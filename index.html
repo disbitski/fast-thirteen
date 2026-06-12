@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Fast Thirteen is a focused daily fasting tracker."
+    />
+    <title>Fast Thirteen</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <header class="topbar">
+        <a class="brand" href="/" aria-label="Fast Thirteen home">
+          <span class="brand-mark">13</span>
+          <span>Fast Thirteen</span>
+        </a>
+        <span class="local-badge">Stored on this device</span>
+      </header>
+
+      <section class="hero">
+        <div>
+          <p class="eyebrow" id="status-label">Ready when you are</p>
+          <h1 id="hero-title">Make space between meals.</h1>
+          <p class="hero-copy" id="hero-copy">
+            One tap starts your fast. Come back when you are ready to eat.
+          </p>
+        </div>
+
+        <div class="timer-card">
+          <div class="progress-ring" id="progress-ring">
+            <div class="progress-inner">
+              <span class="timer" id="timer">00:00:00</span>
+              <span class="timer-label" id="timer-label">13 hour goal</span>
+            </div>
+          </div>
+          <button class="primary-button" id="fast-button" type="button">
+            Start fast
+          </button>
+          <p class="target-copy" id="target-copy">Your target is 13 hours.</p>
+        </div>
+      </section>
+
+      <section class="dashboard" aria-labelledby="dashboard-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Your rhythm</p>
+            <h2 id="dashboard-title">Progress at a glance</h2>
+          </div>
+        </div>
+
+        <div class="stats-grid">
+          <article class="stat-card">
+            <span class="stat-value" id="completed-fasts">0</span>
+            <span class="stat-label">Completed fasts</span>
+          </article>
+          <article class="stat-card">
+            <span class="stat-value" id="total-hours">0.0</span>
+            <span class="stat-label">Total hours</span>
+          </article>
+          <article class="stat-card accent">
+            <span class="stat-value" id="current-streak">0</span>
+            <span class="stat-label">Day streak</span>
+          </article>
+        </div>
+      </section>
+
+      <section class="history" aria-labelledby="history-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">History</p>
+            <h2 id="history-title">Recent fasts</h2>
+          </div>
+          <button class="text-button" id="clear-button" type="button">Clear history</button>
+        </div>
+        <div class="empty-state" id="empty-state">
+          <span class="empty-icon">13</span>
+          <p>Your completed fasts will appear here.</p>
+        </div>
+        <ol class="session-list" id="session-list"></ol>
+      </section>
+    </main>
+
+    <script type="module" src="/src/app.js"></script>
+  </body>
+</html>
