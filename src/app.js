@@ -7,10 +7,12 @@ import {
   startFast,
   summarize,
 } from "./fasting.js";
+import { applyTheme, loadTheme, saveTheme } from "./theme.js";
 
 const STORAGE_KEY = "fast-thirteen-sessions";
 const sessions = loadSessions();
 let activeSession = sessions.find((session) => !session.endedAt) ?? null;
+let selectedTheme = applyTheme(document.documentElement, loadTheme(localStorage));
 
 const elements = {
   button: document.querySelector("#fast-button"),
@@ -26,6 +28,7 @@ const elements = {
   targetCopy: document.querySelector("#target-copy"),
   timer: document.querySelector("#timer"),
   timerLabel: document.querySelector("#timer-label"),
+  themeOptions: [...document.querySelectorAll("[data-theme-option]")],
   totalHours: document.querySelector("#total-hours"),
 };
 
@@ -130,6 +133,13 @@ function render() {
   renderHero();
   renderStats();
   renderHistory();
+  renderTheme();
+}
+
+function renderTheme() {
+  for (const option of elements.themeOptions) {
+    option.setAttribute("aria-pressed", String(option.dataset.themeOption === selectedTheme));
+  }
 }
 
 elements.button.addEventListener("click", () => {
@@ -152,6 +162,16 @@ elements.clearButton.addEventListener("click", () => {
   saveSessions();
   render();
 });
+
+for (const option of elements.themeOptions) {
+  option.addEventListener("click", () => {
+    selectedTheme = applyTheme(
+      document.documentElement,
+      saveTheme(localStorage, option.dataset.themeOption),
+    );
+    renderTheme();
+  });
+}
 
 render();
 setInterval(() => renderHero(), 1000);

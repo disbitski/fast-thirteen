@@ -8,10 +8,69 @@
   --green: #1d5d45;
   --green-bright: #a8d5ba;
   --green-pale: #dfeee4;
+  --accent-ink: #ffffff;
   --orange: #f0a05c;
+  --accent-hover: #174d39;
+  --active: #f0a05c;
+  --active-ink: #15231c;
+  --glow: rgba(168, 213, 186, 0.5);
+  --glass: rgba(255, 253, 247, 0.82);
+  --surface: rgba(255, 253, 247, 0.62);
+  --surface-soft: rgba(255, 253, 247, 0.6);
+  --badge: rgba(255, 253, 247, 0.7);
+  --card-border: rgba(255, 255, 255, 0.8);
+  --shadow: rgba(41, 63, 50, 0.12);
   font-family:
     Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
     sans-serif;
+}
+
+:root[data-theme="cyan"] {
+  color-scheme: dark;
+  --ink: #eaffff;
+  --muted: #8da9ad;
+  --paper: #030607;
+  --card: #071012;
+  --line: #193237;
+  --green: #00e5ff;
+  --green-bright: #9bf5ff;
+  --green-pale: #102b30;
+  --accent-ink: #001114;
+  --orange: #ff8f6b;
+  --accent-hover: #63efff;
+  --active: #ff8f6b;
+  --active-ink: #150805;
+  --glow: rgba(0, 229, 255, 0.18);
+  --glass: rgba(7, 16, 18, 0.84);
+  --surface: rgba(7, 16, 18, 0.72);
+  --surface-soft: rgba(7, 16, 18, 0.66);
+  --badge: rgba(7, 16, 18, 0.8);
+  --card-border: rgba(99, 239, 255, 0.18);
+  --shadow: rgba(0, 229, 255, 0.1);
+}
+
+:root[data-theme="purple"] {
+  color-scheme: dark;
+  --ink: #faf5ff;
+  --muted: #afa0bf;
+  --paper: #07040a;
+  --card: #110b17;
+  --line: #382547;
+  --green: #c56cff;
+  --green-bright: #e7baff;
+  --green-pale: #2c173a;
+  --accent-ink: #16041f;
+  --orange: #ff9f75;
+  --accent-hover: #dc9bff;
+  --active: #ff9f75;
+  --active-ink: #160804;
+  --glow: rgba(197, 108, 255, 0.2);
+  --glass: rgba(17, 11, 23, 0.84);
+  --surface: rgba(17, 11, 23, 0.72);
+  --surface-soft: rgba(17, 11, 23, 0.66);
+  --badge: rgba(17, 11, 23, 0.8);
+  --card-border: rgba(220, 155, 255, 0.18);
+  --shadow: rgba(197, 108, 255, 0.11);
 }
 
 * {
@@ -22,8 +81,11 @@ body {
   margin: 0;
   color: var(--ink);
   background:
-    radial-gradient(circle at 85% 10%, rgba(168, 213, 186, 0.5), transparent 28rem),
+    radial-gradient(circle at 85% 10%, var(--glow), transparent 28rem),
     var(--paper);
+  transition:
+    color 220ms ease,
+    background-color 220ms ease;
 }
 
 button,
@@ -44,6 +106,72 @@ a {
   padding: 24px 0;
 }
 
+.topbar-actions,
+.theme-picker {
+  display: flex;
+  align-items: center;
+}
+
+.topbar-actions {
+  gap: 12px;
+}
+
+.theme-picker {
+  gap: 5px;
+  margin: 0;
+  padding: 5px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--badge);
+}
+
+.theme-picker legend {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.theme-option {
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: inset 0 0 0 1px rgba(127, 127, 127, 0.35);
+  transition:
+    border-color 160ms ease,
+    transform 160ms ease;
+}
+
+.theme-option:hover {
+  transform: scale(1.08);
+}
+
+.theme-option:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 3px;
+}
+
+.theme-option[aria-pressed="true"] {
+  border-color: var(--ink);
+}
+
+.theme-option.light {
+  background: linear-gradient(135deg, #f4f1e8 50%, #1d5d45 50%);
+}
+
+.theme-option.cyan {
+  background: linear-gradient(135deg, #030607 50%, #00e5ff 50%);
+}
+
+.theme-option.purple {
+  background: linear-gradient(135deg, #07040a 50%, #c56cff 50%);
+}
+
 .brand {
   display: inline-flex;
   align-items: center;
@@ -60,7 +188,7 @@ a {
   width: 38px;
   height: 38px;
   border-radius: 50%;
-  color: white;
+  color: var(--accent-ink);
   background: var(--green);
   font-size: 0.8rem;
   font-weight: 800;
@@ -71,7 +199,7 @@ a {
   border: 1px solid var(--line);
   border-radius: 999px;
   color: var(--muted);
-  background: rgba(255, 253, 247, 0.7);
+  background: var(--badge);
   font-size: 0.78rem;
 }
 
@@ -129,10 +257,10 @@ h2 {
   flex-direction: column;
   align-items: center;
   padding: 38px;
-  border: 1px solid rgba(255, 255, 255, 0.8);
+  border: 1px solid var(--card-border);
   border-radius: 40px;
-  background: rgba(255, 253, 247, 0.82);
-  box-shadow: 0 24px 80px rgba(41, 63, 50, 0.12);
+  background: var(--glass);
+  box-shadow: 0 24px 80px var(--shadow);
   backdrop-filter: blur(18px);
 }
 
@@ -176,7 +304,7 @@ h2 {
   padding: 17px 24px;
   border: 0;
   border-radius: 999px;
-  color: white;
+  color: var(--accent-ink);
   background: var(--green);
   cursor: pointer;
   font-weight: 750;
@@ -187,11 +315,12 @@ h2 {
 
 .primary-button:hover {
   transform: translateY(-2px);
-  background: #174d39;
+  background: var(--accent-hover);
 }
 
 .primary-button.is-active {
-  background: var(--orange);
+  color: var(--active-ink);
+  background: var(--active);
 }
 
 .target-copy {
@@ -226,11 +355,11 @@ h2 {
   padding: 26px;
   border: 1px solid var(--line);
   border-radius: 24px;
-  background: rgba(255, 253, 247, 0.6);
+  background: var(--surface-soft);
 }
 
 .stat-card.accent {
-  color: white;
+  color: var(--accent-ink);
   border-color: var(--green);
   background: var(--green);
 }
@@ -249,7 +378,8 @@ h2 {
 }
 
 .accent .stat-label {
-  color: var(--green-bright);
+  color: var(--accent-ink);
+  opacity: 0.72;
 }
 
 .history {
@@ -299,7 +429,7 @@ h2 {
   padding: 20px 22px;
   border: 1px solid var(--line);
   border-radius: 18px;
-  background: rgba(255, 253, 247, 0.62);
+  background: var(--surface);
 }
 
 .session-date,
@@ -342,6 +472,10 @@ h2 {
 @media (max-width: 480px) {
   .local-badge {
     display: none;
+  }
+
+  .topbar-actions {
+    gap: 0;
   }
 
   .timer-card {

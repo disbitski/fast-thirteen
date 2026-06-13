@@ -8,6 +8,14 @@
       content="Fast Thirteen is a focused daily fasting tracker."
     />
     <title>Fast Thirteen</title>
+    <script>
+      try {
+        const theme = localStorage.getItem("fast-thirteen-theme");
+        if (["light", "cyan", "purple"].includes(theme)) {
+          document.documentElement.dataset.theme = theme;
+        }
+      } catch {}
+    </script>
     <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
@@ -17,7 +25,36 @@
           <span class="brand-mark">13</span>
           <span>Fast Thirteen</span>
         </a>
-        <span class="local-badge">Stored on this device</span>
+        <div class="topbar-actions">
+          <fieldset class="theme-picker" aria-label="Color theme">
+            <legend>Color theme</legend>
+            <button
+              class="theme-option light"
+              type="button"
+              data-theme-option="light"
+              aria-label="Use light theme"
+              aria-pressed="true"
+              title="Light"
+            ></button>
+            <button
+              class="theme-option cyan"
+              type="button"
+              data-theme-option="cyan"
+              aria-label="Use black and cyan theme"
+              aria-pressed="false"
+              title="Black and cyan"
+            ></button>
+            <button
+              class="theme-option purple"
+              type="button"
+              data-theme-option="purple"
+              aria-label="Use black and purple theme"
+              aria-pressed="false"
+              title="Black and purple"
+            ></button>
+          </fieldset>
+          <span class="local-badge">Stored on this device</span>
+        </div>
       </header>
 
       <section class="hero">

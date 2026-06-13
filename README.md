@@ -16,6 +16,7 @@ Apple Watch clients.
 - Completed-fast count, total hours, and current streak
 - Recent-session history
 - Browser-local persistence
+- Persistent light, black/cyan, and black/purple themes
 
 ## Run Locally
 
@@ -44,4 +45,3 @@ npm test
 Fast Thirteen is a personal tracking tool, not medical advice. Fasting is not
 appropriate for everyone; consult a qualified healthcare professional when
 needed.
-
