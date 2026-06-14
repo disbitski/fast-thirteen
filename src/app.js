@@ -11,6 +11,7 @@ import {
 import {
   loadData,
   mergeData,
+  normalizeData,
   parseBackup,
   saveData,
   serializeBackup,
@@ -50,6 +51,40 @@ function persistData(message = "Saved locally") {
   const result = saveData(localStorage, appData);
   appData = result.data;
   elements.saveStatus.textContent = result.saved ? message : "Could not save locally";
+  saveSharedData(appData);
+}
+
+async function loadSharedData() {
+  try {
+    const response = await fetch("/api/data", { cache: "no-store" });
+    if (!response.ok) return;
+    const { data } = await response.json();
+
+    if (data) {
+      appData = sessions.length > 0 ? mergeData(data, appData) : normalizeData(data);
+      sessions.splice(0, sessions.length, ...appData.sessions);
+      activeSession = sessions.find((session) => !session.endedAt) ?? null;
+      saveData(localStorage, appData);
+    } else {
+      await saveSharedData(appData);
+    }
+
+    elements.saveStatus.textContent = "Saved on this Mac";
+    render();
+  } catch {
+    elements.saveStatus.textContent = "Saved in this browser";
+  }
+}
+
+async function saveSharedData(value) {
+  try {
+    const response = await fetch("/api/data", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(value),
+    });
+    if (response.ok) elements.saveStatus.textContent = "Saved on this Mac";
+  } catch {}
 }
 
 function formatTime(value) {
@@ -73,6 +108,7 @@ function targetLabel(targetHours) {
 
 function renderHero(now = new Date()) {
   if (!activeSession) {
+    document.body.classList.remove("is-fasting");
     elements.statusLabel.textContent = "Ready when you are";
     elements.heroTitle.textContent = "Make space between meals.";
     elements.heroCopy.textContent =
@@ -86,6 +122,7 @@ function renderHero(now = new Date()) {
     return;
   }
 
+  document.body.classList.add("is-fasting");
   const elapsed = durationMs(activeSession, now);
   const complete = isComplete(activeSession, now);
   const percent = progress(activeSession, now);
@@ -100,7 +137,7 @@ function renderHero(now = new Date()) {
     : `You started at ${formatTime(activeSession.startedAt)}. Keep going at your own pace.`;
   elements.timer.textContent = formatDuration(elapsed);
   elements.timerLabel.textContent = complete ? "Goal complete" : `${Math.round(percent * 100)}% complete`;
-  elements.button.textContent = "End fast";
+  elements.button.textContent = "End current fast";
   elements.button.classList.add("is-active");
   elements.targetCopy.textContent = complete
     ? `Target reached at ${formatTime(targetEnd)}.`
@@ -120,8 +157,13 @@ function renderHistory() {
     .filter((session) => session.endedAt)
     .sort((a, b) => new Date(b.endedAt) - new Date(a.endedAt));
 
-  elements.emptyState.hidden = completedSessions.length > 0;
+  elements.emptyState.hidden = Boolean(activeSession) || completedSessions.length > 0;
   elements.sessionList.replaceChildren(
+    ...(activeSession
+      ? [
+          createActiveSessionRow(activeSession),
+        ]
+      : []),
     ...completedSessions.slice(0, 10).map((session) => {
       const item = document.createElement("li");
       const complete = isComplete(session);
@@ -139,6 +181,25 @@ function renderHistory() {
       return item;
     }),
   );
+}
+
+function createActiveSessionRow(session, now = new Date()) {
+  const item = document.createElement("li");
+  const targetEnd = new Date(
+    new Date(session.startedAt).getTime() + session.targetHours * 60 * 60 * 1000,
+  );
+  item.className = "session-row active-session";
+  item.innerHTML = `
+    <div>
+      <span class="session-date"><span class="live-dot"></span>Currently fasting</span>
+      <span class="session-times">Started ${formatTime(session.startedAt)} · Target ${formatTime(targetEnd)}</span>
+    </div>
+    <div>
+      <span class="session-duration">${formatDuration(durationMs(session, now))}</span>
+      <span class="session-result complete">${session.targetHours}-hour goal</span>
+    </div>
+  `;
+  return item;
 }
 
 function render() {
@@ -165,12 +226,13 @@ elements.button.addEventListener("click", () => {
     const index = sessions.findIndex((session) => session.id === activeSession.id);
     sessions[index] = endFast(activeSession);
     activeSession = null;
+    persistData("Fast ended and saved locally");
   } else {
     activeSession = startFast(new Date(), appData.settings.targetHours);
     sessions.push(activeSession);
+    persistData("Fast started and saved locally");
   }
 
-  persistData();
   render();
 });
 
@@ -231,4 +293,8 @@ for (const option of elements.themeOptions) {
 }
 
 render();
-setInterval(() => renderHero(), 1000);
+loadSharedData();
+setInterval(() => {
+  renderHero();
+  if (activeSession) renderHistory();
+}, 1000);
