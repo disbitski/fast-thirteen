@@ -3,14 +3,22 @@ import {
   endFast,
   formatDuration,
   isComplete,
+  normalizeTargetHours,
   progress,
   startFast,
   summarize,
 } from "./fasting.js";
+import {
+  loadData,
+  mergeData,
+  parseBackup,
+  saveData,
+  serializeBackup,
+} from "./storage.js";
 import { applyTheme, loadTheme, saveTheme } from "./theme.js";
 
-const STORAGE_KEY = "fast-thirteen-sessions";
-const sessions = loadSessions();
+let appData = loadData(localStorage);
+const sessions = appData.sessions;
 let activeSession = sessions.find((session) => !session.endedAt) ?? null;
 let selectedTheme = applyTheme(document.documentElement, loadTheme(localStorage));
 
@@ -20,28 +28,28 @@ const elements = {
   completedFasts: document.querySelector("#completed-fasts"),
   currentStreak: document.querySelector("#current-streak"),
   emptyState: document.querySelector("#empty-state"),
+  exportButton: document.querySelector("#export-button"),
   heroCopy: document.querySelector("#hero-copy"),
   heroTitle: document.querySelector("#hero-title"),
+  importButton: document.querySelector("#import-button"),
+  importFile: document.querySelector("#import-file"),
   progressRing: document.querySelector("#progress-ring"),
+  saveStatus: document.querySelector("#save-status"),
   sessionList: document.querySelector("#session-list"),
   statusLabel: document.querySelector("#status-label"),
   targetCopy: document.querySelector("#target-copy"),
   timer: document.querySelector("#timer"),
   timerLabel: document.querySelector("#timer-label"),
   themeOptions: [...document.querySelectorAll("[data-theme-option]")],
+  targetHours: document.querySelector("#target-hours"),
   totalHours: document.querySelector("#total-hours"),
 };
 
-function loadSessions() {
-  try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "[]");
-  } catch {
-    return [];
-  }
-}
-
-function saveSessions() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(sessions));
+function persistData(message = "Saved locally") {
+  appData.sessions = sessions;
+  const result = saveData(localStorage, appData);
+  appData = result.data;
+  elements.saveStatus.textContent = result.saved ? message : "Could not save locally";
 }
 
 function formatTime(value) {
@@ -59,6 +67,10 @@ function formatDate(value) {
   }).format(new Date(value));
 }
 
+function targetLabel(targetHours) {
+  return `${targetHours} hour${targetHours === 1 ? "" : "s"}`;
+}
+
 function renderHero(now = new Date()) {
   if (!activeSession) {
     elements.statusLabel.textContent = "Ready when you are";
@@ -66,10 +78,10 @@ function renderHero(now = new Date()) {
     elements.heroCopy.textContent =
       "One tap starts your fast. Come back when you are ready to eat.";
     elements.timer.textContent = "00:00:00";
-    elements.timerLabel.textContent = "13 hour goal";
+    elements.timerLabel.textContent = `${appData.settings.targetHours}-hour goal`;
     elements.button.textContent = "Start fast";
     elements.button.classList.remove("is-active");
-    elements.targetCopy.textContent = "Your target is 13 hours.";
+    elements.targetCopy.textContent = `Your target is ${targetLabel(appData.settings.targetHours)}.`;
     elements.progressRing.style.setProperty("--progress", "0deg");
     return;
   }
@@ -82,7 +94,7 @@ function renderHero(now = new Date()) {
   );
 
   elements.statusLabel.textContent = complete ? "Target reached" : "Fast in progress";
-  elements.heroTitle.textContent = complete ? "You made thirteen." : "Stay steady.";
+  elements.heroTitle.textContent = complete ? "You reached your goal." : "Stay steady.";
   elements.heroCopy.textContent = complete
     ? "Your daily target is complete. End the fast whenever you are ready."
     : `You started at ${formatTime(activeSession.startedAt)}. Keep going at your own pace.`;
@@ -134,6 +146,7 @@ function render() {
   renderStats();
   renderHistory();
   renderTheme();
+  renderSettings();
 }
 
 function renderTheme() {
@@ -142,25 +155,69 @@ function renderTheme() {
   }
 }
 
+function renderSettings() {
+  elements.targetHours.value = appData.settings.targetHours;
+  elements.targetHours.disabled = Boolean(activeSession);
+}
+
 elements.button.addEventListener("click", () => {
   if (activeSession) {
     const index = sessions.findIndex((session) => session.id === activeSession.id);
     sessions[index] = endFast(activeSession);
     activeSession = null;
   } else {
-    activeSession = startFast();
+    activeSession = startFast(new Date(), appData.settings.targetHours);
     sessions.push(activeSession);
   }
 
-  saveSessions();
+  persistData();
   render();
 });
 
 elements.clearButton.addEventListener("click", () => {
   const active = sessions.filter((session) => !session.endedAt);
   sessions.splice(0, sessions.length, ...active);
-  saveSessions();
+  persistData();
   render();
+});
+
+elements.targetHours.addEventListener("input", () => {
+  appData.settings.targetHours = normalizeTargetHours(elements.targetHours.value);
+  persistData("Goal saved locally");
+  renderHero();
+});
+
+elements.targetHours.addEventListener("change", () => render());
+
+elements.exportButton.addEventListener("click", () => {
+  const blob = new Blob([serializeBackup(appData)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  const date = new Date().toISOString().slice(0, 10);
+  link.href = url;
+  link.download = `fast-thirteen-backup-${date}.json`;
+  link.click();
+  URL.revokeObjectURL(url);
+  elements.saveStatus.textContent = "Backup exported";
+});
+
+elements.importButton.addEventListener("click", () => elements.importFile.click());
+
+elements.importFile.addEventListener("change", async () => {
+  const [file] = elements.importFile.files;
+  if (!file) return;
+
+  try {
+    appData = mergeData(appData, parseBackup(await file.text()));
+    sessions.splice(0, sessions.length, ...appData.sessions);
+    activeSession = sessions.find((session) => !session.endedAt) ?? null;
+    persistData("Backup imported");
+    render();
+  } catch {
+    elements.saveStatus.textContent = "Backup could not be imported";
+  } finally {
+    elements.importFile.value = "";
+  }
 });
 
 for (const option of elements.themeOptions) {

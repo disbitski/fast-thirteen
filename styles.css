@@ -328,7 +328,8 @@ h2 {
 }
 
 .dashboard,
-.history {
+.history,
+.settings {
   padding-top: 56px;
   border-top: 1px solid var(--line);
 }
@@ -345,6 +346,93 @@ h2 {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 16px;
+}
+
+.save-status {
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.settings-card {
+  display: grid;
+  gap: 0;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  background: var(--surface-soft);
+}
+
+.goal-control,
+.backup-control {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 24px 26px;
+}
+
+.goal-control {
+  border-bottom: 1px solid var(--line);
+}
+
+.goal-control strong,
+.backup-control strong {
+  display: block;
+  margin-bottom: 5px;
+}
+
+.goal-control small,
+.backup-control small {
+  color: var(--muted);
+}
+
+.number-control,
+.backup-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.number-control {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.number-control input {
+  width: 76px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  color: var(--ink);
+  background: var(--card);
+  font: inherit;
+  font-weight: 750;
+}
+
+.number-control input:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.secondary-button {
+  padding: 10px 13px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--ink);
+  background: var(--card);
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-weight: 720;
+}
+
+.secondary-button:hover {
+  border-color: var(--green);
+}
+
+.number-control input:focus-visible,
+.secondary-button:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 3px;
 }
 
 .stat-card {
@@ -467,6 +555,12 @@ h2 {
   .stat-card {
     min-height: 140px;
   }
+
+  .goal-control,
+  .backup-control {
+    align-items: flex-start;
+    flex-direction: column;
+  }
 }
 
 @media (max-width: 480px) {
@@ -491,5 +585,9 @@ h2 {
   .progress-inner {
     width: 198px;
     height: 198px;
+  }
+
+  .backup-actions {
+    flex-wrap: wrap;
   }
 }

@@ -6,7 +6,9 @@ import {
   endFast,
   formatDuration,
   isComplete,
+  normalizeTargetHours,
   progress,
+  startFast,
   summarize,
 } from "../src/fasting.js";
 
@@ -65,4 +67,19 @@ test("counts a streak ending today or yesterday", () => {
 
 test("formats elapsed time for the timer", () => {
   assert.equal(formatDuration((13 * 60 * 60 + 4 * 60 + 9) * 1000), "13:04:09");
+});
+
+test("normalizes fasting targets to safe half-hour increments", () => {
+  assert.equal(normalizeTargetHours("14.2"), 14);
+  assert.equal(normalizeTargetHours(14.3), 14.5);
+  assert.equal(normalizeTargetHours(0), 1);
+  assert.equal(normalizeTargetHours(100), 48);
+  assert.equal(normalizeTargetHours("not a number"), 13);
+});
+
+test("captures the selected goal when starting a fast", () => {
+  const fast = startFast(new Date("2026-06-14T22:00:00.000Z"), 14.5);
+
+  assert.equal(fast.targetHours, 14.5);
+  assert.equal(fast.startedAt, "2026-06-14T22:00:00.000Z");
 });

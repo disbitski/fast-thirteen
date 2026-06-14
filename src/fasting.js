@@ -1,14 +1,25 @@
 export const DEFAULT_TARGET_HOURS = 13;
+export const MIN_TARGET_HOURS = 1;
+export const MAX_TARGET_HOURS = 48;
 
 const HOUR_MS = 60 * 60 * 1000;
 const DAY_MS = 24 * HOUR_MS;
+
+export function normalizeTargetHours(value) {
+  const target = Number(value);
+  if (!Number.isFinite(target)) {
+    return DEFAULT_TARGET_HOURS;
+  }
+
+  return Math.min(MAX_TARGET_HOURS, Math.max(MIN_TARGET_HOURS, Math.round(target * 2) / 2));
+}
 
 export function startFast(now = new Date(), targetHours = DEFAULT_TARGET_HOURS) {
   return {
     id: crypto.randomUUID(),
     startedAt: now.toISOString(),
     endedAt: null,
-    targetHours,
+    targetHours: normalizeTargetHours(targetHours),
   };
 }
 

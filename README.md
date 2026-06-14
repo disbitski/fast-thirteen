@@ -17,6 +17,9 @@ Apple Watch clients.
 - Recent-session history
 - Browser-local persistence
 - Persistent light, black/cyan, and black/purple themes
+- Configurable fasting goals captured per session
+- Versioned local data with migration from the original storage format
+- JSON backup export and restore
 
 ## Run Locally
 
@@ -32,10 +35,20 @@ Run the domain tests:
 npm test
 ```
 
+## Local Data
+
+Fast Thirteen stores active and completed fasts in this browser's local
+storage. Closing the tab, restarting the browser, or restarting the local
+server will not remove that data.
+
+Use **Export data** periodically to create a JSON backup. Browser storage can
+still be lost if site data is manually cleared or the browser profile is
+removed.
+
 ## Roadmap
 
 - Edit and delete sessions
-- Configurable fasting goal and reminders
+- Reminders and target-reached notifications
 - Authentication and cloud synchronization
 - SwiftUI apps for iPhone, Mac, and Apple Watch
 - Widgets, complications, and target-reached notifications

@@ -80,6 +80,51 @@
         </div>
       </section>
 
+      <section class="settings" aria-labelledby="settings-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Daily goal</p>
+            <h2 id="settings-title">Set your rhythm</h2>
+          </div>
+          <span class="save-status" id="save-status" role="status">Saved locally</span>
+        </div>
+        <div class="settings-card">
+          <label class="goal-control" for="target-hours">
+            <span>
+              <strong>Fasting target</strong>
+              <small>Used when you begin your next fast.</small>
+            </span>
+            <span class="number-control">
+              <input
+                id="target-hours"
+                type="number"
+                min="1"
+                max="48"
+                step="0.5"
+                inputmode="decimal"
+                value="13"
+              />
+              <span>hours</span>
+            </span>
+          </label>
+          <div class="backup-control">
+            <span>
+              <strong>Local backup</strong>
+              <small>Export your history or restore it on this browser.</small>
+            </span>
+            <div class="backup-actions">
+              <button class="secondary-button" id="export-button" type="button">
+                Export data
+              </button>
+              <button class="secondary-button" id="import-button" type="button">
+                Import backup
+              </button>
+              <input id="import-file" type="file" accept="application/json,.json" hidden />
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section class="dashboard" aria-labelledby="dashboard-title">
         <div class="section-heading">
           <div>
