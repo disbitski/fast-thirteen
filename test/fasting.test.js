@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   correctSession,
+  createSessionId,
   currentStreak,
   deleteSession,
   durationMs,
@@ -84,6 +85,12 @@ test("captures the selected goal when starting a fast", () => {
 
   assert.equal(fast.targetHours, 14.5);
   assert.equal(fast.startedAt, "2026-06-14T22:00:00.000Z");
+});
+
+test("creates session ids without requiring secure-context randomUUID", () => {
+  const id = createSessionId(new Date("2026-06-14T22:00:00.000Z"), {});
+
+  assert.match(id, /^fast-/);
 });
 
 test("corrects a completed session while preserving its target", () => {

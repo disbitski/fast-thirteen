@@ -14,10 +14,20 @@ export function normalizeTargetHours(value) {
   return Math.min(MAX_TARGET_HOURS, Math.max(MIN_TARGET_HOURS, Math.round(target * 2) / 2));
 }
 
+export function createSessionId(now = new Date(), cryptoProvider = globalThis.crypto) {
+  if (typeof cryptoProvider?.randomUUID === "function") {
+    return cryptoProvider.randomUUID();
+  }
+
+  const timestamp = now.getTime().toString(36);
+  const random = Math.random().toString(36).slice(2, 10);
+  return `fast-${timestamp}-${random}`;
+}
+
 export function startFast(now = new Date(), targetHours = DEFAULT_TARGET_HOURS) {
   const timestamp = now.toISOString();
   return {
-    id: crypto.randomUUID(),
+    id: createSessionId(now),
     startedAt: timestamp,
     endedAt: null,
     targetHours: normalizeTargetHours(targetHours),
