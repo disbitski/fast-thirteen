@@ -1,7 +1,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
+  correctSession,
   currentStreak,
+  deleteSession,
   durationMs,
   endFast,
   formatDuration,
@@ -82,4 +84,51 @@ test("captures the selected goal when starting a fast", () => {
 
   assert.equal(fast.targetHours, 14.5);
   assert.equal(fast.startedAt, "2026-06-14T22:00:00.000Z");
+});
+
+test("corrects a completed session while preserving its target", () => {
+  const original = session("2026-06-14T23:00:00.000Z", "2026-06-15T11:00:00.000Z", 13);
+  const corrected = correctSession(
+    original,
+    "2026-06-14T22:30:00.000Z",
+    "2026-06-15T12:00:00.000Z",
+    new Date("2026-06-15T13:00:00.000Z"),
+  );
+
+  assert.equal(corrected.targetHours, 13);
+  assert.equal(corrected.startedAt, "2026-06-14T22:30:00.000Z");
+  assert.equal(corrected.endedAt, "2026-06-15T12:00:00.000Z");
+  assert.equal(isComplete(corrected), true);
+});
+
+test("rejects invalid session corrections", () => {
+  const completed = session("2026-06-14T23:00:00.000Z", "2026-06-15T11:00:00.000Z");
+
+  assert.throws(
+    () => correctSession(completed, completed.endedAt, completed.startedAt),
+    /End time must be after start time/,
+  );
+});
+
+test("deleted sessions do not affect dashboard statistics", () => {
+  const completed = session("2026-06-14T22:00:00.000Z", "2026-06-15T11:00:00.000Z");
+  const deleted = deleteSession(completed, new Date("2026-06-15T12:00:00.000Z"));
+
+  assert.equal(summarize([deleted]).completedFasts, 0);
+  assert.equal(summarize([deleted]).totalHours, 0);
+});
+
+test("rejects corrections that end in the future", () => {
+  const completed = session("2026-06-14T23:00:00.000Z", "2026-06-15T11:00:00.000Z");
+
+  assert.throws(
+    () =>
+      correctSession(
+        completed,
+        completed.startedAt,
+        "2026-06-15T14:00:00.000Z",
+        new Date("2026-06-15T13:00:00.000Z"),
+      ),
+    /cannot end in the future/,
+  );
 });

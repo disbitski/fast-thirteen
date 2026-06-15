@@ -32,6 +32,8 @@ const session = {
   startedAt: "2026-06-14T22:00:00.000Z",
   endedAt: null,
   targetHours: 13,
+  updatedAt: "2026-06-14T22:00:00.000Z",
+  deletedAt: null,
 };
 
 test("persists an active overnight fast across reloads", () => {
@@ -78,7 +80,7 @@ test("exports and restores a normalized backup", () => {
   };
 
   assert.deepEqual(parseBackup(serializeBackup(original)), {
-    version: 1,
+    version: 2,
     settings: { targetHours: 14.5 },
     sessions: [session],
   });
@@ -106,4 +108,18 @@ test("reports when browser storage cannot save", () => {
   );
 
   assert.equal(result.saved, false);
+});
+
+test("newer deletion tombstones win during merge", () => {
+  const deleted = {
+    ...session,
+    deletedAt: "2026-06-15T12:00:00.000Z",
+    updatedAt: "2026-06-15T12:00:00.000Z",
+  };
+  const merged = mergeData(
+    { ...emptyData(), sessions: [deleted] },
+    { ...emptyData(), sessions: [session] },
+  );
+
+  assert.equal(merged.sessions[0].deletedAt, deleted.deletedAt);
 });

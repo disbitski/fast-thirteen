@@ -542,6 +542,16 @@ h2 {
   background: var(--surface);
 }
 
+.session-result-column {
+  text-align: right;
+}
+
+.edit-session {
+  display: block;
+  margin: 7px 0 0 auto;
+  color: var(--green);
+}
+
 .session-date,
 .session-duration {
   font-weight: 720;
@@ -592,6 +602,105 @@ h2 {
   .live-dot {
     animation: none;
   }
+}
+
+.session-dialog {
+  width: min(560px, calc(100% - 28px));
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 28px;
+  color: var(--ink);
+  background: var(--card);
+  box-shadow: 0 30px 100px var(--shadow);
+}
+
+.session-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.72);
+  backdrop-filter: blur(5px);
+}
+
+.session-form {
+  display: grid;
+  gap: 18px;
+  padding: 28px;
+}
+
+.dialog-heading,
+.dialog-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dialog-heading {
+  justify-content: space-between;
+}
+
+.dialog-actions {
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.icon-button {
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  color: var(--ink);
+  background: var(--surface);
+  cursor: pointer;
+  font-size: 1.4rem;
+}
+
+.session-summary {
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  color: var(--muted);
+  background: var(--surface);
+  font-size: 0.82rem;
+}
+
+.form-field {
+  display: grid;
+  gap: 7px;
+  font-size: 0.82rem;
+  font-weight: 720;
+}
+
+.form-field input {
+  padding: 12px 13px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  color: var(--ink);
+  background: var(--surface);
+  font: inherit;
+}
+
+.form-error {
+  min-height: 1.2em;
+  margin: 0;
+  color: var(--active);
+  font-size: 0.8rem;
+}
+
+.danger-button {
+  margin-right: auto;
+  padding: 10px 13px;
+  border: 1px solid var(--active);
+  border-radius: 999px;
+  color: var(--active);
+  background: transparent;
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-weight: 720;
+}
+
+.primary-button.compact {
+  width: auto;
+  padding: 11px 15px;
+  font-size: 0.8rem;
 }
 
 @media (max-width: 820px) {

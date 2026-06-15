@@ -155,7 +155,6 @@
             <p class="eyebrow">History</p>
             <h2 id="history-title">Recent fasts</h2>
           </div>
-          <button class="text-button" id="clear-button" type="button">Clear history</button>
         </div>
         <div class="empty-state" id="empty-state">
           <span class="empty-icon">13</span>
@@ -164,6 +163,35 @@
         <ol class="session-list" id="session-list"></ol>
       </section>
     </main>
+
+    <dialog class="session-dialog" id="session-dialog" aria-labelledby="session-dialog-title">
+      <form class="session-form" id="session-form">
+        <div class="dialog-heading">
+          <div>
+            <p class="eyebrow">Session details</p>
+            <h2 id="session-dialog-title">Correct this fast</h2>
+          </div>
+          <button class="icon-button" id="close-session-dialog" type="button" aria-label="Close">
+            &times;
+          </button>
+        </div>
+        <div class="session-summary" id="session-summary"></div>
+        <label class="form-field">
+          <span>Started</span>
+          <input id="session-started-at" type="datetime-local" required />
+        </label>
+        <label class="form-field">
+          <span>Ended</span>
+          <input id="session-ended-at" type="datetime-local" required />
+        </label>
+        <p class="form-error" id="session-error" role="alert"></p>
+        <div class="dialog-actions">
+          <button class="danger-button" id="delete-session" type="button">Delete session</button>
+          <button class="secondary-button" id="cancel-session-edit" type="button">Cancel</button>
+          <button class="primary-button compact" type="submit">Save correction</button>
+        </div>
+      </form>
+    </dialog>
 
     <script type="module" src="/src/app.js"></script>
   </body>

@@ -16,6 +16,7 @@ Apple Watch clients.
 - 13-hour target progress
 - Completed-fast count, total hours, and current streak
 - Recent-session history
+- Completed-session details with timestamp correction and confirmed deletion
 - Browser-local persistence
 - Persistent light, black/cyan, and black/purple themes
 - Configurable fasting goals captured per session
@@ -55,7 +56,6 @@ removed.
 
 ## Roadmap
 
-- Edit and delete sessions
 - Reminders and target-reached notifications
 - Authentication and cloud synchronization
 - SwiftUI apps for iPhone, Mac, and Apple Watch

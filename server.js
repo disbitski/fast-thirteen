@@ -13,7 +13,7 @@ import { extname, join, normalize } from "node:path";
 const host = process.env.HOST ?? "0.0.0.0";
 const port = Number(process.env.PORT ?? 4173);
 const root = new URL(".", import.meta.url).pathname;
-const dataDirectory = join(root, "data");
+const dataDirectory = process.env.DATA_DIRECTORY ?? join(root, "data");
 const dataPath = join(dataDirectory, "fast-thirteen-data.json");
 const temporaryDataPath = `${dataPath}.tmp`;
 const contentTypes = {

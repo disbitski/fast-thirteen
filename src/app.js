@@ -1,4 +1,6 @@
 import {
+  correctSession,
+  deleteSession,
   durationMs,
   endFast,
   formatDuration,
@@ -20,14 +22,18 @@ import { applyTheme, loadTheme, saveTheme } from "./theme.js";
 
 let appData = loadData(localStorage);
 const sessions = appData.sessions;
-let activeSession = sessions.find((session) => !session.endedAt) ?? null;
+let activeSession = sessions.find((session) => !session.deletedAt && !session.endedAt) ?? null;
+let editingSessionId = null;
+let deleteConfirmationPending = false;
 let selectedTheme = applyTheme(document.documentElement, loadTheme(localStorage));
 
 const elements = {
   button: document.querySelector("#fast-button"),
-  clearButton: document.querySelector("#clear-button"),
   completedFasts: document.querySelector("#completed-fasts"),
   currentStreak: document.querySelector("#current-streak"),
+  cancelSessionEdit: document.querySelector("#cancel-session-edit"),
+  closeSessionDialog: document.querySelector("#close-session-dialog"),
+  deleteSession: document.querySelector("#delete-session"),
   emptyState: document.querySelector("#empty-state"),
   exportButton: document.querySelector("#export-button"),
   heroCopy: document.querySelector("#hero-copy"),
@@ -36,7 +42,13 @@ const elements = {
   importFile: document.querySelector("#import-file"),
   progressRing: document.querySelector("#progress-ring"),
   saveStatus: document.querySelector("#save-status"),
+  sessionDialog: document.querySelector("#session-dialog"),
+  sessionEndedAt: document.querySelector("#session-ended-at"),
+  sessionError: document.querySelector("#session-error"),
+  sessionForm: document.querySelector("#session-form"),
   sessionList: document.querySelector("#session-list"),
+  sessionStartedAt: document.querySelector("#session-started-at"),
+  sessionSummary: document.querySelector("#session-summary"),
   statusLabel: document.querySelector("#status-label"),
   targetCopy: document.querySelector("#target-copy"),
   timer: document.querySelector("#timer"),
@@ -63,7 +75,7 @@ async function loadSharedData() {
     if (data) {
       appData = sessions.length > 0 ? mergeData(data, appData) : normalizeData(data);
       sessions.splice(0, sessions.length, ...appData.sessions);
-      activeSession = sessions.find((session) => !session.endedAt) ?? null;
+      activeSession = sessions.find((session) => !session.deletedAt && !session.endedAt) ?? null;
       saveData(localStorage, appData);
     } else {
       await saveSharedData(appData);
@@ -104,6 +116,12 @@ function formatDate(value) {
 
 function targetLabel(targetHours) {
   return `${targetHours} hour${targetHours === 1 ? "" : "s"}`;
+}
+
+function toLocalInputValue(value) {
+  const date = new Date(value);
+  const local = new Date(date.getTime() - date.getTimezoneOffset() * 60 * 1000);
+  return local.toISOString().slice(0, 16);
 }
 
 function renderHero(now = new Date()) {
@@ -154,7 +172,7 @@ function renderStats() {
 
 function renderHistory() {
   const completedSessions = sessions
-    .filter((session) => session.endedAt)
+    .filter((session) => !session.deletedAt && session.endedAt)
     .sort((a, b) => new Date(b.endedAt) - new Date(a.endedAt));
 
   elements.emptyState.hidden = Boolean(activeSession) || completedSessions.length > 0;
@@ -173,14 +191,37 @@ function renderHistory() {
           <span class="session-date">${formatDate(session.endedAt)}</span>
           <span class="session-times">${formatTime(session.startedAt)} to ${formatTime(session.endedAt)}</span>
         </div>
-        <div>
+        <div class="session-result-column">
           <span class="session-duration">${formatDuration(durationMs(session)).slice(0, 5)}</span>
           <span class="session-result ${complete ? "complete" : ""}">${complete ? "Goal reached" : "Fast ended early"}</span>
+          <button class="text-button edit-session" type="button" data-session-id="${session.id}">Edit</button>
         </div>
       `;
       return item;
     }),
   );
+}
+
+function openSessionDialog(sessionId) {
+  const session = sessions.find((item) => item.id === sessionId && !item.deletedAt);
+  if (!session?.endedAt) return;
+
+  editingSessionId = session.id;
+  deleteConfirmationPending = false;
+  elements.deleteSession.textContent = "Delete session";
+  elements.sessionError.textContent = "";
+  elements.sessionStartedAt.value = toLocalInputValue(session.startedAt);
+  elements.sessionEndedAt.value = toLocalInputValue(session.endedAt);
+  elements.sessionSummary.textContent =
+    `${formatDuration(durationMs(session)).slice(0, 5)} · ${session.targetHours}-hour goal · ` +
+    `${isComplete(session) ? "Goal reached" : "Ended early"}`;
+  elements.sessionDialog.showModal();
+}
+
+function closeSessionDialog() {
+  editingSessionId = null;
+  deleteConfirmationPending = false;
+  elements.sessionDialog.close();
 }
 
 function createActiveSessionRow(session, now = new Date()) {
@@ -236,12 +277,48 @@ elements.button.addEventListener("click", () => {
   render();
 });
 
-elements.clearButton.addEventListener("click", () => {
-  const active = sessions.filter((session) => !session.endedAt);
-  sessions.splice(0, sessions.length, ...active);
-  persistData();
+elements.sessionList.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-session-id]");
+  if (button) openSessionDialog(button.dataset.sessionId);
+});
+
+elements.sessionForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  const index = sessions.findIndex((session) => session.id === editingSessionId);
+  if (index < 0) return;
+
+  try {
+    sessions[index] = correctSession(
+      sessions[index],
+      elements.sessionStartedAt.value,
+      elements.sessionEndedAt.value,
+    );
+    persistData("Session corrected and saved");
+    closeSessionDialog();
+    render();
+  } catch (error) {
+    elements.sessionError.textContent = error.message;
+  }
+});
+
+elements.deleteSession.addEventListener("click", () => {
+  if (!deleteConfirmationPending) {
+    deleteConfirmationPending = true;
+    elements.deleteSession.textContent = "Confirm delete";
+    elements.sessionError.textContent = "Click Confirm delete to permanently remove this session.";
+    return;
+  }
+
+  const index = sessions.findIndex((session) => session.id === editingSessionId);
+  if (index < 0) return;
+  sessions[index] = deleteSession(sessions[index]);
+  persistData("Session deleted");
+  closeSessionDialog();
   render();
 });
+
+elements.cancelSessionEdit.addEventListener("click", closeSessionDialog);
+elements.closeSessionDialog.addEventListener("click", closeSessionDialog);
 
 elements.targetHours.addEventListener("input", () => {
   appData.settings.targetHours = normalizeTargetHours(elements.targetHours.value);
@@ -272,7 +349,7 @@ elements.importFile.addEventListener("change", async () => {
   try {
     appData = mergeData(appData, parseBackup(await file.text()));
     sessions.splice(0, sessions.length, ...appData.sessions);
-    activeSession = sessions.find((session) => !session.endedAt) ?? null;
+    activeSession = sessions.find((session) => !session.deletedAt && !session.endedAt) ?? null;
     persistData("Backup imported");
     render();
   } catch {

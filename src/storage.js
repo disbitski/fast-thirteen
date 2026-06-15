@@ -1,6 +1,6 @@
 import { DEFAULT_TARGET_HOURS, normalizeTargetHours } from "./fasting.js";
 
-export const DATA_VERSION = 1;
+export const DATA_VERSION = 2;
 export const STORAGE_KEY = "fast-thirteen-data";
 export const LEGACY_SESSIONS_KEY = "fast-thirteen-sessions";
 
@@ -13,11 +13,17 @@ export function emptyData() {
 }
 
 function normalizeSession(session) {
+  const endedAt = session?.endedAt == null ? null : new Date(session.endedAt);
+  const deletedAt = session?.deletedAt == null ? null : new Date(session.deletedAt);
+  const updatedAt = new Date(session?.updatedAt ?? session?.endedAt ?? session?.startedAt);
+
   if (
     !session ||
     typeof session.id !== "string" ||
     Number.isNaN(Date.parse(session.startedAt)) ||
-    (session.endedAt !== null && Number.isNaN(Date.parse(session.endedAt)))
+    (endedAt && Number.isNaN(endedAt.getTime())) ||
+    (deletedAt && Number.isNaN(deletedAt.getTime())) ||
+    Number.isNaN(updatedAt.getTime())
   ) {
     return null;
   }
@@ -25,8 +31,10 @@ function normalizeSession(session) {
   return {
     id: session.id,
     startedAt: new Date(session.startedAt).toISOString(),
-    endedAt: session.endedAt ? new Date(session.endedAt).toISOString() : null,
+    endedAt: endedAt?.toISOString() ?? null,
     targetHours: normalizeTargetHours(session.targetHours),
+    updatedAt: updatedAt.toISOString(),
+    deletedAt: deletedAt?.toISOString() ?? null,
   };
 }
 
@@ -81,12 +89,13 @@ export function parseBackup(text) {
 export function mergeData(current, incoming) {
   const normalizedCurrent = normalizeData(current);
   const normalizedIncoming = normalizeData(incoming);
-  const sessions = new Map(
-    [...normalizedCurrent.sessions, ...normalizedIncoming.sessions].map((session) => [
-      session.id,
-      session,
-    ]),
-  );
+  const sessions = new Map();
+  for (const session of [...normalizedCurrent.sessions, ...normalizedIncoming.sessions]) {
+    const existing = sessions.get(session.id);
+    if (!existing || new Date(session.updatedAt) >= new Date(existing.updatedAt)) {
+      sessions.set(session.id, session);
+    }
+  }
 
   return normalizeData({
     settings: normalizedIncoming.settings,

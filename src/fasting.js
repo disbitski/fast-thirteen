@@ -15,11 +15,14 @@ export function normalizeTargetHours(value) {
 }
 
 export function startFast(now = new Date(), targetHours = DEFAULT_TARGET_HOURS) {
+  const timestamp = now.toISOString();
   return {
     id: crypto.randomUUID(),
-    startedAt: now.toISOString(),
+    startedAt: timestamp,
     endedAt: null,
     targetHours: normalizeTargetHours(targetHours),
+    updatedAt: timestamp,
+    deletedAt: null,
   };
 }
 
@@ -32,7 +35,45 @@ export function endFast(session, now = new Date()) {
     throw new Error("A fast cannot end before it starts");
   }
 
-  return { ...session, endedAt: now.toISOString() };
+  const timestamp = now.toISOString();
+  return { ...session, endedAt: timestamp, updatedAt: timestamp };
+}
+
+export function correctSession(session, startedAt, endedAt, now = new Date()) {
+  const start = new Date(startedAt);
+  const end = new Date(endedAt);
+
+  if (!session.endedAt || session.deletedAt) {
+    throw new Error("An active fast cannot be corrected");
+  }
+
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+    throw new Error("Start and end times are required");
+  }
+
+  if (end.getTime() <= start.getTime()) {
+    throw new Error("End time must be after start time");
+  }
+
+  if (end.getTime() > now.getTime()) {
+    throw new Error("A completed fast cannot end in the future");
+  }
+
+  return {
+    ...session,
+    startedAt: start.toISOString(),
+    endedAt: end.toISOString(),
+    updatedAt: now.toISOString(),
+  };
+}
+
+export function deleteSession(session, now = new Date()) {
+  if (!session.endedAt || session.deletedAt) {
+    throw new Error("An active fast cannot be deleted");
+  }
+
+  const timestamp = now.toISOString();
+  return { ...session, deletedAt: timestamp, updatedAt: timestamp };
 }
 
 export function durationMs(session, now = new Date()) {
@@ -56,7 +97,7 @@ function localDayKey(value) {
 export function currentStreak(sessions, now = new Date()) {
   const completedDays = new Set(
     sessions
-      .filter((session) => session.endedAt && isComplete(session))
+      .filter((session) => !session.deletedAt && session.endedAt && isComplete(session))
       .map((session) => localDayKey(session.endedAt)),
   );
 
@@ -73,7 +114,7 @@ export function currentStreak(sessions, now = new Date()) {
 }
 
 export function summarize(sessions, now = new Date()) {
-  const ended = sessions.filter((session) => session.endedAt);
+  const ended = sessions.filter((session) => !session.deletedAt && session.endedAt);
   const completed = ended.filter((session) => isComplete(session));
   const totalMs = ended.reduce((total, session) => total + durationMs(session), 0);
 
