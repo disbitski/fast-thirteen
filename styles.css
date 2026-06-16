@@ -385,7 +385,8 @@ h2 {
 }
 
 .goal-control,
-.backup-control {
+.backup-control,
+.profile-control {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -393,18 +394,21 @@ h2 {
   padding: 24px 26px;
 }
 
-.goal-control {
+.goal-control,
+.backup-control {
   border-bottom: 1px solid var(--line);
 }
 
 .goal-control strong,
-.backup-control strong {
+.backup-control strong,
+.profile-control strong {
   display: block;
   margin-bottom: 5px;
 }
 
 .goal-control small,
-.backup-control small {
+.backup-control small,
+.profile-control small {
   color: var(--muted);
 }
 
@@ -449,6 +453,27 @@ h2 {
 
 .secondary-button:hover {
   border-color: var(--green);
+}
+
+.sync-pill {
+  flex: 0 0 auto;
+  padding: 9px 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--green);
+  background: var(--badge);
+  font-size: 0.78rem;
+  font-weight: 750;
+}
+
+.sync-pill[data-sync-status="error"] {
+  color: var(--active);
+}
+
+.sync-pill[data-sync-status="synced"] {
+  color: var(--accent-ink);
+  border-color: var(--green);
+  background: var(--green);
 }
 
 .number-control input:focus-visible,
@@ -723,7 +748,8 @@ h2 {
   }
 
   .goal-control,
-  .backup-control {
+  .backup-control,
+  .profile-control {
     align-items: flex-start;
     flex-direction: column;
   }

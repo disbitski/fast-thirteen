@@ -1,10 +1,14 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
+  DATA_VERSION,
   emptyData,
   LEGACY_SESSIONS_KEY,
   loadData,
   mergeData,
+  normalizeData,
+  normalizeProfile,
+  normalizeSync,
   parseBackup,
   saveData,
   serializeBackup,
@@ -35,6 +39,7 @@ const session = {
   updatedAt: "2026-06-14T22:00:00.000Z",
   deletedAt: null,
 };
+const defaults = emptyData();
 
 test("persists an active overnight fast across reloads", () => {
   const storage = memoryStorage();
@@ -71,6 +76,8 @@ test("ignores malformed sessions and applies default settings", () => {
 
   assert.equal(data.settings.targetHours, 13);
   assert.deepEqual(data.sessions, [session]);
+  assert.equal(data.profile.mode, "guest");
+  assert.equal(data.sync.status, "local");
 });
 
 test("exports and restores a normalized backup", () => {
@@ -80,14 +87,20 @@ test("exports and restores a normalized backup", () => {
   };
 
   assert.deepEqual(parseBackup(serializeBackup(original)), {
-    version: 2,
+    version: DATA_VERSION,
     settings: { targetHours: 14.5 },
+    profile: defaults.profile,
+    sync: defaults.sync,
     sessions: [session],
   });
 });
 
 test("merges backups without duplicating sessions", () => {
-  const ended = { ...session, endedAt: "2026-06-15T11:30:00.000Z" };
+  const ended = {
+    ...session,
+    endedAt: "2026-06-15T11:30:00.000Z",
+    updatedAt: "2026-06-15T11:30:00.000Z",
+  };
   const merged = mergeData(
     { ...emptyData(), sessions: [session] },
     { settings: { targetHours: 14 }, sessions: [ended] },
@@ -122,4 +135,83 @@ test("newer deletion tombstones win during merge", () => {
   );
 
   assert.equal(merged.sessions[0].deletedAt, deleted.deletedAt);
+});
+
+test("normalizes version two backups into sync-ready data", () => {
+  const data = normalizeData({
+    version: 2,
+    settings: { targetHours: 13 },
+    sessions: [session],
+  });
+
+  assert.equal(data.version, DATA_VERSION);
+  assert.equal(data.profile.mode, "guest");
+  assert.equal(data.profile.displayName, "Guest");
+  assert.equal(data.sync.status, "local");
+  assert.equal(data.sessions.length, 1);
+});
+
+test("normalizes authenticated profile and sync status fields", () => {
+  assert.deepEqual(
+    normalizeProfile({
+      mode: "authenticated",
+      userId: " user-123 ",
+      email: " dave@example.com ",
+      displayName: " Dave ",
+      provider: " google ",
+      updatedAt: "2026-06-16T12:00:00.000Z",
+    }),
+    {
+      mode: "authenticated",
+      guestId: "local-guest",
+      userId: "user-123",
+      email: "dave@example.com",
+      displayName: "Dave",
+      provider: "google",
+      updatedAt: "2026-06-16T12:00:00.000Z",
+    },
+  );
+  assert.deepEqual(normalizeSync({ status: "error", lastError: "offline" }), {
+    status: "error",
+    lastSyncedAt: null,
+    lastError: "offline",
+    updatedAt: defaults.sync.updatedAt,
+  });
+});
+
+test("newer profile and sync metadata win during merge", () => {
+  const current = {
+    ...emptyData(),
+    profile: { ...defaults.profile, displayName: "Old guest", updatedAt: "2026-06-15T00:00:00.000Z" },
+    sync: { ...defaults.sync, status: "error", lastError: "offline", updatedAt: "2026-06-15T00:00:00.000Z" },
+  };
+  const incoming = {
+    ...emptyData(),
+    profile: { ...defaults.profile, displayName: "New guest", updatedAt: "2026-06-16T00:00:00.000Z" },
+    sync: { ...defaults.sync, status: "local", updatedAt: "2026-06-16T00:00:00.000Z" },
+  };
+  const merged = mergeData(current, incoming);
+
+  assert.equal(merged.profile.displayName, "New guest");
+  assert.equal(merged.sync.status, "local");
+  assert.equal(merged.sync.lastError, null);
+});
+
+test("session tombstones win deterministic updated-at ties", () => {
+  const timestamp = "2026-06-15T12:00:00.000Z";
+  const completed = {
+    ...session,
+    endedAt: "2026-06-15T11:30:00.000Z",
+    updatedAt: timestamp,
+  };
+  const deleted = {
+    ...completed,
+    deletedAt: timestamp,
+  };
+  const merged = mergeData(
+    { ...emptyData(), sessions: [completed] },
+    { ...emptyData(), sessions: [deleted] },
+  );
+
+  assert.equal(merged.sessions[0].deletedAt, timestamp);
 });

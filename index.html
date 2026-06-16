@@ -53,7 +53,7 @@
               title="Black and purple"
             ></button>
           </fieldset>
-          <span class="local-badge">Stored on this Mac</span>
+          <span class="local-badge" id="profile-badge">Guest · Local only</span>
         </div>
       </header>
 
@@ -121,6 +121,13 @@
               </button>
               <input id="import-file" type="file" accept="application/json,.json" hidden />
             </div>
+          </div>
+          <div class="profile-control">
+            <span>
+              <strong id="profile-mode">Guest profile</strong>
+              <small id="sync-description">Tracking locally now. Cloud sync can plug in later.</small>
+            </span>
+            <span class="sync-pill" id="sync-status">Local only</span>
           </div>
         </div>
       </section>

@@ -1,14 +1,75 @@
 import { DEFAULT_TARGET_HOURS, normalizeTargetHours } from "./fasting.js";
 
-export const DATA_VERSION = 2;
+export const DATA_VERSION = 3;
 export const STORAGE_KEY = "fast-thirteen-data";
 export const LEGACY_SESSIONS_KEY = "fast-thirteen-sessions";
+export const SYNC_STATUSES = ["local", "syncing", "synced", "error"];
+export const PROFILE_MODES = ["guest", "authenticated"];
 
 export function emptyData() {
+  const timestamp = new Date(0).toISOString();
+
   return {
     version: DATA_VERSION,
     settings: { targetHours: DEFAULT_TARGET_HOURS },
+    profile: {
+      mode: "guest",
+      guestId: "local-guest",
+      userId: null,
+      email: null,
+      displayName: "Guest",
+      provider: null,
+      updatedAt: timestamp,
+    },
+    sync: {
+      status: "local",
+      lastSyncedAt: null,
+      lastError: null,
+      updatedAt: timestamp,
+    },
     sessions: [],
+  };
+}
+
+function normalizeIsoDate(value, fallback) {
+  const date = new Date(value ?? fallback);
+  return Number.isNaN(date.getTime()) ? fallback : date.toISOString();
+}
+
+function nullableIsoDate(value) {
+  if (value == null) return null;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date.toISOString();
+}
+
+function normalizeString(value, fallback = null) {
+  return typeof value === "string" && value.trim() ? value.trim() : fallback;
+}
+
+export function normalizeProfile(profile) {
+  const fallback = emptyData().profile;
+  const mode = PROFILE_MODES.includes(profile?.mode) ? profile.mode : fallback.mode;
+
+  return {
+    mode,
+    guestId: normalizeString(profile?.guestId, fallback.guestId),
+    userId: mode === "authenticated" ? normalizeString(profile?.userId) : null,
+    email: mode === "authenticated" ? normalizeString(profile?.email) : null,
+    displayName: normalizeString(profile?.displayName, mode === "authenticated" ? "Signed in" : "Guest"),
+    provider: mode === "authenticated" ? normalizeString(profile?.provider) : null,
+    updatedAt: normalizeIsoDate(profile?.updatedAt, fallback.updatedAt),
+  };
+}
+
+export function normalizeSync(sync) {
+  const fallback = emptyData().sync;
+  const status = SYNC_STATUSES.includes(sync?.status) ? sync.status : fallback.status;
+
+  return {
+    status,
+    lastSyncedAt: nullableIsoDate(sync?.lastSyncedAt),
+    lastError: status === "error" ? normalizeString(sync?.lastError, "Sync failed") : null,
+    updatedAt: normalizeIsoDate(sync?.updatedAt, fallback.updatedAt),
   };
 }
 
@@ -48,8 +109,36 @@ export function normalizeData(value) {
     settings: {
       targetHours: normalizeTargetHours(value?.settings?.targetHours),
     },
+    profile: normalizeProfile(value?.profile),
+    sync: normalizeSync(value?.sync),
     sessions,
   };
+}
+
+function newestByUpdatedAt(current, incoming) {
+  return new Date(incoming.updatedAt) > new Date(current.updatedAt) ? incoming : current;
+}
+
+function mergeSessions(currentSessions, incomingSessions) {
+  const sessions = new Map();
+  for (const session of [...currentSessions, ...incomingSessions]) {
+    const existing = sessions.get(session.id);
+    if (!existing) {
+      sessions.set(session.id, session);
+      continue;
+    }
+
+    const sessionUpdatedAt = new Date(session.updatedAt).getTime();
+    const existingUpdatedAt = new Date(existing.updatedAt).getTime();
+    if (
+      sessionUpdatedAt > existingUpdatedAt ||
+      (sessionUpdatedAt === existingUpdatedAt && session.deletedAt && !existing.deletedAt)
+    ) {
+      sessions.set(session.id, session);
+    }
+  }
+
+  return [...sessions.values()];
 }
 
 export function loadData(storage) {
@@ -89,17 +178,14 @@ export function parseBackup(text) {
 export function mergeData(current, incoming) {
   const normalizedCurrent = normalizeData(current);
   const normalizedIncoming = normalizeData(incoming);
-  const sessions = new Map();
-  for (const session of [...normalizedCurrent.sessions, ...normalizedIncoming.sessions]) {
-    const existing = sessions.get(session.id);
-    if (!existing || new Date(session.updatedAt) >= new Date(existing.updatedAt)) {
-      sessions.set(session.id, session);
-    }
-  }
+  const profile = newestByUpdatedAt(normalizedCurrent.profile, normalizedIncoming.profile);
+  const sync = newestByUpdatedAt(normalizedCurrent.sync, normalizedIncoming.sync);
 
   return normalizeData({
     settings: normalizedIncoming.settings,
-    sessions: [...sessions.values()],
+    profile,
+    sync,
+    sessions: mergeSessions(normalizedCurrent.sessions, normalizedIncoming.sessions),
   });
 }
 

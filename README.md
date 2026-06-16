@@ -18,6 +18,7 @@ Apple Watch clients.
 - Recent-session history
 - Completed-session details with timestamp correction and confirmed deletion
 - Browser-local persistence
+- Guest profile and local-only sync status foundations
 - Persistent light, black/cyan, and black/purple themes
 - Configurable fasting goals captured per session
 - Versioned local data with migration from the original storage format
@@ -46,6 +47,10 @@ Fast Thirteen stores active and completed fasts in a local file on the Mac
 running the server, with browser storage as a fallback. Closing the tab,
 restarting the browser, restarting the local server, or switching between the
 localhost and LAN URLs will not remove that data.
+
+The local data format is sync-ready: sessions carry `updatedAt` and `deletedAt`
+fields, backups include guest profile metadata, and sync status is tracked even
+while the app remains local-only.
 
 Other devices on the same network can use the Mac's LAN URL while the server
 is running. They will share the same fasting history.

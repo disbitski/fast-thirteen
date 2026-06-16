@@ -40,6 +40,8 @@ const elements = {
   heroTitle: document.querySelector("#hero-title"),
   importButton: document.querySelector("#import-button"),
   importFile: document.querySelector("#import-file"),
+  profileBadge: document.querySelector("#profile-badge"),
+  profileMode: document.querySelector("#profile-mode"),
   progressRing: document.querySelector("#progress-ring"),
   saveStatus: document.querySelector("#save-status"),
   sessionDialog: document.querySelector("#session-dialog"),
@@ -49,6 +51,8 @@ const elements = {
   sessionList: document.querySelector("#session-list"),
   sessionStartedAt: document.querySelector("#session-started-at"),
   sessionSummary: document.querySelector("#session-summary"),
+  syncDescription: document.querySelector("#sync-description"),
+  syncStatus: document.querySelector("#sync-status"),
   statusLabel: document.querySelector("#status-label"),
   targetCopy: document.querySelector("#target-copy"),
   timer: document.querySelector("#timer"),
@@ -60,9 +64,17 @@ const elements = {
 
 function persistData(message = "Saved locally") {
   appData.sessions = sessions;
+  appData.sync = {
+    ...appData.sync,
+    status: "local",
+    lastSyncedAt: null,
+    lastError: null,
+    updatedAt: new Date().toISOString(),
+  };
   const result = saveData(localStorage, appData);
   appData = result.data;
   elements.saveStatus.textContent = result.saved ? message : "Could not save locally";
+  renderProfileSync();
   saveSharedData(appData);
 }
 
@@ -77,6 +89,7 @@ async function loadSharedData() {
       sessions.splice(0, sessions.length, ...appData.sessions);
       activeSession = sessions.find((session) => !session.deletedAt && !session.endedAt) ?? null;
       saveData(localStorage, appData);
+      await saveSharedData(appData);
     } else {
       await saveSharedData(appData);
     }
@@ -116,6 +129,38 @@ function formatDate(value) {
 
 function targetLabel(targetHours) {
   return `${targetHours} hour${targetHours === 1 ? "" : "s"}`;
+}
+
+function profileLabel() {
+  return appData.profile.mode === "authenticated"
+    ? appData.profile.displayName
+    : "Guest profile";
+}
+
+function syncLabel() {
+  const labels = {
+    error: "Sync issue",
+    local: "Local only",
+    synced: "Synced",
+    syncing: "Syncing",
+  };
+  return labels[appData.sync.status] ?? labels.local;
+}
+
+function syncDescription() {
+  if (appData.sync.status === "error") {
+    return appData.sync.lastError ?? "Cloud sync needs attention.";
+  }
+
+  if (appData.sync.status === "synced" && appData.sync.lastSyncedAt) {
+    return `Last synced ${formatDate(appData.sync.lastSyncedAt)} at ${formatTime(appData.sync.lastSyncedAt)}.`;
+  }
+
+  if (appData.sync.status === "syncing") {
+    return "Preparing to sync your local fasting history.";
+  }
+
+  return "Tracking locally now. Cloud sync can plug in later.";
 }
 
 function toLocalInputValue(value) {
@@ -249,6 +294,7 @@ function render() {
   renderHistory();
   renderTheme();
   renderSettings();
+  renderProfileSync();
 }
 
 function renderTheme() {
@@ -260,6 +306,14 @@ function renderTheme() {
 function renderSettings() {
   elements.targetHours.value = appData.settings.targetHours;
   elements.targetHours.disabled = Boolean(activeSession);
+}
+
+function renderProfileSync() {
+  elements.profileBadge.textContent = `${profileLabel()} · ${syncLabel()}`;
+  elements.profileMode.textContent = profileLabel();
+  elements.syncStatus.textContent = syncLabel();
+  elements.syncStatus.dataset.syncStatus = appData.sync.status;
+  elements.syncDescription.textContent = syncDescription();
 }
 
 elements.button.addEventListener("click", () => {
