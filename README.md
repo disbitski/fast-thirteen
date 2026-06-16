@@ -62,6 +62,7 @@ removed.
 ## Roadmap
 
 - Reminders and target-reached notifications
+- Personal analytics dashboard with weekly and monthly fasting trends
 - Authentication and cloud synchronization
 - SwiftUI apps for iPhone, Mac, and Apple Watch
 - Widgets, complications, and target-reached notifications
