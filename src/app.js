@@ -19,6 +19,8 @@ import {
   serializeBackup,
 } from "./storage.js";
 import { applyTheme, loadTheme, saveTheme } from "./theme.js";
+import { createAuthService, mapAuthStateToProfile } from "./auth.js";
+import { loadSupabaseConfig } from "./supabaseConfig.js";
 
 let appData = loadData(localStorage);
 const sessions = appData.sessions;
@@ -26,6 +28,12 @@ let activeSession = sessions.find((session) => !session.deletedAt && !session.en
 let editingSessionId = null;
 let deleteConfirmationPending = false;
 let selectedTheme = applyTheme(document.documentElement, loadTheme(localStorage));
+const supabaseConfig = loadSupabaseConfig(globalThis);
+const authService = createAuthService({
+  config: supabaseConfig,
+  createClient: globalThis.supabase?.createClient?.bind(globalThis.supabase),
+});
+let authState = { configured: authService.isConfigured(), status: "guest", user: null };
 
 const elements = {
   button: document.querySelector("#fast-button"),
@@ -36,6 +44,7 @@ const elements = {
   deleteSession: document.querySelector("#delete-session"),
   emptyState: document.querySelector("#empty-state"),
   exportButton: document.querySelector("#export-button"),
+  googleSignIn: document.querySelector("#google-sign-in"),
   heroCopy: document.querySelector("#hero-copy"),
   heroTitle: document.querySelector("#hero-title"),
   importButton: document.querySelector("#import-button"),
@@ -53,6 +62,7 @@ const elements = {
   sessionSummary: document.querySelector("#session-summary"),
   syncDescription: document.querySelector("#sync-description"),
   syncStatus: document.querySelector("#sync-status"),
+  authHelp: document.querySelector("#auth-help"),
   statusLabel: document.querySelector("#status-label"),
   targetCopy: document.querySelector("#target-copy"),
   timer: document.querySelector("#timer"),
@@ -161,6 +171,22 @@ function syncDescription() {
   }
 
   return "Tracking locally now. Cloud sync can plug in later.";
+}
+
+function authHelpText() {
+  if (!authService.isConfigured()) {
+    return "Google sign-in is disabled until Supabase publishable config is added. Local tracking still works.";
+  }
+
+  if (authState.status === "authenticated") {
+    return "Signed in. Cloud sync will use this profile in the next milestone.";
+  }
+
+  if (authState.error) {
+    return "Could not read the current auth session. Local tracking still works.";
+  }
+
+  return "Google sign-in is scaffolded. OAuth credentials come next.";
 }
 
 function toLocalInputValue(value) {
@@ -314,6 +340,8 @@ function renderProfileSync() {
   elements.syncStatus.textContent = syncLabel();
   elements.syncStatus.dataset.syncStatus = appData.sync.status;
   elements.syncDescription.textContent = syncDescription();
+  elements.googleSignIn.hidden = !authService.isConfigured() || appData.profile.mode === "authenticated";
+  elements.authHelp.textContent = authHelpText();
 }
 
 elements.button.addEventListener("click", () => {
@@ -396,6 +424,14 @@ elements.exportButton.addEventListener("click", () => {
 
 elements.importButton.addEventListener("click", () => elements.importFile.click());
 
+elements.googleSignIn.addEventListener("click", async () => {
+  elements.authHelp.textContent = "Opening Google sign-in...";
+  const result = await authService.signInWithGoogle();
+  if (!result.ok) {
+    elements.authHelp.textContent = result.message;
+  }
+});
+
 elements.importFile.addEventListener("change", async () => {
   const [file] = elements.importFile.files;
   if (!file) return;
@@ -425,6 +461,25 @@ for (const option of elements.themeOptions) {
 
 render();
 loadSharedData();
+authService
+  .currentAuthState()
+  .then((state) => {
+    authState = state;
+    if (state.status === "authenticated") {
+      appData.profile = mapAuthStateToProfile(state);
+      persistData("Profile updated locally");
+    }
+    renderProfileSync();
+  })
+  .catch(() => {
+    authState = {
+      configured: authService.isConfigured(),
+      error: true,
+      status: "guest",
+      user: null,
+    };
+    renderProfileSync();
+  });
 setInterval(() => {
   renderHero();
   if (activeSession) renderHistory();

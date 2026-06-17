@@ -61,7 +61,7 @@
               title="SpaceX"
             ></button>
           </fieldset>
-          <span class="local-badge" id="profile-badge">Guest · Local only</span>
+          <span class="local-badge" id="profile-badge">Guest profile · Local only</span>
         </div>
       </header>
 
@@ -135,7 +135,15 @@
               <strong id="profile-mode">Guest profile</strong>
               <small id="sync-description">Tracking locally now. Cloud sync can plug in later.</small>
             </span>
-            <span class="sync-pill" id="sync-status">Local only</span>
+            <div class="profile-actions">
+              <span class="sync-pill" id="sync-status">Local only</span>
+              <button class="secondary-button" id="google-sign-in" type="button" hidden>
+                Continue with Google
+              </button>
+              <small class="auth-help" id="auth-help">
+                Google sign-in is disabled until Supabase config is added.
+              </small>
+            </div>
           </div>
         </div>
       </section>
@@ -208,6 +216,7 @@
       </form>
     </dialog>
 
+    <script src="/config.js"></script>
     <script type="module" src="/src/app.js"></script>
   </body>
 </html>

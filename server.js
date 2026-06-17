@@ -24,12 +24,29 @@ const contentTypes = {
   ".svg": "image/svg+xml",
 };
 
+function browserConfig() {
+  return {
+    supabaseUrl: process.env.SUPABASE_URL?.trim() || null,
+    supabaseAnonKey: process.env.SUPABASE_ANON_KEY?.trim() || null,
+  };
+}
+
 function sendJson(response, status, value) {
   response.writeHead(status, {
     "Cache-Control": "no-store",
     "Content-Type": "application/json; charset=utf-8",
   });
   response.end(JSON.stringify(value));
+}
+
+function sendConfig(response) {
+  response.writeHead(200, {
+    "Cache-Control": "no-store",
+    "Content-Type": "text/javascript; charset=utf-8",
+  });
+  response.end(
+    `window.__FAST_THIRTEEN_CONFIG__ = Object.freeze(${JSON.stringify(browserConfig())});\n`,
+  );
 }
 
 function readSharedData() {
@@ -50,6 +67,11 @@ async function readRequestJson(request) {
 }
 
 createServer((request, response) => {
+  if (request.url === "/config.js" && request.method === "GET") {
+    sendConfig(response);
+    return;
+  }
+
   if (request.url === "/api/data" && request.method === "GET") {
     try {
       sendJson(response, 200, { data: readSharedData() });

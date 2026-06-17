@@ -19,6 +19,7 @@ Apple Watch clients.
 - Completed-session details with timestamp correction and confirmed deletion
 - Browser-local persistence
 - Guest profile and local-only sync status foundations
+- Optional Google sign-in scaffold that stays disabled without Supabase config
 - Persistent light, black/cyan, black/purple, and SpaceX themes
 - Configurable fasting goals captured per session
 - Versioned local data with migration from the original storage format
@@ -65,6 +66,10 @@ Schema and row-level-security planning lives in
 [`docs/supabase-foundation.md`](docs/supabase-foundation.md). The committed
 `.env.example` contains placeholders only; real OAuth secrets, service-role
 keys, and Apple signing material must stay outside Git.
+
+The local server exposes `/config.js` with only browser-publishable Supabase
+values: `SUPABASE_URL` and `SUPABASE_ANON_KEY`. If either value is missing,
+authentication is disabled and local-only tracking continues to work.
 
 ## Roadmap
 
