@@ -9,10 +9,11 @@ import {
 } from "node:fs";
 import { createServer } from "node:http";
 import { extname, join, normalize } from "node:path";
+import { fileURLToPath } from "node:url";
 
 const host = process.env.HOST ?? "0.0.0.0";
 const port = Number(process.env.PORT ?? 4173);
-const root = new URL(".", import.meta.url).pathname;
+const root = fileURLToPath(new URL(".", import.meta.url));
 const dataDirectory = process.env.DATA_DIRECTORY ?? join(root, "data");
 const dataPath = join(dataDirectory, "fast-thirteen-data.json");
 const temporaryDataPath = `${dataPath}.tmp`;
