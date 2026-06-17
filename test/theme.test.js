@@ -27,6 +27,7 @@ function memoryStorage(initialValue = null) {
 test("normalizes unknown themes to light", () => {
   assert.equal(normalizeTheme("cyan"), "cyan");
   assert.equal(normalizeTheme("purple"), "purple");
+  assert.equal(normalizeTheme("spacex"), "spacex");
   assert.equal(normalizeTheme("neon-green"), DEFAULT_THEME);
   assert.equal(normalizeTheme(null), DEFAULT_THEME);
 });
@@ -35,8 +36,8 @@ test("loads and saves a valid theme", () => {
   const storage = memoryStorage();
 
   assert.equal(loadTheme(storage), DEFAULT_THEME);
-  assert.equal(saveTheme(storage, "purple"), "purple");
-  assert.equal(loadTheme(storage), "purple");
+  assert.equal(saveTheme(storage, "spacex"), "spacex");
+  assert.equal(loadTheme(storage), "spacex");
 });
 
 test("falls back safely when browser storage is unavailable", () => {

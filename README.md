@@ -19,7 +19,7 @@ Apple Watch clients.
 - Completed-session details with timestamp correction and confirmed deletion
 - Browser-local persistence
 - Guest profile and local-only sync status foundations
-- Persistent light, black/cyan, and black/purple themes
+- Persistent light, black/cyan, black/purple, and SpaceX themes
 - Configurable fasting goals captured per session
 - Versioned local data with migration from the original storage format
 - JSON backup export and restore

@@ -76,6 +76,31 @@
   --active-glow: rgba(255, 159, 117, 0.18);
 }
 
+:root[data-theme="spacex"] {
+  color-scheme: dark;
+  --ink: #f4f7f9;
+  --muted: #9aa6b2;
+  --paper: #050608;
+  --card: #0b0d11;
+  --line: rgba(255, 122, 24, 0.24);
+  --green: #ff7a18;
+  --green-bright: #ffb21a;
+  --green-pale: #17110b;
+  --accent-ink: #050608;
+  --orange: #b8c7d3;
+  --accent-hover: #ffb21a;
+  --active: #b8c7d3;
+  --active-ink: #050608;
+  --glow: rgba(255, 122, 24, 0.18);
+  --glass: rgba(7, 9, 12, 0.86);
+  --surface: rgba(7, 9, 12, 0.72);
+  --surface-soft: rgba(14, 17, 22, 0.78);
+  --badge: rgba(7, 9, 12, 0.82);
+  --card-border: rgba(255, 178, 26, 0.26);
+  --shadow: rgba(0, 0, 0, 0.62);
+  --active-glow: rgba(184, 199, 211, 0.16);
+}
+
 * {
   box-sizing: border-box;
 }
@@ -180,6 +205,10 @@ a {
 
 .theme-option.purple {
   background: linear-gradient(135deg, #07040a 50%, #c56cff 50%);
+}
+
+.theme-option.spacex {
+  background: linear-gradient(135deg, #050608 46%, #ff7a18 47% 68%, #b8c7d3 69%);
 }
 
 .brand {

@@ -11,7 +11,7 @@
     <script>
       try {
         const theme = localStorage.getItem("fast-thirteen-theme");
-        if (["light", "cyan", "purple"].includes(theme)) {
+        if (["light", "cyan", "purple", "spacex"].includes(theme)) {
           document.documentElement.dataset.theme = theme;
         }
       } catch {}
@@ -51,6 +51,14 @@
               aria-label="Use black and purple theme"
               aria-pressed="false"
               title="Black and purple"
+            ></button>
+            <button
+              class="theme-option spacex"
+              type="button"
+              data-theme-option="spacex"
+              aria-label="Use SpaceX theme"
+              aria-pressed="false"
+              title="SpaceX"
             ></button>
           </fieldset>
           <span class="local-badge" id="profile-badge">Guest · Local only</span>
