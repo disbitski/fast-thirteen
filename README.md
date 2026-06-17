@@ -59,6 +59,13 @@ Use **Export data** periodically to create a JSON backup. Browser storage can
 still be lost if site data is manually cleared or the browser profile is
 removed.
 
+## Supabase Foundation
+
+Schema and row-level-security planning lives in
+[`docs/supabase-foundation.md`](docs/supabase-foundation.md). The committed
+`.env.example` contains placeholders only; real OAuth secrets, service-role
+keys, and Apple signing material must stay outside Git.
+
 ## Roadmap
 
 - Reminders and target-reached notifications
