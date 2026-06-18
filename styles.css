@@ -512,6 +512,52 @@ h2 {
   max-width: 360px;
 }
 
+.profile-menu {
+  position: relative;
+}
+
+.profile-menu summary {
+  display: block;
+  padding: 10px 13px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--ink);
+  background: var(--card);
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-weight: 720;
+  list-style: none;
+}
+
+.profile-menu summary::-webkit-details-marker {
+  display: none;
+}
+
+.profile-menu-panel {
+  position: absolute;
+  right: 0;
+  z-index: 2;
+  display: grid;
+  gap: 6px;
+  min-width: 230px;
+  margin-top: 8px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--card);
+  box-shadow: 0 16px 48px var(--shadow);
+}
+
+.profile-menu-panel strong,
+.profile-menu-panel small {
+  display: block;
+}
+
+.profile-menu-panel .text-button {
+  justify-self: start;
+  color: var(--green);
+}
+
 .auth-help {
   flex-basis: 100%;
   color: var(--muted);
@@ -520,7 +566,8 @@ h2 {
 }
 
 .number-control input:focus-visible,
-.secondary-button:focus-visible {
+.secondary-button:focus-visible,
+.profile-menu summary:focus-visible {
   outline: 2px solid var(--green);
   outline-offset: 3px;
 }
@@ -800,6 +847,11 @@ h2 {
   .profile-actions {
     justify-content: flex-start;
     max-width: 100%;
+  }
+
+  .profile-menu-panel {
+    left: 0;
+    right: auto;
   }
 
   .auth-help {

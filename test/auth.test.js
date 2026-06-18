@@ -4,9 +4,11 @@ import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
+  cleanAuthCallbackUrl,
   createAuthService,
   mapAuthStateToProfile,
   mapSupabaseSession,
+  readAuthCallbackState,
 } from "../src/auth.js";
 
 const repoRoot = fileURLToPath(new URL("..", import.meta.url));
@@ -39,8 +41,10 @@ test("missing auth config leaves Google sign-in disabled", async () => {
   assert.equal(service.isConfigured(), false);
   assert.deepEqual(await service.currentAuthState(), {
     configured: false,
+    error: null,
+    message: "Google sign-in needs Supabase publishable config first.",
     session: null,
-    status: "guest",
+    status: "disabled",
     user: null,
   });
   assert.deepEqual(await service.signInWithGoogle(), {
@@ -99,6 +103,8 @@ test("configured auth wrapper reads the current Supabase session", async () => {
 
   assert.deepEqual(await service.currentAuthState(), {
     configured: true,
+    error: null,
+    message: null,
     session: {
       user: {
         id: "user-123",
@@ -112,6 +118,136 @@ test("configured auth wrapper reads the current Supabase session", async () => {
     },
   });
 });
+
+test("configured auth wrapper reports not-ready without a browser client", async () => {
+  const service = createAuthService({
+    clientStatus: "not-ready",
+    config: {
+      supabaseUrl: "https://example.supabase.co",
+      supabaseAnonKey: "sb_publishable_test",
+      isConfigured: true,
+    },
+  });
+
+  assert.deepEqual(service.initialState(), {
+    configured: true,
+    error: null,
+    message: "Supabase is configured, but the browser client is not loaded yet.",
+    session: null,
+    status: "not-ready",
+    user: null,
+  });
+  assert.deepEqual(await service.currentAuthState(), service.initialState());
+});
+
+test("maps cancelled OAuth callback into a local-safe auth state", () => {
+  const state = readAuthCallbackState(
+    new URLSearchParams({
+      error: "access_denied",
+      error_description: "User cancelled login",
+    }),
+  );
+
+  assert.equal(state.status, "cancelled");
+  assert.equal(state.message, "Google sign-in was cancelled. Local tracking still works.");
+});
+
+test("cleans OAuth callback error params while preserving unrelated params", () => {
+  const calls = [];
+  cleanAuthCallbackUrl(
+    {
+      hash: "#top",
+      pathname: "/",
+      search: "?error=access_denied&keep=yes&error_description=cancelled",
+    },
+    {
+      replaceState(...args) {
+        calls.push(args);
+      },
+    },
+  );
+
+  assert.deepEqual(calls, [[{}, "", "/?keep=yes#top"]]);
+});
+
+test("signs out through Supabase without deleting local history", async () => {
+  let signedOut = false;
+  const service = createAuthService({
+    config: {
+      supabaseUrl: "https://example.supabase.co",
+      supabaseAnonKey: "sb_publishable_test",
+      isConfigured: true,
+    },
+    supabaseClient: {
+      auth: {
+        async signOut() {
+          signedOut = true;
+          return {};
+        },
+      },
+    },
+  });
+
+  assert.deepEqual(await service.signOut(), {
+    ok: true,
+    status: "signed-out",
+    message: "Signed out. Local fasting history remains on this device.",
+  });
+  assert.equal(signedOut, true);
+});
+
+test("sign-out reports placeholder state when SDK is not loaded", async () => {
+  const service = createAuthService({
+    clientStatus: "not-ready",
+    config: {
+      supabaseUrl: "https://example.supabase.co",
+      supabaseAnonKey: "sb_publishable_test",
+      isConfigured: true,
+    },
+  });
+
+  assert.deepEqual(await service.signOut(), {
+    ok: false,
+    status: "not-ready",
+    message: "Sign-out is ready for Supabase, but the browser client is not loaded yet.",
+  });
+});
+
+test("auth state subscription maps signed-out events explicitly", () => {
+  let handler;
+  const service = createAuthService({
+    config: {
+      supabaseUrl: "https://example.supabase.co",
+      supabaseAnonKey: "sb_publishable_test",
+      isConfigured: true,
+    },
+    supabaseClient: {
+      auth: {
+        onAuthStateChange(callback) {
+          handler = callback;
+          return { data: { subscription: { unsubscribe() {} } } };
+        },
+      },
+    },
+  });
+  const states = [];
+
+  service.onAuthStateChange((state) => states.push(state));
+  handler("SIGNED_OUT", null);
+
+  assert.deepEqual(states, [
+    {
+      configured: true,
+      error: null,
+      event: "SIGNED_OUT",
+      message: "Signed out. Local fasting history remains on this device.",
+      session: null,
+      status: "signed-out",
+      user: null,
+    },
+  ]);
+});
+
 
 test("tracked files do not contain committed OAuth or service-role secrets", () => {
   const secretPatterns = [

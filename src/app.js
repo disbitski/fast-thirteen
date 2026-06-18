@@ -19,7 +19,13 @@ import {
   serializeBackup,
 } from "./storage.js";
 import { applyTheme, loadTheme, saveTheme } from "./theme.js";
-import { createAuthService, mapAuthStateToProfile } from "./auth.js";
+import {
+  cleanAuthCallbackUrl,
+  createAuthService,
+  mapAuthStateToProfile,
+  readAuthCallbackState,
+} from "./auth.js";
+import { createBrowserSupabaseClient } from "./supabaseClient.js";
 import { loadSupabaseConfig } from "./supabaseConfig.js";
 
 let appData = loadData(localStorage);
@@ -29,11 +35,20 @@ let editingSessionId = null;
 let deleteConfirmationPending = false;
 let selectedTheme = applyTheme(document.documentElement, loadTheme(localStorage));
 const supabaseConfig = loadSupabaseConfig(globalThis);
+const supabaseClient = createBrowserSupabaseClient({
+  config: supabaseConfig,
+  source: globalThis,
+});
 const authService = createAuthService({
   config: supabaseConfig,
-  createClient: globalThis.supabase?.createClient?.bind(globalThis.supabase),
+  clientStatus: supabaseClient.status,
+  supabaseClient: supabaseClient.client,
 });
-let authState = { configured: authService.isConfigured(), status: "guest", user: null };
+const callbackAuthState = readAuthCallbackState(
+  new URLSearchParams(globalThis.location?.search ?? ""),
+);
+let authState = authService.initialState(callbackAuthState);
+if (callbackAuthState) cleanAuthCallbackUrl(globalThis.location, globalThis.history);
 
 const elements = {
   button: document.querySelector("#fast-button"),
@@ -50,6 +65,9 @@ const elements = {
   importButton: document.querySelector("#import-button"),
   importFile: document.querySelector("#import-file"),
   profileBadge: document.querySelector("#profile-badge"),
+  profileMenu: document.querySelector("#profile-menu"),
+  profileMenuDetail: document.querySelector("#profile-menu-detail"),
+  profileMenuTitle: document.querySelector("#profile-menu-title"),
   profileMode: document.querySelector("#profile-mode"),
   progressRing: document.querySelector("#progress-ring"),
   saveStatus: document.querySelector("#save-status"),
@@ -63,6 +81,7 @@ const elements = {
   syncDescription: document.querySelector("#sync-description"),
   syncStatus: document.querySelector("#sync-status"),
   authHelp: document.querySelector("#auth-help"),
+  signOut: document.querySelector("#sign-out"),
   statusLabel: document.querySelector("#status-label"),
   targetCopy: document.querySelector("#target-copy"),
   timer: document.querySelector("#timer"),
@@ -178,15 +197,43 @@ function authHelpText() {
     return "Google sign-in is disabled until Supabase publishable config is added. Local tracking still works.";
   }
 
-  if (authState.status === "authenticated") {
-    return "Signed in. Cloud sync will use this profile in the next milestone.";
+  if (authState.message) {
+    return authState.message;
   }
 
-  if (authState.error) {
+  if (authState.status === "loading") {
+    return "Checking Google sign-in status...";
+  }
+
+  if (authState.status === "authenticated") {
+    return "Signed in with Google. Cloud sync will use this profile in the next milestone.";
+  }
+
+  if (authState.status === "cancelled") {
+    return "Google sign-in was cancelled. Local tracking still works.";
+  }
+
+  if (authState.status === "not-ready") {
+    return "Supabase config is present, but the browser client is not loaded yet.";
+  }
+
+  if (authState.error || authState.status === "error") {
     return "Could not read the current auth session. Local tracking still works.";
   }
 
-  return "Google sign-in is scaffolded. OAuth credentials come next.";
+  return "Google sign-in wiring is ready for OAuth credentials.";
+}
+
+function profileMenuDetail() {
+  if (appData.profile.mode === "authenticated") {
+    return `${appData.profile.email ?? "Signed in"} · ${appData.profile.provider ?? "google"}`;
+  }
+
+  if (authService.isConfigured()) {
+    return "Guest mode is active until Google sign-in completes.";
+  }
+
+  return "Local-only tracking is active.";
 }
 
 function toLocalInputValue(value) {
@@ -337,11 +384,40 @@ function renderSettings() {
 function renderProfileSync() {
   elements.profileBadge.textContent = `${profileLabel()} · ${syncLabel()}`;
   elements.profileMode.textContent = profileLabel();
+  elements.profileMenu.dataset.authStatus = authState.status;
+  elements.profileMenuTitle.textContent = profileLabel();
+  elements.profileMenuDetail.textContent = profileMenuDetail();
   elements.syncStatus.textContent = syncLabel();
   elements.syncStatus.dataset.syncStatus = appData.sync.status;
   elements.syncDescription.textContent = syncDescription();
   elements.googleSignIn.hidden = !authService.isConfigured() || appData.profile.mode === "authenticated";
+  elements.googleSignIn.disabled = ["loading", "redirecting"].includes(authState.status);
+  elements.signOut.hidden = appData.profile.mode !== "authenticated";
   elements.authHelp.textContent = authHelpText();
+}
+
+function applyAuthState(state, { persistMessage } = {}) {
+  authState = state;
+
+  if (state.status === "authenticated") {
+    appData.profile = mapAuthStateToProfile(state);
+    persistData(persistMessage ?? "Profile updated locally");
+    return;
+  }
+
+  if (state.status === "signed-out") {
+    appData.profile = mapAuthStateToProfile(state);
+    persistData(persistMessage ?? "Signed out locally");
+    return;
+  }
+
+  if (state.status === "guest" && appData.profile.mode === "authenticated") {
+    appData.profile = mapAuthStateToProfile(state);
+    persistData(persistMessage ?? "Using guest profile locally");
+    return;
+  }
+
+  renderProfileSync();
 }
 
 elements.button.addEventListener("click", () => {
@@ -425,11 +501,37 @@ elements.exportButton.addEventListener("click", () => {
 elements.importButton.addEventListener("click", () => elements.importFile.click());
 
 elements.googleSignIn.addEventListener("click", async () => {
-  elements.authHelp.textContent = "Opening Google sign-in...";
+  applyAuthState({
+    ...authState,
+    message: "Opening Google sign-in...",
+    status: "redirecting",
+  });
   const result = await authService.signInWithGoogle();
   if (!result.ok) {
-    elements.authHelp.textContent = result.message;
+    applyAuthState({
+      ...authState,
+      error: result.error ?? null,
+      message: result.message,
+      status: result.status,
+    });
   }
+});
+
+elements.signOut.addEventListener("click", async () => {
+  elements.authHelp.textContent = "Signing out...";
+  const result = await authService.signOut();
+  applyAuthState(
+    {
+      configured: authService.isConfigured(),
+      error: result.error ?? null,
+      message: result.message,
+      status: result.status,
+      user: null,
+    },
+    {
+      persistMessage: result.ok ? "Signed out locally" : null,
+    },
+  );
 });
 
 elements.importFile.addEventListener("change", async () => {
@@ -463,23 +565,21 @@ render();
 loadSharedData();
 authService
   .currentAuthState()
-  .then((state) => {
-    authState = state;
-    if (state.status === "authenticated") {
-      appData.profile = mapAuthStateToProfile(state);
-      persistData("Profile updated locally");
-    }
-    renderProfileSync();
-  })
+  .then((state) => applyAuthState(state, { persistMessage: "Profile updated locally" }))
   .catch(() => {
-    authState = {
+    applyAuthState({
       configured: authService.isConfigured(),
       error: true,
+      message: "Could not read the current auth session. Local tracking still works.",
       status: "guest",
       user: null,
-    };
-    renderProfileSync();
+    });
   });
+authService.onAuthStateChange((state) => {
+  applyAuthState(state, {
+    persistMessage: state.status === "authenticated" ? "Profile updated locally" : null,
+  });
+});
 setInterval(() => {
   renderHero();
   if (activeSession) renderHistory();
