@@ -134,9 +134,13 @@
             <span>
               <strong id="profile-mode">Guest profile</strong>
               <small id="sync-description">Tracking locally now. Cloud sync can plug in later.</small>
+              <small class="readiness-copy" id="auth-readiness-detail">
+                Add Supabase publishable config to enable Google sign-in readiness.
+              </small>
             </span>
             <div class="profile-actions">
               <span class="sync-pill" id="sync-status">Local only</span>
+              <span class="readiness-pill" id="auth-readiness-status">Local-only</span>
               <button class="secondary-button" id="google-sign-in" type="button" hidden>
                 Continue with Google
               </button>

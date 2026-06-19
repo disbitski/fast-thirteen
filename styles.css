@@ -485,7 +485,8 @@ h2 {
   border-color: var(--green);
 }
 
-.sync-pill {
+.sync-pill,
+.readiness-pill {
   flex: 0 0 auto;
   padding: 9px 12px;
   border: 1px solid var(--line);
@@ -496,6 +497,11 @@ h2 {
   font-weight: 750;
 }
 
+.readiness-copy {
+  display: block;
+  max-width: 560px;
+}
+
 .sync-pill[data-sync-status="error"] {
   color: var(--active);
 }
@@ -504,6 +510,22 @@ h2 {
   color: var(--accent-ink);
   border-color: var(--green);
   background: var(--green);
+}
+
+.readiness-pill[data-readiness-status="authenticated"],
+.readiness-pill[data-readiness-status="oauth-pending"] {
+  color: var(--accent-ink);
+  border-color: var(--green);
+  background: var(--green);
+}
+
+.readiness-pill[data-readiness-status="client-error"] {
+  color: var(--active);
+}
+
+.readiness-pill[data-readiness-status="sdk-missing"] {
+  color: var(--active);
+  border-color: var(--active);
 }
 
 .profile-actions {

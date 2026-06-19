@@ -25,6 +25,7 @@ import {
   mapAuthStateToProfile,
   readAuthCallbackState,
 } from "./auth.js";
+import { authReadiness } from "./authReadiness.js";
 import { createBrowserSupabaseClient } from "./supabaseClient.js";
 import { loadSupabaseConfig } from "./supabaseConfig.js";
 
@@ -81,6 +82,8 @@ const elements = {
   syncDescription: document.querySelector("#sync-description"),
   syncStatus: document.querySelector("#sync-status"),
   authHelp: document.querySelector("#auth-help"),
+  authReadinessDetail: document.querySelector("#auth-readiness-detail"),
+  authReadinessStatus: document.querySelector("#auth-readiness-status"),
   signOut: document.querySelector("#sign-out"),
   statusLabel: document.querySelector("#status-label"),
   targetCopy: document.querySelector("#target-copy"),
@@ -382,6 +385,12 @@ function renderSettings() {
 }
 
 function renderProfileSync() {
+  const readiness = authReadiness({
+    authStatus: authState.status,
+    clientStatus: supabaseClient.status,
+    config: supabaseConfig,
+  });
+
   elements.profileBadge.textContent = `${profileLabel()} · ${syncLabel()}`;
   elements.profileMode.textContent = profileLabel();
   elements.profileMenu.dataset.authStatus = authState.status;
@@ -390,6 +399,9 @@ function renderProfileSync() {
   elements.syncStatus.textContent = syncLabel();
   elements.syncStatus.dataset.syncStatus = appData.sync.status;
   elements.syncDescription.textContent = syncDescription();
+  elements.authReadinessStatus.textContent = readiness.label;
+  elements.authReadinessStatus.dataset.readinessStatus = readiness.status;
+  elements.authReadinessDetail.textContent = readiness.message;
   elements.googleSignIn.hidden = !authService.isConfigured() || appData.profile.mode === "authenticated";
   elements.googleSignIn.disabled = ["loading", "redirecting"].includes(authState.status);
   elements.signOut.hidden = appData.profile.mode !== "authenticated";
