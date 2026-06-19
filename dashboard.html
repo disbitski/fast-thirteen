@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Fast Thirteen analytics dashboard with weekly fasting trends and insights."
+    />
+    <title>Fast Thirteen Dashboard</title>
+    <script>
+      try {
+        const theme = localStorage.getItem("fast-thirteen-theme");
+        if (["light", "cyan", "purple", "spacex"].includes(theme)) {
+          document.documentElement.dataset.theme = theme;
+        }
+      } catch {}
+    </script>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="shell analytics-shell">
+      <header class="topbar">
+        <a class="brand" href="/" aria-label="Fast Thirteen home">
+          <span class="brand-mark">13</span>
+          <span>Fast Thirteen</span>
+        </a>
+        <div class="topbar-actions">
+          <nav class="topnav" aria-label="Fast Thirteen pages">
+            <a href="/">Tracker</a>
+            <a aria-current="page" href="/dashboard.html">Dashboard</a>
+          </nav>
+          <fieldset class="theme-picker" aria-label="Color theme">
+            <legend>Color theme</legend>
+            <button class="theme-option light" type="button" data-theme-option="light" aria-label="Use light theme" aria-pressed="true" title="Light"></button>
+            <button class="theme-option cyan" type="button" data-theme-option="cyan" aria-label="Use black and cyan theme" aria-pressed="false" title="Black and cyan"></button>
+            <button class="theme-option purple" type="button" data-theme-option="purple" aria-label="Use black and purple theme" aria-pressed="false" title="Black and purple"></button>
+            <button class="theme-option spacex" type="button" data-theme-option="spacex" aria-label="Use SpaceX theme" aria-pressed="false" title="SpaceX"></button>
+          </fieldset>
+        </div>
+      </header>
+
+      <section class="analytics-hero" aria-labelledby="analytics-title">
+        <div>
+          <p class="eyebrow">Analytics</p>
+          <h1 id="analytics-title">Your fasting signal.</h1>
+          <p class="hero-copy" id="analytics-summary">
+            Loading your rhythm from this Mac.
+          </p>
+        </div>
+        <article class="analytics-focus-card">
+          <span class="focus-label">7-day total</span>
+          <strong id="weekly-total">0.0h</strong>
+          <span id="weekly-context">No completed fasts yet.</span>
+        </article>
+      </section>
+
+      <section class="dashboard" aria-labelledby="analytics-stats-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">At a glance</p>
+            <h2 id="analytics-stats-title">Core metrics</h2>
+          </div>
+          <span class="save-status" id="analytics-source">Reading local data</span>
+        </div>
+        <div class="stats-grid analytics-stats">
+          <article class="stat-card">
+            <span class="stat-value" id="completed-fasts">0</span>
+            <span class="stat-label">Tracked fasts</span>
+          </article>
+          <article class="stat-card">
+            <span class="stat-value" id="average-hours">0.0</span>
+            <span class="stat-label">Average hours</span>
+          </article>
+          <article class="stat-card">
+            <span class="stat-value" id="completion-rate">0%</span>
+            <span class="stat-label">Goal hit rate</span>
+          </article>
+          <article class="stat-card accent">
+            <span class="stat-value" id="current-streak">0</span>
+            <span class="stat-label">Current streak</span>
+          </article>
+        </div>
+      </section>
+
+      <section class="analytics-grid" aria-label="Fasting charts">
+        <article class="chart-card wide">
+          <div class="chart-heading">
+            <div>
+              <p class="eyebrow">Last 7 days</p>
+              <h2>Weekly rhythm</h2>
+            </div>
+            <span class="chart-badge" id="target-badge">13h goal</span>
+          </div>
+          <div class="bar-chart" id="weekly-bars" aria-label="Fasting hours by day"></div>
+        </article>
+
+        <article class="chart-card">
+          <div class="chart-heading">
+            <div>
+              <p class="eyebrow">Trend</p>
+              <h2>Momentum</h2>
+            </div>
+          </div>
+          <svg class="trend-chart" id="trend-chart" viewBox="0 0 360 160" role="img" aria-label="Seven day fasting trend"></svg>
+          <p class="chart-note" id="trend-note">Waiting for more completed fasts.</p>
+        </article>
+
+        <article class="chart-card">
+          <div class="chart-heading">
+            <div>
+              <p class="eyebrow">Consistency</p>
+              <h2>Goal quality</h2>
+            </div>
+          </div>
+          <div class="donut-wrap">
+            <div class="donut-chart" id="goal-donut"><span id="goal-donut-label">0%</span></div>
+          </div>
+          <p class="chart-note" id="goal-note">Goal completion will appear after completed fasts.</p>
+        </article>
+      </section>
+
+      <section class="insight-grid" aria-label="Fasting insights">
+        <article class="insight-card">
+          <span class="insight-kicker">Best fast</span>
+          <strong id="best-fast">0.0h</strong>
+          <p id="best-fast-note">No completed fast yet.</p>
+        </article>
+        <article class="insight-card">
+          <span class="insight-kicker">Start window</span>
+          <strong id="start-window">Not enough data</strong>
+          <p>Typical fasting start time.</p>
+        </article>
+        <article class="insight-card">
+          <span class="insight-kicker">End window</span>
+          <strong id="end-window">Not enough data</strong>
+          <p>Typical fast completion time.</p>
+        </article>
+        <article class="insight-card">
+          <span class="insight-kicker">Longest streak</span>
+          <strong id="longest-streak">0 days</strong>
+          <p>Best goal-reaching run so far.</p>
+        </article>
+      </section>
+    </main>
+
+    <script type="module" src="/src/dashboard.js"></script>
+  </body>
+</html>

@@ -15,6 +15,7 @@ Apple Watch clients.
 - Clear active-state styling and a live running-fast history row
 - 13-hour target progress
 - Completed-fast count, total hours, and current streak
+- Separate analytics dashboard with weekly charts and fasting insights
 - Recent-session history
 - Completed-session details with timestamp correction and confirmed deletion
 - Browser-local persistence
