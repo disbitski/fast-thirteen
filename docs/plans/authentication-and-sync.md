@@ -56,6 +56,7 @@ must work offline and sync when a signed-in device reconnects.
 
 When a guest signs in for the first time:
 
+0. Build a dry-run plan that previews migration work without cloud writes.
 1. Preserve a local backup before migration.
 2. Upload validated local sessions to the signed-in account.
 3. Merge by stable session ID without duplicates.

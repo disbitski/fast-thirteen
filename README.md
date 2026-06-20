@@ -76,6 +76,11 @@ Google OAuth setup readiness lives in
 [`docs/google-oauth-readiness.md`](docs/google-oauth-readiness.md). It documents
 the Supabase and Google Cloud steps without committing credentials.
 
+Guest migration dry-run planning lives in
+[`docs/guest-migration-dry-run.md`](docs/guest-migration-dry-run.md). It
+describes how local history will be validated, backed up, deduplicated, and
+previewed before any future cloud writes happen.
+
 ## Roadmap
 
 - Reminders and target-reached notifications
