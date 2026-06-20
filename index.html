@@ -65,7 +65,7 @@
               title="SpaceX"
             ></button>
           </fieldset>
-          <span class="local-badge" id="profile-badge">Guest profile · Local only</span>
+          <span class="local-badge" id="profile-badge">Guest mode · Local data</span>
         </div>
       </header>
 
@@ -136,23 +136,23 @@
           </div>
           <div class="profile-control">
             <span>
-              <strong id="profile-mode">Guest profile</strong>
+              <strong id="profile-mode">Guest mode</strong>
               <small id="sync-description">Tracking locally now. Cloud sync can plug in later.</small>
               <small class="readiness-copy" id="auth-readiness-detail">
                 Add Supabase publishable config to enable Google sign-in readiness.
               </small>
             </span>
             <div class="profile-actions">
-              <span class="sync-pill" id="sync-status">Local only</span>
-              <span class="readiness-pill" id="auth-readiness-status">Local-only</span>
+              <span class="sync-pill" id="sync-status">Local data</span>
+              <span class="readiness-pill" id="auth-readiness-status">Guest mode</span>
               <button class="secondary-button" id="google-sign-in" type="button" hidden>
                 Continue with Google
               </button>
               <details class="profile-menu" id="profile-menu">
                 <summary>Profile</summary>
                 <div class="profile-menu-panel">
-                  <strong id="profile-menu-title">Guest profile</strong>
-                  <small id="profile-menu-detail">Local-only tracking is active.</small>
+                  <strong id="profile-menu-title">Guest mode</strong>
+                  <small id="profile-menu-detail">Local data is active.</small>
                   <button class="text-button" id="sign-out" type="button" hidden>
                     Sign out
                   </button>

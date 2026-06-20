@@ -166,13 +166,13 @@ function targetLabel(targetHours) {
 function profileLabel() {
   return appData.profile.mode === "authenticated"
     ? appData.profile.displayName
-    : "Guest profile";
+    : "Guest mode";
 }
 
 function syncLabel() {
   const labels = {
     error: "Sync issue",
-    local: "Local only",
+    local: "Local data",
     synced: "Synced",
     syncing: "Syncing",
   };
@@ -236,7 +236,7 @@ function profileMenuDetail() {
     return "Guest mode is active until Google sign-in completes.";
   }
 
-  return "Local-only tracking is active.";
+  return "Local data is active.";
 }
 
 function toLocalInputValue(value) {

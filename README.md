@@ -19,7 +19,7 @@ Apple Watch clients.
 - Recent-session history
 - Completed-session details with timestamp correction and confirmed deletion
 - Browser-local persistence
-- Guest profile and local-only sync status foundations
+- Guest mode and local data sync status foundations
 - Optional Google sign-in scaffold that stays disabled without Supabase config
 - Persistent light, black/cyan, black/purple, and SpaceX themes
 - Configurable fasting goals captured per session

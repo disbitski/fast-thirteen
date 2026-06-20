@@ -74,4 +74,4 @@ The local data model remains the source of truth for conflict semantics:
 
 After the schema is reviewed, add a small Supabase client wrapper that can be
 disabled when environment values are missing. The app should continue to show
-`Guest profile · Local only` until the user explicitly signs in.
+`Guest mode · Local data` until the user explicitly signs in.

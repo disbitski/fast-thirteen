@@ -4,7 +4,7 @@ import { AUTH_READINESS, authReadiness } from "../src/authReadiness.js";
 
 test("auth readiness defaults to local-only when config is missing", () => {
   assert.deepEqual(authReadiness({ config: { isConfigured: false } }), {
-    label: "Local-only",
+    label: "Guest mode",
     message: "Add Supabase publishable config to enable Google sign-in readiness.",
     status: AUTH_READINESS.LOCAL_ONLY,
   });
