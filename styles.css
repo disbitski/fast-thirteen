@@ -662,7 +662,7 @@ h2 {
 .settings-card {
   display: grid;
   gap: 0;
-  overflow: hidden;
+  overflow: visible;
   border: 1px solid var(--line);
   border-radius: 24px;
   background: var(--surface-soft);
