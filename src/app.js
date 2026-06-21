@@ -26,6 +26,8 @@ import {
   readAuthCallbackState,
 } from "./auth.js";
 import { authReadiness } from "./authReadiness.js";
+import { createGuestMigrationPlan } from "./migrationPlan.js";
+import { createMigrationPreviewModel } from "./migrationPreview.js";
 import { createBrowserSupabaseClient } from "./supabaseClient.js";
 import { loadSupabaseConfig } from "./supabaseConfig.js";
 
@@ -65,6 +67,11 @@ const elements = {
   heroTitle: document.querySelector("#hero-title"),
   importButton: document.querySelector("#import-button"),
   importFile: document.querySelector("#import-file"),
+  migrationPreview: document.querySelector("#migration-preview"),
+  migrationPreviewDetails: document.querySelector("#migration-preview-details"),
+  migrationPreviewMessage: document.querySelector("#migration-preview-message"),
+  migrationPreviewStats: document.querySelector("#migration-preview-stats"),
+  migrationPreviewTitle: document.querySelector("#migration-preview-title"),
   profileBadge: document.querySelector("#profile-badge"),
   profileMenu: document.querySelector("#profile-menu"),
   profileMenuDetail: document.querySelector("#profile-menu-detail"),
@@ -384,11 +391,41 @@ function renderSettings() {
   elements.targetHours.disabled = Boolean(activeSession);
 }
 
+function renderMigrationPreview(model) {
+  elements.migrationPreview.dataset.previewStatus = model.status;
+  elements.migrationPreviewTitle.textContent = model.title;
+  elements.migrationPreviewMessage.textContent = model.message;
+  elements.migrationPreviewStats.replaceChildren(
+    ...model.stats.map((item) => {
+      const card = document.createElement("div");
+      const term = document.createElement("dt");
+      const description = document.createElement("dd");
+      term.textContent = item.label;
+      description.textContent = item.value;
+      description.dataset.tone = item.tone;
+      card.append(term, description);
+      return card;
+    }),
+  );
+  elements.migrationPreviewDetails.replaceChildren(
+    ...model.details.map((detail) => {
+      const item = document.createElement("li");
+      item.textContent = detail;
+      return item;
+    }),
+  );
+}
+
 function renderProfileSync() {
   const readiness = authReadiness({
     authStatus: authState.status,
     clientStatus: supabaseClient.status,
     config: supabaseConfig,
+  });
+  const migrationPlan = createGuestMigrationPlan({
+    authState,
+    localData: appData,
+    profile: appData.profile,
   });
 
   elements.profileBadge.textContent = `${profileLabel()} · ${syncLabel()}`;
@@ -406,6 +443,7 @@ function renderProfileSync() {
   elements.googleSignIn.disabled = ["loading", "redirecting"].includes(authState.status);
   elements.signOut.hidden = appData.profile.mode !== "authenticated";
   elements.authHelp.textContent = authHelpText();
+  renderMigrationPreview(createMigrationPreviewModel(migrationPlan));
 }
 
 function applyAuthState(state, { persistMessage } = {}) {

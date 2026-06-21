@@ -34,10 +34,14 @@ preview deterministic for tests, logs, and future UI review.
 
 ## Current Safety Boundary
 
+The app now includes a small migration preview surface in the profile/settings
+area. It shows backup readiness, planned upload/update/delete counts, skipped
+active sessions, duplicate skips, and invalid-session blockers from the dry-run
+planner.
+
 The dry run can return upload candidates, but it is not a sync operation. A
 future milestone still needs to:
 
-- Show the preview to the signed-in user.
 - Write the planned sessions to Supabase with row-level security enabled.
 - Read the records back from Supabase to confirm the cloud copy.
 - Mark local sync status only after confirmation succeeds.

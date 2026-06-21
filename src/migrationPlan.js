@@ -93,8 +93,11 @@ function normalizeCloudSessions(cloudSessions) {
 }
 
 function migrationUserId({ authState, localData, profile }) {
+  if (authState) {
+    return authState.status === "authenticated" ? authState.user?.id ?? null : null;
+  }
+
   return (
-    authState?.user?.id ??
     profile?.userId ??
     (localData?.profile?.mode === "authenticated" ? localData.profile.userId : null) ??
     null
@@ -102,8 +105,11 @@ function migrationUserId({ authState, localData, profile }) {
 }
 
 function migrationUserEmail({ authState, localData, profile }) {
+  if (authState) {
+    return authState.status === "authenticated" ? authState.user?.email ?? null : null;
+  }
+
   return (
-    authState?.user?.email ??
     profile?.email ??
     (localData?.profile?.mode === "authenticated" ? localData.profile.email : null) ??
     null

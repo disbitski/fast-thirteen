@@ -517,6 +517,7 @@ a {
 
 h1,
 h2,
+h3,
 p {
   margin-top: 0;
 }
@@ -537,6 +538,12 @@ h2 {
   font-size: clamp(2rem, 4vw, 3rem);
   font-weight: 500;
   letter-spacing: -0.04em;
+}
+
+h3 {
+  margin-bottom: 8px;
+  font-size: 1.05rem;
+  letter-spacing: -0.02em;
 }
 
 .hero-copy {
@@ -840,6 +847,93 @@ h2 {
   color: var(--muted);
   font-size: 0.74rem;
   text-align: right;
+}
+
+.migration-preview {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 0.9fr);
+  gap: 24px;
+  padding: 24px 26px;
+  border-top: 1px solid var(--line);
+  background:
+    radial-gradient(circle at 100% 0%, var(--glow), transparent 18rem),
+    rgba(127, 127, 127, 0.03);
+}
+
+.migration-preview .eyebrow {
+  margin-bottom: 8px;
+}
+
+.migration-preview p {
+  max-width: 580px;
+  margin-bottom: 0;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.migration-preview-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+  gap: 8px;
+  margin: 0;
+}
+
+.migration-preview-stats div {
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--badge);
+}
+
+.migration-preview-stats dt {
+  color: var(--muted);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.migration-preview-stats dd {
+  margin: 4px 0 0;
+  color: var(--ink);
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+
+.migration-preview-stats dd[data-tone="good"] {
+  color: var(--green);
+}
+
+.migration-preview-stats dd[data-tone="warn"] {
+  color: var(--active);
+}
+
+.migration-preview-details {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 18px;
+  margin: 0;
+  padding: 0;
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.45;
+  list-style: none;
+}
+
+.migration-preview-details li::before {
+  content: "Dry run";
+  display: inline-block;
+  margin-right: 8px;
+  color: var(--green);
+  font-size: 0.64rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.migration-preview[data-preview-status="blocked"] {
+  border-color: var(--active);
 }
 
 .number-control input:focus-visible,
@@ -1165,6 +1259,14 @@ h2 {
     max-width: 100%;
   }
 
+  .migration-preview {
+    grid-template-columns: 1fr;
+  }
+
+  .migration-preview-details {
+    grid-template-columns: 1fr;
+  }
+
   .profile-menu-panel {
     left: 0;
     right: auto;
@@ -1227,4 +1329,9 @@ h2 {
   .backup-actions {
     flex-wrap: wrap;
   }
+
+  .migration-preview {
+    padding: 20px;
+  }
+
 }

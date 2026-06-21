@@ -219,3 +219,31 @@ test("requires an authenticated user before migration can run", () => {
     id: null,
   });
 });
+
+test("does not treat a stale local profile as current authentication", () => {
+  const plan = createGuestMigrationPlan({
+    authState: {
+      status: "disabled",
+      user: null,
+    },
+    localData: {
+      ...emptyData(),
+      profile: {
+        ...emptyData().profile,
+        mode: "authenticated",
+        userId: "stale-user",
+        email: "stale@example.com",
+        displayName: "Stale user",
+        provider: "google",
+      },
+      sessions: [completed],
+    },
+  });
+
+  assert.equal(plan.canMigrate, false);
+  assert.deepEqual(plan.blockers, ["authenticated-user-required"]);
+  assert.deepEqual(plan.user, {
+    email: null,
+    id: null,
+  });
+});
