@@ -3,6 +3,13 @@ import { currentStreak, durationMs, isComplete } from "./fasting.js";
 const HOUR_MS = 60 * 60 * 1000;
 const DAY_MS = 24 * HOUR_MS;
 
+export const ANALYTICS_RANGES = [
+  { bucket: "day", days: 7, id: "7", label: "7 days", shortLabel: "7D" },
+  { bucket: "day", days: 30, id: "30", label: "30 days", shortLabel: "30D" },
+  { bucket: "week", days: 90, id: "90", label: "90 days", shortLabel: "90D" },
+  { bucket: "month", days: 365, id: "365", label: "Full year", shortLabel: "1Y" },
+];
+
 function localDayStart(value) {
   const date = new Date(value);
   return new Date(date.getFullYear(), date.getMonth(), date.getDate());
@@ -37,6 +44,16 @@ function completedSessions(sessions) {
   return sessions
     .filter((session) => !session.deletedAt && session.endedAt)
     .sort((a, b) => new Date(a.endedAt) - new Date(b.endedAt));
+}
+
+function sessionsInDays(sessions, now, days) {
+  const start = localDayStart(new Date(localDayStart(now).getTime() - (days - 1) * DAY_MS));
+  const end = new Date(localDayStart(now).getTime() + DAY_MS);
+
+  return completedSessions(sessions).filter((session) => {
+    const endedAt = new Date(session.endedAt);
+    return endedAt >= start && endedAt < end;
+  });
 }
 
 function localMinutes(value) {
@@ -91,6 +108,56 @@ export function lastNDays(sessions, now = new Date(), days = 7) {
   });
 }
 
+function bucketDateLabel(value, bucket) {
+  const options = bucket === "month"
+    ? { month: "short" }
+    : { month: "short", day: "numeric" };
+
+  return new Intl.DateTimeFormat(undefined, options).format(new Date(value));
+}
+
+function summarizeBucket(days, bucket) {
+  const first = days[0];
+  const last = days.at(-1);
+
+  return {
+    completed: days.reduce((total, day) => total + day.completed, 0),
+    date: first.date,
+    endDate: last.date,
+    goalReached: days.reduce((total, day) => total + day.goalReached, 0),
+    key: `${first.key}:${last.key}`,
+    label: bucketDateLabel(first.date, bucket),
+    sessions: days.flatMap((day) => day.sessions),
+    totalHours: round1(days.reduce((total, day) => total + day.totalHours, 0)),
+  };
+}
+
+function chunkDays(days, size, bucket) {
+  const buckets = [];
+
+  for (let index = 0; index < days.length; index += size) {
+    buckets.push(summarizeBucket(days.slice(index, index + size), bucket));
+  }
+
+  return buckets;
+}
+
+export function rangeBuckets(sessions, now = new Date(), days = 7) {
+  const daily = lastNDays(sessions, now, days);
+  if (days <= 30) {
+    return daily.map((day) => ({
+      ...day,
+      label: days <= 7
+        ? new Intl.DateTimeFormat(undefined, { weekday: "short" }).format(new Date(day.date))
+        : bucketDateLabel(day.date, "day"),
+    }));
+  }
+
+  if (days <= 90) return chunkDays(daily, 7, "week");
+
+  return chunkDays(daily, Math.ceil(days / 12), "month").slice(-12);
+}
+
 export function longestGoalStreak(sessions) {
   const days = [
     ...new Set(
@@ -113,8 +180,8 @@ export function longestGoalStreak(sessions) {
   return longest;
 }
 
-export function calculateAnalytics(sessions, now = new Date(), targetHours = 13) {
-  const completed = completedSessions(sessions);
+export function calculateAnalytics(sessions, now = new Date(), targetHours = 13, rangeDays = 7) {
+  const completed = sessionsInDays(sessions, now, rangeDays);
   const goalSessions = completed.filter((session) => isComplete(session));
   const durations = completed.map((session) => durationMs(session) / HOUR_MS);
   const totalHours = durations.reduce((total, value) => total + value, 0);
@@ -123,10 +190,13 @@ export function calculateAnalytics(sessions, now = new Date(), targetHours = 13)
     return durationMs(session) > durationMs(best) ? session : best;
   }, null);
   const sevenDays = lastNDays(sessions, now, 7);
-  const recentHours = sevenDays.map((day) => day.totalHours);
-  const priorThree = recentHours.slice(0, 3);
-  const latestThree = recentHours.slice(-3);
-  const trendDelta = average(latestThree) - average(priorThree);
+  const buckets = rangeBuckets(sessions, now, rangeDays);
+  const bucketHours = buckets.map((bucket) => bucket.totalHours);
+  const comparisonSize = Math.max(1, Math.min(3, Math.floor(bucketHours.length / 2)));
+  const prior = bucketHours.slice(0, comparisonSize);
+  const latest = bucketHours.slice(-comparisonSize);
+  const trendDelta = average(latest) - average(prior);
+  const range = ANALYTICS_RANGES.find((option) => option.days === rangeDays) ?? ANALYTICS_RANGES[0];
 
   return {
     averageHours: round1(average(durations)),
@@ -136,9 +206,12 @@ export function calculateAnalytics(sessions, now = new Date(), targetHours = 13)
     completedFasts: completed.length,
     currentStreak: currentStreak(sessions, now),
     last7Days: sevenDays,
-    longestStreak: longestGoalStreak(sessions),
+    longestStreak: longestGoalStreak(completed),
     preferredEndTime: formatHourWindow(averageOrNaN(completed.map((session) => localMinutes(session.endedAt)))),
     preferredStartTime: formatHourWindow(averageOrNaN(completed.map((session) => localMinutes(session.startedAt)))),
+    range,
+    rangeBuckets: buckets,
+    rangeDays,
     targetHours,
     totalHours: round1(totalHours),
     trendDelta: round1(trendDelta),

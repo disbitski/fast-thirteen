@@ -49,7 +49,7 @@
           </p>
         </div>
         <article class="analytics-focus-card">
-          <span class="focus-label">7-day total</span>
+          <span class="focus-label" id="range-total-label">7-day total</span>
           <strong id="weekly-total">0.0h</strong>
           <span id="weekly-context">No completed fasts yet.</span>
         </article>
@@ -87,10 +87,19 @@
         <article class="chart-card wide">
           <div class="chart-heading">
             <div>
-              <p class="eyebrow">Last 7 days</p>
-              <h2>Weekly rhythm</h2>
+              <p class="eyebrow" id="range-chart-kicker">Last 7 days</p>
+              <h2>Fasting rhythm</h2>
             </div>
-            <span class="chart-badge" id="target-badge">13h goal</span>
+            <div class="chart-actions">
+              <fieldset class="range-toggle" aria-label="Analytics range">
+                <legend>Analytics range</legend>
+                <button type="button" data-range-days="7" aria-pressed="true">7D</button>
+                <button type="button" data-range-days="30" aria-pressed="false">30D</button>
+                <button type="button" data-range-days="90" aria-pressed="false">90D</button>
+                <button type="button" data-range-days="365" aria-pressed="false">1Y</button>
+              </fieldset>
+              <span class="chart-badge" id="target-badge">13h goal</span>
+            </div>
           </div>
           <div class="bar-chart" id="weekly-bars" aria-label="Fasting hours by day"></div>
         </article>
@@ -102,7 +111,7 @@
               <h2>Momentum</h2>
             </div>
           </div>
-          <svg class="trend-chart" id="trend-chart" viewBox="0 0 360 160" role="img" aria-label="Seven day fasting trend"></svg>
+          <svg class="trend-chart" id="trend-chart" viewBox="0 0 360 160" role="img" aria-label="Selected range fasting trend"></svg>
           <p class="chart-note" id="trend-note">Waiting for more completed fasts.</p>
         </article>
 

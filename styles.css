@@ -359,8 +359,51 @@ a {
   gap: 18px;
 }
 
+.chart-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
 .chart-heading h2 {
   font-size: clamp(1.8rem, 3vw, 2.5rem);
+}
+
+.range-toggle {
+  display: flex;
+  gap: 5px;
+  margin: 0;
+  padding: 5px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--badge);
+}
+
+.range-toggle legend {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.range-toggle button {
+  padding: 7px 10px;
+  border: 0;
+  border-radius: 999px;
+  color: var(--muted);
+  background: transparent;
+  cursor: pointer;
+  font-size: 0.74rem;
+  font-weight: 800;
+}
+
+.range-toggle button[aria-pressed="true"] {
+  color: var(--accent-ink);
+  background: var(--green);
 }
 
 .chart-badge {
@@ -371,12 +414,14 @@ a {
 }
 
 .bar-chart {
+  --bar-count: 7;
   display: grid;
-  grid-template-columns: repeat(7, minmax(34px, 1fr));
+  grid-template-columns: repeat(var(--bar-count), minmax(34px, 1fr));
   gap: 12px;
   align-items: end;
   min-height: 310px;
   padding-top: 18px;
+  overflow-x: auto;
 }
 
 .bar-column {
@@ -938,7 +983,8 @@ h3 {
 
 .number-control input:focus-visible,
 .secondary-button:focus-visible,
-.profile-menu summary:focus-visible {
+.profile-menu summary:focus-visible,
+.range-toggle button:focus-visible {
   outline: 2px solid var(--green);
   outline-offset: 3px;
 }
@@ -980,6 +1026,24 @@ h3 {
 
 .history {
   margin-top: 72px;
+}
+
+.history-hint {
+  max-width: 520px;
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 0.88rem;
+  line-height: 1.6;
+}
+
+.history-hint a {
+  color: var(--green);
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.history-hint a:hover {
+  text-decoration: underline;
 }
 
 .text-button {
@@ -1232,6 +1296,14 @@ h3 {
 
   .chart-card.wide {
     grid-row: auto;
+  }
+
+  .chart-heading {
+    flex-direction: column;
+  }
+
+  .chart-actions {
+    justify-content: flex-start;
   }
 
   .bar-chart {

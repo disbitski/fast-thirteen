@@ -53,6 +53,8 @@ const callbackAuthState = readAuthCallbackState(
 let authState = authService.initialState(callbackAuthState);
 if (callbackAuthState) cleanAuthCallbackUrl(globalThis.location, globalThis.history);
 
+const DAY_MS = 24 * 60 * 60 * 1000;
+
 const elements = {
   button: document.querySelector("#fast-button"),
   completedFasts: document.querySelector("#completed-fasts"),
@@ -164,6 +166,10 @@ function formatDate(value) {
     day: "numeric",
     year: "numeric",
   }).format(new Date(value));
+}
+
+function isWithinPastDays(value, days, now = new Date()) {
+  return new Date(value).getTime() >= now.getTime() - days * DAY_MS;
 }
 
 function targetLabel(targetHours) {
@@ -300,7 +306,7 @@ function renderStats() {
 
 function renderHistory() {
   const completedSessions = sessions
-    .filter((session) => !session.deletedAt && session.endedAt)
+    .filter((session) => !session.deletedAt && session.endedAt && isWithinPastDays(session.endedAt, 7))
     .sort((a, b) => new Date(b.endedAt) - new Date(a.endedAt));
 
   elements.emptyState.hidden = Boolean(activeSession) || completedSessions.length > 0;

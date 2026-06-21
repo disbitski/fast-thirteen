@@ -5,6 +5,7 @@ import {
   formatHourWindow,
   lastNDays,
   longestGoalStreak,
+  rangeBuckets,
 } from "../src/analytics.js";
 
 const sessions = [
@@ -78,6 +79,47 @@ test("calculates dashboard analytics without active or deleted sessions", () => 
   assert.equal(analytics.completionRate, 67);
   assert.equal(analytics.longestStreak, 2);
   assert.equal(analytics.targetHours, 13);
+  assert.equal(analytics.range.days, 7);
+  assert.equal(analytics.rangeBuckets.length, 7);
+});
+
+test("calculates dashboard analytics for the selected date range", () => {
+  const olderSession = {
+    id: "older",
+    startedAt: "2026-05-20T23:00:00.000Z",
+    endedAt: "2026-05-21T12:30:00.000Z",
+    targetHours: 13,
+    updatedAt: "2026-05-21T12:30:00.000Z",
+    deletedAt: null,
+  };
+
+  const sevenDayAnalytics = calculateAnalytics(
+    [...sessions, olderSession],
+    new Date("2026-06-19T12:00:00.000Z"),
+    13,
+    7,
+  );
+  const thirtyDayAnalytics = calculateAnalytics(
+    [...sessions, olderSession],
+    new Date("2026-06-19T12:00:00.000Z"),
+    13,
+    30,
+  );
+
+  assert.equal(sevenDayAnalytics.completedFasts, 3);
+  assert.equal(sevenDayAnalytics.totalHours, 37.7);
+  assert.equal(thirtyDayAnalytics.completedFasts, 4);
+  assert.equal(thirtyDayAnalytics.totalHours, 51.2);
+});
+
+test("builds readable buckets for dashboard range toggles", () => {
+  const now = new Date("2026-06-19T12:00:00.000Z");
+
+  assert.equal(rangeBuckets(sessions, now, 7).length, 7);
+  assert.equal(rangeBuckets(sessions, now, 30).length, 30);
+  assert.equal(rangeBuckets(sessions, now, 90).length, 13);
+  assert.equal(rangeBuckets(sessions, now, 365).length, 12);
+  assert.ok(rangeBuckets(sessions, now, 90).some((bucket) => bucket.completed > 1));
 });
 
 test("empty analytics shows not enough data for time windows", () => {
