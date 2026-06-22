@@ -39,6 +39,14 @@ area. It shows backup readiness, planned upload/update/delete counts, skipped
 active sessions, duplicate skips, and invalid-session blockers from the dry-run
 planner.
 
+The app also has a migration executor interface in `src/migrationExecutor.js`.
+It is still not connected to Supabase. The executor requires a current
+authenticated user, a precomputed migration plan, and a repository object. It
+validates blockers, requires the local backup to exist, preserves that backup
+first, and then dispatches upload/update/tombstone calls to the supplied
+repository. Tests use a mocked repository so execution behavior is covered
+without making cloud writes.
+
 The dry run can return upload candidates, but it is not a sync operation. A
 future milestone still needs to:
 

@@ -20,6 +20,14 @@ function stat(label, value, tone = "neutral") {
   return { label, tone, value: String(value) };
 }
 
+function disabledConfirmation(label = "Migration confirmation disabled") {
+  return {
+    disabled: true,
+    label,
+    message: "Cloud migration execution is not enabled in this local preview.",
+  };
+}
+
 export function createMigrationPreviewModel(plan) {
   const actionCounts = countActions(plan?.uploadCandidates ?? []);
   const summary = plan?.summary ?? {};
@@ -52,6 +60,7 @@ export function createMigrationPreviewModel(plan) {
       status: "auth-required",
       title: "Sign in to preview migration",
       message: `${countLabel(summary.localSessions ?? 0, "local session")} ready for a dry-run review after Google sign-in.`,
+      confirmation: disabledConfirmation("Sign in before migration"),
     };
   }
 
@@ -65,6 +74,7 @@ export function createMigrationPreviewModel(plan) {
       status: "blocked",
       title: "Review local history first",
       message: "The dry run found local records that need cleanup before any future cloud sync.",
+      confirmation: disabledConfirmation("Resolve blockers first"),
     };
   }
 
@@ -81,6 +91,7 @@ export function createMigrationPreviewModel(plan) {
       status: "ready",
       title: "Migration preview ready",
       message: "This dry run shows what would sync after sign-in. It does not write to Supabase yet.",
+      confirmation: disabledConfirmation("Confirm migration unavailable"),
     };
   }
 
@@ -94,5 +105,6 @@ export function createMigrationPreviewModel(plan) {
     status: "empty",
     title: "Nothing to migrate yet",
     message: "Your local history is backed up and there are no completed changes waiting to upload.",
+    confirmation: disabledConfirmation("Nothing to migrate"),
   };
 }

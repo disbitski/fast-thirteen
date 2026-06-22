@@ -70,6 +70,8 @@ const elements = {
   importButton: document.querySelector("#import-button"),
   importFile: document.querySelector("#import-file"),
   migrationPreview: document.querySelector("#migration-preview"),
+  migrationConfirm: document.querySelector("#migration-confirm"),
+  migrationConfirmDetail: document.querySelector("#migration-confirm-detail"),
   migrationPreviewDetails: document.querySelector("#migration-preview-details"),
   migrationPreviewMessage: document.querySelector("#migration-preview-message"),
   migrationPreviewStats: document.querySelector("#migration-preview-stats"),
@@ -420,6 +422,9 @@ function renderMigrationPreview(model) {
       return item;
     }),
   );
+  elements.migrationConfirm.disabled = model.confirmation.disabled;
+  elements.migrationConfirm.textContent = model.confirmation.label;
+  elements.migrationConfirmDetail.textContent = model.confirmation.message;
 }
 
 function renderProfileSync() {

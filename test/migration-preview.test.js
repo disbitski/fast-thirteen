@@ -28,6 +28,11 @@ test("maps a ready migration plan into local-safe preview copy", () => {
   assert.equal(model.status, "ready");
   assert.equal(model.title, "Migration preview ready");
   assert.match(model.message, /does not write to Supabase yet/);
+  assert.deepEqual(model.confirmation, {
+    disabled: true,
+    label: "Confirm migration unavailable",
+    message: "Cloud migration execution is not enabled in this local preview.",
+  });
   assert.deepEqual(
     model.stats.map((item) => [item.label, item.value, item.tone]),
     [
@@ -59,6 +64,7 @@ test("maps missing authentication into sign-in preview state", () => {
   assert.equal(model.status, "auth-required");
   assert.equal(model.title, "Sign in to preview migration");
   assert.match(model.message, /5 local sessions/);
+  assert.equal(model.confirmation.label, "Sign in before migration");
   assert.deepEqual(model.details, [
     "Local data stays on this Mac until you sign in.",
     "No cloud writes happen from this preview.",
@@ -78,6 +84,7 @@ test("maps invalid local sessions into blocked preview state", () => {
 
   assert.equal(model.status, "blocked");
   assert.equal(model.title, "Review local history first");
+  assert.equal(model.confirmation.label, "Resolve blockers first");
   assert.equal(model.stats.at(-1).value, "2");
   assert.equal(model.stats.at(-1).tone, "warn");
   assert.deepEqual(model.details, [
@@ -101,6 +108,7 @@ test("maps empty migration plan into nothing-to-sync preview state", () => {
 
   assert.equal(model.status, "empty");
   assert.equal(model.title, "Nothing to migrate yet");
+  assert.equal(model.confirmation.label, "Nothing to migrate");
   assert.deepEqual(model.details, [
     "1 duplicate already matches cloud history.",
     "0 active fasts stay local until completed.",
