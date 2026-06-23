@@ -40,6 +40,7 @@ function candidateMethod(action) {
 export async function executeGuestMigrationPlan({ plan, repository } = {}) {
   assertExecutablePlan(plan);
   requireRepositoryMethod(repository, "preserveBackup");
+  requireRepositoryMethod(repository, "confirmMigration");
   const executionCandidates = (plan.uploadCandidates ?? []).map((candidate) => {
     const method = candidateMethod(candidate.action);
     requireRepositoryMethod(repository, method);
@@ -64,12 +65,19 @@ export async function executeGuestMigrationPlan({ plan, repository } = {}) {
     calls.push({ action: candidate.action, sessionId: candidate.session.id });
   }
 
+  await repository.confirmMigration({
+    plan,
+    user: plan.user,
+  });
+  calls.push({ action: "confirm", sessionId: null });
+
   return {
     calls,
     status: "executed",
     summary: {
       backupPreserved: true,
-      executedCount: calls.length - 1,
+      confirmed: true,
+      executedCount: executionCandidates.length,
       tombstoneCount: calls.filter((call) => call.action === "tombstone").length,
       updateCount: calls.filter((call) => call.action === "update").length,
       uploadCount: calls.filter((call) => call.action === "upload").length,

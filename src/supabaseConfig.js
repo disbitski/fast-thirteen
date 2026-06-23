@@ -32,15 +32,23 @@ function cleanPublishableKey(value) {
   return candidate;
 }
 
+function cleanBoolean(value) {
+  return value === true || value === "true";
+}
+
 export function normalizeSupabaseConfig(value = {}) {
   const supabaseUrl = cleanUrl(value.supabaseUrl ?? value.SUPABASE_URL);
   const supabaseAnonKey = cleanPublishableKey(
     value.supabaseAnonKey ?? value.SUPABASE_ANON_KEY,
   );
+  const migrationWritesEnabled = cleanBoolean(
+    value.migrationWritesEnabled ?? value.SUPABASE_MIGRATION_WRITES_ENABLED,
+  );
 
   return {
     supabaseUrl,
     supabaseAnonKey,
+    migrationWritesEnabled,
     isConfigured: Boolean(supabaseUrl && supabaseAnonKey),
   };
 }

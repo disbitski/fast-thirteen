@@ -28,6 +28,7 @@ function browserConfig() {
   return {
     supabaseUrl: process.env.SUPABASE_URL?.trim() || null,
     supabaseAnonKey: process.env.SUPABASE_ANON_KEY?.trim() || null,
+    migrationWritesEnabled: process.env.SUPABASE_MIGRATION_WRITES_ENABLED === "true",
   };
 }
 

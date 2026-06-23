@@ -44,13 +44,22 @@ It is still not connected to Supabase. The executor requires a current
 authenticated user, a precomputed migration plan, and a repository object. It
 validates blockers, requires the local backup to exist, preserves that backup
 first, and then dispatches upload/update/tombstone calls to the supplied
-repository. Tests use a mocked repository so execution behavior is covered
-without making cloud writes.
+repository before calling a final confirmation hook. Tests use a mocked
+repository so execution behavior is covered without making cloud writes.
+
+`src/supabaseMigrationRepository.js` now defines the Supabase repository shape
+for the next step. It maps local sessions to `fast_sessions` rows, exposes the
+required `preserveBackup`, `uploadSession`, `updateSession`, `tombstoneSession`,
+and `confirmMigration` methods, and reports readiness separately from
+execution. Publishable Supabase config alone is not enough to write. Migration
+writes stay disabled unless `SUPABASE_MIGRATION_WRITES_ENABLED=true` is present
+and the repository is created with explicit execution support.
 
 The dry run can return upload candidates, but it is not a sync operation. A
 future milestone still needs to:
 
-- Write the planned sessions to Supabase with row-level security enabled.
+- Wire the Supabase repository into a reviewed write path with row-level
+  security enabled.
 - Read the records back from Supabase to confirm the cloud copy.
 - Mark local sync status only after confirmation succeeds.
 

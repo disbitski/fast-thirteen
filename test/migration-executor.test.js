@@ -51,6 +51,9 @@ function repository() {
     async preserveBackup(input) {
       calls.push(["backup", input]);
     },
+    async confirmMigration(input) {
+      calls.push(["confirm", input]);
+    },
     async tombstoneSession(input) {
       calls.push(["tombstone", input]);
     },
@@ -151,10 +154,12 @@ test("preserves backup before mocked upload update and tombstone calls", async (
       ["upload", session.id],
       ["update", "fast-updated"],
       ["tombstone", tombstone.id],
+      ["confirm", null],
     ],
   );
   assert.deepEqual(execution.summary, {
     backupPreserved: true,
+    confirmed: true,
     executedCount: 3,
     tombstoneCount: 1,
     updateCount: 1,
@@ -165,6 +170,7 @@ test("preserves backup before mocked upload update and tombstone calls", async (
     { action: "upload", sessionId: session.id },
     { action: "update", sessionId: "fast-updated" },
     { action: "tombstone", sessionId: tombstone.id },
+    { action: "confirm", sessionId: null },
   ]);
 });
 
