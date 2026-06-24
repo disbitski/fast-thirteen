@@ -37,6 +37,17 @@ function candidateMethod(action) {
   throw new MigrationExecutionError("unknown-action", `Unsupported migration action: ${action}`);
 }
 
+function assertConfirmed(confirmation) {
+  if (confirmation?.status !== "confirmed" || confirmation?.canMarkSynced !== true) {
+    const error = new MigrationExecutionError(
+      "migration-confirmation-blocked",
+      "Cloud read-back confirmation must pass before local records can be marked synced.",
+    );
+    error.confirmation = confirmation ?? null;
+    throw error;
+  }
+}
+
 export async function executeGuestMigrationPlan({ plan, repository } = {}) {
   assertExecutablePlan(plan);
   requireRepositoryMethod(repository, "preserveBackup");
@@ -65,14 +76,16 @@ export async function executeGuestMigrationPlan({ plan, repository } = {}) {
     calls.push({ action: candidate.action, sessionId: candidate.session.id });
   }
 
-  await repository.confirmMigration({
+  const confirmation = await repository.confirmMigration({
     plan,
     user: plan.user,
   });
+  assertConfirmed(confirmation);
   calls.push({ action: "confirm", sessionId: null });
 
   return {
     calls,
+    confirmation,
     status: "executed",
     summary: {
       backupPreserved: true,

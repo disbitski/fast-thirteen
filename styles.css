@@ -1369,18 +1369,28 @@ h3 {
 }
 
 @media (max-width: 480px) {
+  .topbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
   .local-badge {
     display: none;
   }
 
   .topbar-actions {
     gap: 8px;
+    justify-content: flex-start;
+    width: 100%;
   }
 
   .topnav {
-    order: 2;
-    width: 100%;
+    order: 1;
     justify-content: center;
+  }
+
+  .theme-picker {
+    order: 2;
   }
 
   .analytics-stats {

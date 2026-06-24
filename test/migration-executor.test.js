@@ -53,6 +53,11 @@ function repository() {
     },
     async confirmMigration(input) {
       calls.push(["confirm", input]);
+      return {
+        canMarkSynced: true,
+        confirmedCount: input.plan.uploadCandidates.length,
+        status: "confirmed",
+      };
     },
     async tombstoneSession(input) {
       calls.push(["tombstone", input]);
@@ -172,6 +177,42 @@ test("preserves backup before mocked upload update and tombstone calls", async (
     { action: "tombstone", sessionId: tombstone.id },
     { action: "confirm", sessionId: null },
   ]);
+  assert.equal(execution.confirmation.status, "confirmed");
+});
+
+test("blocks completion when read-back confirmation fails without changing local sync state", async () => {
+  const localData = {
+    sync: {
+      status: "local",
+      lastSyncedAt: null,
+      lastError: null,
+      updatedAt: "2026-06-22T12:00:00.000Z",
+    },
+  };
+  const repo = repository();
+  repo.confirmMigration = async (input) => {
+    repo.calls.push(["confirm", input]);
+    return {
+      blockers: [{ code: "missing-read-back-row", sessionId: session.id }],
+      canMarkSynced: false,
+      status: "blocked",
+    };
+  };
+
+  await assertMigrationError(
+    {
+      plan: plan({ localData }),
+      repository: repo,
+    },
+    "migration-confirmation-blocked",
+  );
+
+  assert.equal(localData.sync.status, "local");
+  assert.equal(localData.sync.lastSyncedAt, null);
+  assert.deepEqual(
+    repo.calls.map(([type]) => type),
+    ["backup", "upload", "confirm"],
+  );
 });
 
 test("rejects unknown candidate actions before preserving backup", async () => {

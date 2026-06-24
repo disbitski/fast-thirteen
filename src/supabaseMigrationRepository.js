@@ -1,3 +1,5 @@
+import { validateMigrationSession } from "./migrationPlan.js";
+
 export const FAST_SESSIONS_TABLE = "fast_sessions";
 export const MIGRATION_REPOSITORY_METHODS = Object.freeze([
   "preserveBackup",
@@ -96,13 +98,123 @@ export function fastSessionRowToSession(row) {
   };
 }
 
+function sessionComparisonFields(session) {
+  return {
+    deletedAt: session.deletedAt ?? null,
+    endedAt: session.endedAt ?? null,
+    id: session.id,
+    startedAt: session.startedAt,
+    targetHours: Number(session.targetHours),
+    updatedAt: session.updatedAt,
+  };
+}
+
+function changedFields(expected, actual) {
+  const expectedFields = sessionComparisonFields(expected);
+  const actualFields = sessionComparisonFields(actual);
+  return Object.keys(expectedFields).filter((field) => expectedFields[field] !== actualFields[field]);
+}
+
+function latestByUpdatedAtThenTombstone(left, right) {
+  const leftUpdated = new Date(left.updatedAt).getTime();
+  const rightUpdated = new Date(right.updatedAt).getTime();
+  if (leftUpdated !== rightUpdated) return leftUpdated - rightUpdated;
+  if (left.deletedAt && !right.deletedAt) return 1;
+  if (!left.deletedAt && right.deletedAt) return -1;
+  return 0;
+}
+
+export function normalizeMigrationReadBackRows(rows, { user } = {}) {
+  const userId = requireUserId(user);
+  const invalidRows = [];
+  const sessions = new Map();
+
+  for (const row of Array.isArray(rows) ? rows : []) {
+    if (row?.user_id !== userId) {
+      invalidRows.push({
+        id: typeof row?.id === "string" ? row.id : null,
+        reason: "user-id-mismatch",
+      });
+      continue;
+    }
+
+    try {
+      const result = validateMigrationSession(fastSessionRowToSession(row));
+      if (!result.ok) {
+        invalidRows.push(result.invalid);
+        continue;
+      }
+
+      const existing = sessions.get(result.session.id);
+      if (!existing || latestByUpdatedAtThenTombstone(result.session, existing) > 0) {
+        sessions.set(result.session.id, result.session);
+      }
+    } catch (error) {
+      invalidRows.push({
+        id: typeof row?.id === "string" ? row.id : null,
+        reason: error.code ?? "row-invalid",
+      });
+    }
+  }
+
+  return {
+    invalidRows,
+    sessions,
+  };
+}
+
+function blocker(code, sessionId, detail = {}) {
+  return {
+    code,
+    sessionId,
+    ...detail,
+  };
+}
+
+export function createMigrationConfirmationResult({ plan, rows = [], user } = {}) {
+  const readBack = normalizeMigrationReadBackRows(rows, { user });
+  const blockers = readBack.invalidRows.map((row) => blocker("invalid-read-back-row", row.id, { reason: row.reason }));
+  const candidates = plan?.uploadCandidates ?? [];
+
+  for (const candidate of candidates) {
+    const expected = candidate.session;
+    const actual = readBack.sessions.get(expected.id);
+
+    if (!actual) {
+      blockers.push(blocker("missing-read-back-row", expected.id, { action: candidate.action }));
+      continue;
+    }
+
+    if (candidate.action === "tombstone" && !actual.deletedAt) {
+      blockers.push(blocker("tombstone-not-confirmed", expected.id));
+      continue;
+    }
+
+    const fields = changedFields(expected, actual);
+    if (fields.length > 0) {
+      blockers.push(blocker("changed-read-back-row", expected.id, { fields }));
+    }
+  }
+
+  return {
+    blockers,
+    canMarkSynced: blockers.length === 0,
+    confirmedCount: blockers.length === 0 ? candidates.length : 0,
+    expectedCount: candidates.length,
+    readBackCount: readBack.sessions.size,
+    status: blockers.length === 0 ? "confirmed" : "blocked",
+  };
+}
+
 export function supabaseMigrationRepositoryReadiness({
   client = null,
   config = {},
+  executeConfirmations = false,
   executeWrites = false,
 } = {}) {
   if (!config?.isConfigured) {
     return {
+      canConfirm: false,
       canWrite: false,
       message: "Supabase publishable config is missing; migration writes are disabled.",
       reason: "publishable-config-missing",
@@ -112,6 +224,7 @@ export function supabaseMigrationRepositoryReadiness({
 
   if (!client) {
     return {
+      canConfirm: false,
       canWrite: false,
       message: "Supabase browser client is not ready; migration writes are disabled.",
       reason: "client-missing",
@@ -121,6 +234,7 @@ export function supabaseMigrationRepositoryReadiness({
 
   if (config.migrationWritesEnabled !== true) {
     return {
+      canConfirm: false,
       canWrite: false,
       message: "Publishable Supabase config is present, but migration write support is disabled.",
       reason: "write-support-disabled",
@@ -130,6 +244,7 @@ export function supabaseMigrationRepositoryReadiness({
 
   if (executeWrites !== true) {
     return {
+      canConfirm: false,
       canWrite: false,
       message: "Migration write support is configured, but execution is disabled in this build.",
       reason: "executor-disabled",
@@ -137,9 +252,30 @@ export function supabaseMigrationRepositoryReadiness({
     };
   }
 
+  if (config.migrationConfirmationsEnabled !== true) {
+    return {
+      canConfirm: false,
+      canWrite: false,
+      message: "Migration writes require explicit read-back confirmation support before execution.",
+      reason: "confirmation-support-disabled",
+      status: "disabled",
+    };
+  }
+
+  if (executeConfirmations !== true) {
+    return {
+      canConfirm: false,
+      canWrite: false,
+      message: "Migration confirmation support is configured, but confirmation is disabled in this build.",
+      reason: "confirmation-disabled",
+      status: "disabled",
+    };
+  }
+
   return {
+    canConfirm: true,
     canWrite: true,
-    message: "Supabase migration write support is explicitly enabled.",
+    message: "Supabase migration write and confirmation support are explicitly enabled.",
     reason: null,
     status: "ready",
   };
@@ -148,9 +284,10 @@ export function supabaseMigrationRepositoryReadiness({
 export function createSupabaseMigrationRepository({
   client = null,
   config = {},
+  executeConfirmations = false,
   executeWrites = false,
 } = {}) {
-  const readiness = supabaseMigrationRepositoryReadiness({ client, config, executeWrites });
+  const readiness = supabaseMigrationRepositoryReadiness({ client, config, executeConfirmations, executeWrites });
 
   return {
     methods: MIGRATION_REPOSITORY_METHODS,
@@ -202,12 +339,13 @@ export function createSupabaseMigrationRepository({
 
     async confirmMigration({ plan, user } = {}) {
       assertCanWrite(readiness);
-      requireUserId(user);
-      return {
-        action: "confirmMigration",
-        candidateCount: plan?.uploadCandidates?.length ?? 0,
-        userId: user.id,
-      };
+      const userId = requireUserId(user);
+      const from = requireClientTable(client);
+      const rows = await executeSupabaseQuery(
+        from(FAST_SESSIONS_TABLE).select("*").eq("user_id", userId),
+        "confirmMigration",
+      );
+      return createMigrationConfirmationResult({ plan, rows, user });
     },
   };
 }

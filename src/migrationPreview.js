@@ -28,7 +28,19 @@ function disabledConfirmation(label = "Migration confirmation disabled") {
   };
 }
 
-export function createMigrationPreviewModel(plan) {
+function confirmationModel(readiness) {
+  if (readiness?.canWrite === true && readiness?.canConfirm === true) {
+    return {
+      disabled: false,
+      label: "Confirm migration",
+      message: "Migration execution and read-back confirmation are explicitly enabled.",
+    };
+  }
+
+  return disabledConfirmation("Confirm migration unavailable");
+}
+
+export function createMigrationPreviewModel(plan, { migrationReadiness = null } = {}) {
   const actionCounts = countActions(plan?.uploadCandidates ?? []);
   const summary = plan?.summary ?? {};
   const authRequired = plan?.blockers?.includes("authenticated-user-required");
@@ -91,7 +103,7 @@ export function createMigrationPreviewModel(plan) {
       status: "ready",
       title: "Migration preview ready",
       message: "This dry run shows what would sync after sign-in. It does not write to Supabase yet.",
-      confirmation: disabledConfirmation("Confirm migration unavailable"),
+      confirmation: confirmationModel(migrationReadiness),
     };
   }
 

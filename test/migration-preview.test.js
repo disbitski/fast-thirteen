@@ -53,6 +53,21 @@ test("maps a ready migration plan into local-safe preview copy", () => {
   ]);
 });
 
+test("only enables confirmation when write and read-back support are ready", () => {
+  const model = createMigrationPreviewModel(basePlan, {
+    migrationReadiness: {
+      canConfirm: true,
+      canWrite: true,
+    },
+  });
+
+  assert.deepEqual(model.confirmation, {
+    disabled: false,
+    label: "Confirm migration",
+    message: "Migration execution and read-back confirmation are explicitly enabled.",
+  });
+});
+
 test("maps missing authentication into sign-in preview state", () => {
   const model = createMigrationPreviewModel({
     ...basePlan,
