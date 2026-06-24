@@ -25,6 +25,7 @@ import {
   mapAuthStateToProfile,
   readAuthCallbackState,
 } from "./auth.js";
+import { recentSessionsForDays } from "./analytics.js";
 import { authReadiness } from "./authReadiness.js";
 import { createGuestMigrationPlan } from "./migrationPlan.js";
 import { createMigrationPreviewModel } from "./migrationPreview.js";
@@ -52,8 +53,6 @@ const callbackAuthState = readAuthCallbackState(
 );
 let authState = authService.initialState(callbackAuthState);
 if (callbackAuthState) cleanAuthCallbackUrl(globalThis.location, globalThis.history);
-
-const DAY_MS = 24 * 60 * 60 * 1000;
 
 const elements = {
   button: document.querySelector("#fast-button"),
@@ -168,10 +167,6 @@ function formatDate(value) {
     day: "numeric",
     year: "numeric",
   }).format(new Date(value));
-}
-
-function isWithinPastDays(value, days, now = new Date()) {
-  return new Date(value).getTime() >= now.getTime() - days * DAY_MS;
 }
 
 function targetLabel(targetHours) {
@@ -307,9 +302,7 @@ function renderStats() {
 }
 
 function renderHistory() {
-  const completedSessions = sessions
-    .filter((session) => !session.deletedAt && session.endedAt && isWithinPastDays(session.endedAt, 7))
-    .sort((a, b) => new Date(b.endedAt) - new Date(a.endedAt));
+  const completedSessions = recentSessionsForDays(sessions, new Date(), 7);
 
   elements.emptyState.hidden = Boolean(activeSession) || completedSessions.length > 0;
   elements.sessionList.replaceChildren(

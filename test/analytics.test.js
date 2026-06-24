@@ -6,6 +6,7 @@ import {
   lastNDays,
   longestGoalStreak,
   rangeBuckets,
+  recentSessionsForDays,
 } from "../src/analytics.js";
 
 const sessions = [
@@ -66,6 +67,32 @@ test("builds last seven day buckets from completed non-deleted sessions", () => 
       ["2026-06-18", 0, 0],
       ["2026-06-19", 0, 0],
     ],
+  );
+});
+
+test("recent sessions use seven local calendar days instead of a rolling hour window", () => {
+  const dailySessions = Array.from({ length: 8 }, (_, index) => {
+    const day = 17 + index;
+    return {
+      id: `june-${day}`,
+      startedAt: `2026-06-${String(day - 1).padStart(2, "0")}T23:00:00.000Z`,
+      endedAt: `2026-06-${String(day).padStart(2, "0")}T12:00:00.000Z`,
+      targetHours: 13,
+      updatedAt: `2026-06-${String(day).padStart(2, "0")}T12:00:00.000Z`,
+      deletedAt: null,
+    };
+  });
+
+  const recent = recentSessionsForDays(
+    dailySessions,
+    new Date("2026-06-24T13:00:00.000Z"),
+    7,
+  );
+
+  assert.equal(recent.length, 7);
+  assert.deepEqual(
+    recent.map((session) => session.id),
+    ["june-24", "june-23", "june-22", "june-21", "june-20", "june-19", "june-18"],
   );
 });
 

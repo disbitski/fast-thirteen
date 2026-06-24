@@ -108,6 +108,12 @@ export function lastNDays(sessions, now = new Date(), days = 7) {
   });
 }
 
+export function recentSessionsForDays(sessions, now = new Date(), days = 7) {
+  return lastNDays(sessions, now, days)
+    .flatMap((day) => day.sessions)
+    .sort((a, b) => new Date(b.endedAt) - new Date(a.endedAt));
+}
+
 function bucketDateLabel(value, bucket) {
   const options = bucket === "month"
     ? { month: "short" }
