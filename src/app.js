@@ -55,6 +55,9 @@ const callbackAuthState = readAuthCallbackState(
 let authState = authService.initialState(callbackAuthState);
 if (callbackAuthState) cleanAuthCallbackUrl(globalThis.location, globalThis.history);
 
+const SHARED_DATA_URL = "api/data";
+const SAMPLE_DATA_URL = "sample-data.json";
+
 const elements = {
   button: document.querySelector("#fast-button"),
   completedFasts: document.querySelector("#completed-fasts"),
@@ -123,8 +126,8 @@ function persistData(message = "Saved locally") {
 
 async function loadSharedData() {
   try {
-    const response = await fetch("/api/data", { cache: "no-store" });
-    if (!response.ok) return;
+    const response = await fetch(SHARED_DATA_URL, { cache: "no-store" });
+    if (!response.ok) throw new Error("Shared data unavailable");
     const { data } = await response.json();
 
     if (data) {
@@ -140,13 +143,34 @@ async function loadSharedData() {
     elements.saveStatus.textContent = "Saved on this Mac";
     render();
   } catch {
+    await loadSampleData();
+  }
+}
+
+async function loadSampleData() {
+  if (sessions.length > 0) {
+    elements.saveStatus.textContent = "Saved in this browser";
+    return;
+  }
+
+  try {
+    const response = await fetch(SAMPLE_DATA_URL, { cache: "no-store" });
+    if (!response.ok) throw new Error("Sample data unavailable");
+
+    appData = normalizeData(await response.json());
+    sessions.splice(0, sessions.length, ...appData.sessions);
+    activeSession = sessions.find((session) => !session.deletedAt && !session.endedAt) ?? null;
+    saveData(localStorage, appData);
+    elements.saveStatus.textContent = "Viewing sample data";
+    render();
+  } catch {
     elements.saveStatus.textContent = "Saved in this browser";
   }
 }
 
 async function saveSharedData(value) {
   try {
-    const response = await fetch("/api/data", {
+    const response = await fetch(SHARED_DATA_URL, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(value),

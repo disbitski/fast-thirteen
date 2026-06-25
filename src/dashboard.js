@@ -5,6 +5,8 @@ import { applyTheme, loadTheme, saveTheme } from "./theme.js";
 let appData = loadData(localStorage);
 let selectedTheme = applyTheme(document.documentElement, loadTheme(localStorage));
 let selectedRangeDays = ANALYTICS_RANGES[0].days;
+const SHARED_DATA_URL = "api/data";
+const SAMPLE_DATA_URL = "sample-data.json";
 
 const elements = {
   analyticsSource: document.querySelector("#analytics-source"),
@@ -173,8 +175,8 @@ function render() {
 
 async function loadSharedData() {
   try {
-    const response = await fetch("/api/data", { cache: "no-store" });
-    if (!response.ok) return;
+    const response = await fetch(SHARED_DATA_URL, { cache: "no-store" });
+    if (!response.ok) throw new Error("Shared data unavailable");
     const { data } = await response.json();
 
     if (data) {
@@ -183,6 +185,25 @@ async function loadSharedData() {
       elements.analyticsSource.textContent = "Saved on this Mac";
       render();
     }
+  } catch {
+    await loadSampleData();
+  }
+}
+
+async function loadSampleData() {
+  if (appData.sessions.length > 0) {
+    elements.analyticsSource.textContent = "Reading this browser";
+    return;
+  }
+
+  try {
+    const response = await fetch(SAMPLE_DATA_URL, { cache: "no-store" });
+    if (!response.ok) throw new Error("Sample data unavailable");
+
+    appData = normalizeData(await response.json());
+    saveData(localStorage, appData);
+    elements.analyticsSource.textContent = "Viewing sample data";
+    render();
   } catch {
     elements.analyticsSource.textContent = "Reading this browser";
   }
