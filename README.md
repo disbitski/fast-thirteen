@@ -8,6 +8,19 @@ store sessions in the browser, and summarize progress. The domain logic is
 kept separate so it can later be shared conceptually with iPhone, Mac, and
 Apple Watch clients.
 
+## Try The Live UI
+
+Experience the current Fast Thirteen UI on GitHub Pages:
+[Launch the live sample](https://disbitski.github.io/fast-thirteen/).
+
+The live version uses sample fasting data so you can explore the tracker, the
+analytics dashboard, the 7/30/90/1Y trend controls, and the theme picker
+without running anything locally.
+
+| Light | Black/Cyan | SpaceX |
+| --- | --- | --- |
+| ![Fast Thirteen light theme](docs/assets/fast-thirteen-light.png) | ![Fast Thirteen black and cyan theme](docs/assets/fast-thirteen-cyan.png) | ![Fast Thirteen SpaceX theme](docs/assets/fast-thirteen-spacex.png) |
+
 ## Features
 
 - Start and end a fast with one button
