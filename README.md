@@ -21,6 +21,23 @@ without running anything locally.
 | --- | --- | --- |
 | ![Fast Thirteen light theme](docs/assets/fast-thirteen-light.png) | ![Fast Thirteen black and cyan theme](docs/assets/fast-thirteen-cyan.png) | ![Fast Thirteen SpaceX theme](docs/assets/fast-thirteen-spacex.png) |
 
+## Why I Built This
+
+I have been practicing daily fasting for more than 10 years. For me, fasting
+is part of a larger philosophy around daily habits: strong body, strong mind,
+disciplined soul.
+
+Fast Thirteen started as a simple personal tool to help me stay consistent
+with a 13-hour daily fasting rhythm. I wanted something clean, focused, and
+motivating. No noise, no shame, no complicated setup. Just start the fast, end
+the fast, and watch the habit compound over time.
+
+I am building this in public because I want to give it to others for free and
+help people make progress with their own fasting journey.
+
+You can follow more of my training, discipline, and daily habit work on
+Instagram: [@thedavedev](https://www.instagram.com/thedavedev/).
+
 ## Features
 
 - Start and end a fast with one button
