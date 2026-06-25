@@ -11,6 +11,7 @@ test("missing Supabase browser config disables auth", () => {
     supabaseUrl: null,
     supabaseAnonKey: null,
     migrationConfirmationsEnabled: false,
+    migrationFinalizationEnabled: false,
     migrationWritesEnabled: false,
     isConfigured: false,
   });
@@ -22,6 +23,7 @@ test("loads only browser-publishable Supabase config values", () => {
       supabaseUrl: " https://example.supabase.co/ ",
       supabaseAnonKey: " sb_publishable_test ",
       migrationConfirmationsEnabled: "true",
+      migrationFinalizationEnabled: "true",
       migrationWritesEnabled: "true",
       serviceRoleKey: "must-not-leak",
       appleClientSecret: "must-not-leak",
@@ -32,6 +34,7 @@ test("loads only browser-publishable Supabase config values", () => {
     supabaseUrl: "https://example.supabase.co",
     supabaseAnonKey: "sb_publishable_test",
     migrationConfirmationsEnabled: true,
+    migrationFinalizationEnabled: true,
     migrationWritesEnabled: true,
     isConfigured: true,
   });
@@ -49,6 +52,7 @@ test("rejects secret-looking Supabase keys in browser config", () => {
       supabaseUrl: "https://example.supabase.co",
       supabaseAnonKey: null,
       migrationConfirmationsEnabled: false,
+      migrationFinalizationEnabled: false,
       migrationWritesEnabled: false,
       isConfigured: false,
     },

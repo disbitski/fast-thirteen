@@ -53,10 +53,27 @@ test("maps a ready migration plan into local-safe preview copy", () => {
   ]);
 });
 
-test("only enables confirmation when write and read-back support are ready", () => {
+test("keeps confirmation disabled without local finalization support", () => {
   const model = createMigrationPreviewModel(basePlan, {
     migrationReadiness: {
       canConfirm: true,
+      canFinalize: false,
+      canWrite: true,
+    },
+  });
+
+  assert.deepEqual(model.confirmation, {
+    disabled: true,
+    label: "Confirm migration unavailable",
+    message: "Cloud migration execution is not enabled in this local preview.",
+  });
+});
+
+test("only enables confirmation when write read-back and finalization support are ready", () => {
+  const model = createMigrationPreviewModel(basePlan, {
+    migrationReadiness: {
+      canConfirm: true,
+      canFinalize: true,
       canWrite: true,
     },
   });
@@ -64,7 +81,7 @@ test("only enables confirmation when write and read-back support are ready", () 
   assert.deepEqual(model.confirmation, {
     disabled: false,
     label: "Confirm migration",
-    message: "Migration execution and read-back confirmation are explicitly enabled.",
+    message: "Migration execution, read-back confirmation, and local finalization are explicitly enabled.",
   });
 });
 

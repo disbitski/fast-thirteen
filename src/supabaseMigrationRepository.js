@@ -210,11 +210,13 @@ export function supabaseMigrationRepositoryReadiness({
   client = null,
   config = {},
   executeConfirmations = false,
+  executeFinalization = false,
   executeWrites = false,
 } = {}) {
   if (!config?.isConfigured) {
     return {
       canConfirm: false,
+      canFinalize: false,
       canWrite: false,
       message: "Supabase publishable config is missing; migration writes are disabled.",
       reason: "publishable-config-missing",
@@ -225,6 +227,7 @@ export function supabaseMigrationRepositoryReadiness({
   if (!client) {
     return {
       canConfirm: false,
+      canFinalize: false,
       canWrite: false,
       message: "Supabase browser client is not ready; migration writes are disabled.",
       reason: "client-missing",
@@ -235,6 +238,7 @@ export function supabaseMigrationRepositoryReadiness({
   if (config.migrationWritesEnabled !== true) {
     return {
       canConfirm: false,
+      canFinalize: false,
       canWrite: false,
       message: "Publishable Supabase config is present, but migration write support is disabled.",
       reason: "write-support-disabled",
@@ -245,6 +249,7 @@ export function supabaseMigrationRepositoryReadiness({
   if (executeWrites !== true) {
     return {
       canConfirm: false,
+      canFinalize: false,
       canWrite: false,
       message: "Migration write support is configured, but execution is disabled in this build.",
       reason: "executor-disabled",
@@ -255,6 +260,7 @@ export function supabaseMigrationRepositoryReadiness({
   if (config.migrationConfirmationsEnabled !== true) {
     return {
       canConfirm: false,
+      canFinalize: false,
       canWrite: false,
       message: "Migration writes require explicit read-back confirmation support before execution.",
       reason: "confirmation-support-disabled",
@@ -265,6 +271,7 @@ export function supabaseMigrationRepositoryReadiness({
   if (executeConfirmations !== true) {
     return {
       canConfirm: false,
+      canFinalize: false,
       canWrite: false,
       message: "Migration confirmation support is configured, but confirmation is disabled in this build.",
       reason: "confirmation-disabled",
@@ -272,10 +279,33 @@ export function supabaseMigrationRepositoryReadiness({
     };
   }
 
+  if (config.migrationFinalizationEnabled !== true) {
+    return {
+      canConfirm: true,
+      canFinalize: false,
+      canWrite: false,
+      message: "Migration confirmation requires explicit local finalization support before execution.",
+      reason: "finalization-support-disabled",
+      status: "disabled",
+    };
+  }
+
+  if (executeFinalization !== true) {
+    return {
+      canConfirm: true,
+      canFinalize: false,
+      canWrite: false,
+      message: "Migration finalization support is configured, but local sync updates are disabled in this build.",
+      reason: "finalization-disabled",
+      status: "disabled",
+    };
+  }
+
   return {
     canConfirm: true,
+    canFinalize: true,
     canWrite: true,
-    message: "Supabase migration write and confirmation support are explicitly enabled.",
+    message: "Supabase migration write, confirmation, and finalization support are explicitly enabled.",
     reason: null,
     status: "ready",
   };
@@ -285,9 +315,16 @@ export function createSupabaseMigrationRepository({
   client = null,
   config = {},
   executeConfirmations = false,
+  executeFinalization = false,
   executeWrites = false,
 } = {}) {
-  const readiness = supabaseMigrationRepositoryReadiness({ client, config, executeConfirmations, executeWrites });
+  const readiness = supabaseMigrationRepositoryReadiness({
+    client,
+    config,
+    executeConfirmations,
+    executeFinalization,
+    executeWrites,
+  });
 
   return {
     methods: MIGRATION_REPOSITORY_METHODS,

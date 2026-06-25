@@ -47,11 +47,15 @@ export function normalizeSupabaseConfig(value = {}) {
   const migrationConfirmationsEnabled = cleanBoolean(
     value.migrationConfirmationsEnabled ?? value.SUPABASE_MIGRATION_CONFIRMATIONS_ENABLED,
   );
+  const migrationFinalizationEnabled = cleanBoolean(
+    value.migrationFinalizationEnabled ?? value.SUPABASE_MIGRATION_FINALIZATION_ENABLED,
+  );
 
   return {
     supabaseUrl,
     supabaseAnonKey,
     migrationConfirmationsEnabled,
+    migrationFinalizationEnabled,
     migrationWritesEnabled,
     isConfigured: Boolean(supabaseUrl && supabaseAnonKey),
   };

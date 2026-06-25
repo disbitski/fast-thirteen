@@ -29,11 +29,15 @@ function disabledConfirmation(label = "Migration confirmation disabled") {
 }
 
 function confirmationModel(readiness) {
-  if (readiness?.canWrite === true && readiness?.canConfirm === true) {
+  if (
+    readiness?.canWrite === true &&
+    readiness?.canConfirm === true &&
+    readiness?.canFinalize === true
+  ) {
     return {
       disabled: false,
       label: "Confirm migration",
-      message: "Migration execution and read-back confirmation are explicitly enabled.",
+      message: "Migration execution, read-back confirmation, and local finalization are explicitly enabled.",
     };
   }
 

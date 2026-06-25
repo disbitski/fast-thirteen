@@ -30,6 +30,7 @@ const session = {
 const configured = {
   isConfigured: true,
   migrationConfirmationsEnabled: false,
+  migrationFinalizationEnabled: false,
   migrationWritesEnabled: false,
   supabaseAnonKey: "sb_publishable_test",
   supabaseUrl: "https://example.supabase.co",
@@ -120,8 +121,9 @@ test("publishable config alone keeps migration writes disabled", () => {
       config: configured,
     }),
     {
-      canWrite: false,
       canConfirm: false,
+      canFinalize: false,
+      canWrite: false,
       message: "Publishable Supabase config is present, but migration write support is disabled.",
       reason: "write-support-disabled",
       status: "disabled",
@@ -136,8 +138,9 @@ test("migration writes stay disabled without explicit executor support", () => {
       config: { ...configured, migrationWritesEnabled: true },
     }),
     {
-      canWrite: false,
       canConfirm: false,
+      canFinalize: false,
+      canWrite: false,
       message: "Migration write support is configured, but execution is disabled in this build.",
       reason: "executor-disabled",
       status: "disabled",
@@ -189,8 +192,14 @@ test("explicitly enabled repository maps uploads to fast_sessions upsert", async
   const client = fakeClient();
   const repository = createSupabaseMigrationRepository({
     client,
-    config: { ...configured, migrationConfirmationsEnabled: true, migrationWritesEnabled: true },
+    config: {
+      ...configured,
+      migrationConfirmationsEnabled: true,
+      migrationFinalizationEnabled: true,
+      migrationWritesEnabled: true,
+    },
     executeConfirmations: true,
+    executeFinalization: true,
     executeWrites: true,
   });
 
@@ -215,9 +224,29 @@ test("confirmation support must be explicit before repository can execute", () =
     }),
     {
       canConfirm: false,
+      canFinalize: false,
       canWrite: false,
       message: "Migration writes require explicit read-back confirmation support before execution.",
       reason: "confirmation-support-disabled",
+      status: "disabled",
+    },
+  );
+});
+
+test("finalization support must be explicit before repository can execute", () => {
+  assert.deepEqual(
+    supabaseMigrationRepositoryReadiness({
+      client: fakeClient(),
+      config: { ...configured, migrationConfirmationsEnabled: true, migrationWritesEnabled: true },
+      executeConfirmations: true,
+      executeWrites: true,
+    }),
+    {
+      canConfirm: true,
+      canFinalize: false,
+      canWrite: false,
+      message: "Migration confirmation requires explicit local finalization support before execution.",
+      reason: "finalization-support-disabled",
       status: "disabled",
     },
   );
@@ -347,8 +376,14 @@ test("repository confirms migration by reading fast_sessions rows", async () => 
   const client = fakeClient({ readRows: [sessionToFastSessionRow(session, user)] });
   const repository = createSupabaseMigrationRepository({
     client,
-    config: { ...configured, migrationConfirmationsEnabled: true, migrationWritesEnabled: true },
+    config: {
+      ...configured,
+      migrationConfirmationsEnabled: true,
+      migrationFinalizationEnabled: true,
+      migrationWritesEnabled: true,
+    },
     executeConfirmations: true,
+    executeFinalization: true,
     executeWrites: true,
   });
 

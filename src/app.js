@@ -31,6 +31,7 @@ import { createGuestMigrationPlan } from "./migrationPlan.js";
 import { createMigrationPreviewModel } from "./migrationPreview.js";
 import { createBrowserSupabaseClient } from "./supabaseClient.js";
 import { loadSupabaseConfig } from "./supabaseConfig.js";
+import { supabaseMigrationRepositoryReadiness } from "./supabaseMigrationRepository.js";
 
 let appData = loadData(localStorage);
 const sessions = appData.sessions;
@@ -431,6 +432,10 @@ function renderProfileSync() {
     localData: appData,
     profile: appData.profile,
   });
+  const migrationReadiness = supabaseMigrationRepositoryReadiness({
+    client: supabaseClient.client,
+    config: supabaseConfig,
+  });
 
   elements.profileBadge.textContent = `${profileLabel()} · ${syncLabel()}`;
   elements.profileMode.textContent = profileLabel();
@@ -447,7 +452,7 @@ function renderProfileSync() {
   elements.googleSignIn.disabled = ["loading", "redirecting"].includes(authState.status);
   elements.signOut.hidden = appData.profile.mode !== "authenticated";
   elements.authHelp.textContent = authHelpText();
-  renderMigrationPreview(createMigrationPreviewModel(migrationPlan));
+  renderMigrationPreview(createMigrationPreviewModel(migrationPlan, { migrationReadiness }));
 }
 
 function applyAuthState(state, { persistMessage } = {}) {
