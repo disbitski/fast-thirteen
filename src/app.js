@@ -32,6 +32,8 @@ import { createMigrationPreviewModel } from "./migrationPreview.js";
 import { createBrowserSupabaseClient } from "./supabaseClient.js";
 import { loadSupabaseConfig } from "./supabaseConfig.js";
 import { supabaseMigrationRepositoryReadiness } from "./supabaseMigrationRepository.js";
+import { createCloudReadPlan, createFailedSyncReadPlan, syncReadReadiness } from "./syncReadPlan.js";
+import { createSyncPreviewModel } from "./syncPreview.js";
 
 let appData = loadData(localStorage);
 const sessions = appData.sessions;
@@ -94,6 +96,14 @@ const elements = {
   sessionStartedAt: document.querySelector("#session-started-at"),
   sessionSummary: document.querySelector("#session-summary"),
   syncDescription: document.querySelector("#sync-description"),
+  syncPreview: document.querySelector("#sync-preview"),
+  syncPreviewAction: document.querySelector("#sync-preview-action"),
+  syncPreviewActionDetail: document.querySelector("#sync-preview-action-detail"),
+  syncPreviewDetails: document.querySelector("#sync-preview-details"),
+  syncPreviewLastSync: document.querySelector("#sync-preview-last-sync"),
+  syncPreviewMessage: document.querySelector("#sync-preview-message"),
+  syncPreviewStats: document.querySelector("#sync-preview-stats"),
+  syncPreviewTitle: document.querySelector("#sync-preview-title"),
   syncStatus: document.querySelector("#sync-status"),
   authHelp: document.querySelector("#auth-help"),
   authReadinessDetail: document.querySelector("#auth-readiness-detail"),
@@ -445,6 +455,35 @@ function renderMigrationPreview(model) {
   elements.migrationConfirmDetail.textContent = model.confirmation.message;
 }
 
+function renderSyncPreview(model) {
+  elements.syncPreview.dataset.previewStatus = model.status;
+  elements.syncPreviewTitle.textContent = model.title;
+  elements.syncPreviewMessage.textContent = model.message;
+  elements.syncPreviewLastSync.textContent = model.lastSync;
+  elements.syncPreviewStats.replaceChildren(
+    ...model.stats.map((item) => {
+      const card = document.createElement("div");
+      const term = document.createElement("dt");
+      const description = document.createElement("dd");
+      term.textContent = item.label;
+      description.textContent = item.value;
+      description.dataset.tone = item.tone;
+      card.append(term, description);
+      return card;
+    }),
+  );
+  elements.syncPreviewDetails.replaceChildren(
+    ...model.details.map((detail) => {
+      const item = document.createElement("li");
+      item.textContent = detail;
+      return item;
+    }),
+  );
+  elements.syncPreviewAction.disabled = model.action.disabled;
+  elements.syncPreviewAction.textContent = model.action.label;
+  elements.syncPreviewActionDetail.textContent = model.action.message;
+}
+
 function renderProfileSync() {
   const readiness = authReadiness({
     authStatus: authState.status,
@@ -460,6 +499,21 @@ function renderProfileSync() {
     client: supabaseClient.client,
     config: supabaseConfig,
   });
+  const cloudReadReadiness = syncReadReadiness({
+    authState,
+    clientStatus: supabaseClient.status,
+    config: supabaseConfig,
+  });
+  const cloudReadPlan = cloudReadReadiness.canRead
+    ? createCloudReadPlan({
+        localData: appData,
+        remoteRows: [],
+        user: authState.user,
+      })
+    : createFailedSyncReadPlan({
+        error: cloudReadReadiness.message,
+        localData: appData,
+      });
 
   elements.profileBadge.textContent = `${profileLabel()} · ${syncLabel()}`;
   elements.profileMode.textContent = profileLabel();
@@ -477,6 +531,7 @@ function renderProfileSync() {
   elements.signOut.hidden = appData.profile.mode !== "authenticated";
   elements.authHelp.textContent = authHelpText();
   renderMigrationPreview(createMigrationPreviewModel(migrationPlan, { migrationReadiness }));
+  renderSyncPreview(createSyncPreviewModel(cloudReadPlan, { readiness: cloudReadReadiness }));
 }
 
 function applyAuthState(state, { persistMessage } = {}) {

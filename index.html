@@ -182,6 +182,28 @@
               </small>
             </div>
           </div>
+          <div class="sync-preview" id="sync-preview" data-preview-status="disabled">
+            <div>
+              <p class="eyebrow">Cloud read preview</p>
+              <h3 id="sync-preview-title">Cloud sync preview disabled</h3>
+              <p id="sync-preview-message">
+                Sign in with configured Supabase auth before reading cloud fasting history.
+              </p>
+              <small class="sync-preview-last" id="sync-preview-last-sync">
+                Last successful sync: Never synced
+              </small>
+            </div>
+            <dl class="sync-preview-stats" id="sync-preview-stats"></dl>
+            <ul class="sync-preview-details" id="sync-preview-details"></ul>
+            <div class="sync-preview-action">
+              <button class="secondary-button" id="sync-preview-action" type="button" disabled>
+                Cloud read disabled
+              </button>
+              <small id="sync-preview-action-detail">
+                Cloud reads are preview-only here and no cloud writes will run.
+              </small>
+            </div>
+          </div>
         </div>
       </section>
 
