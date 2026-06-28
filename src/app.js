@@ -32,7 +32,12 @@ import { createMigrationPreviewModel } from "./migrationPreview.js";
 import { createBrowserSupabaseClient } from "./supabaseClient.js";
 import { loadSupabaseConfig } from "./supabaseConfig.js";
 import { supabaseMigrationRepositoryReadiness } from "./supabaseMigrationRepository.js";
-import { createCloudReadPlan, createFailedSyncReadPlan, syncReadReadiness } from "./syncReadPlan.js";
+import {
+  createFailedSyncReadPlan,
+  createSupabaseSyncReadRepository,
+  syncReadReadiness,
+} from "./syncReadPlan.js";
+import { createCloudPullPreview } from "./syncPull.js";
 import { createSyncPreviewModel } from "./syncPreview.js";
 
 let appData = loadData(localStorage);
@@ -40,6 +45,9 @@ const sessions = appData.sessions;
 let activeSession = sessions.find((session) => !session.deletedAt && !session.endedAt) ?? null;
 let editingSessionId = null;
 let deleteConfirmationPending = false;
+let pendingSyncPullKey = null;
+let syncPullPreview = null;
+let syncPullRequestId = 0;
 let selectedTheme = applyTheme(document.documentElement, loadTheme(localStorage));
 const supabaseConfig = loadSupabaseConfig(globalThis);
 const supabaseClient = createBrowserSupabaseClient({
@@ -484,6 +492,74 @@ function renderSyncPreview(model) {
   elements.syncPreviewActionDetail.textContent = model.action.message;
 }
 
+function syncPullKey(readiness) {
+  return JSON.stringify({
+    canRead: readiness.canRead,
+    reason: readiness.reason,
+    sessionState: sessions
+      .map((session) => `${session.id}:${session.updatedAt}:${session.deletedAt ?? ""}`)
+      .sort()
+      .join("|"),
+    syncUpdatedAt: appData.sync.updatedAt,
+    userId: authState.user?.id ?? null,
+  });
+}
+
+function fallbackSyncPreview(readiness) {
+  return createSyncPreviewModel(
+    createFailedSyncReadPlan({
+      error: readiness.message,
+      localData: appData,
+    }),
+    { readiness },
+  );
+}
+
+function refreshCloudPullPreview(readiness, key) {
+  if (!readiness.canRead) {
+    syncPullRequestId += 1;
+    pendingSyncPullKey = null;
+    syncPullPreview = null;
+    return;
+  }
+
+  if (syncPullPreview?.key === key || pendingSyncPullKey === key) return;
+
+  const requestId = ++syncPullRequestId;
+  pendingSyncPullKey = key;
+  const repository = createSupabaseSyncReadRepository({
+    client: supabaseClient.client,
+    readiness,
+  });
+
+  createCloudPullPreview({
+    localData: appData,
+    readiness,
+    repository,
+    user: authState.user,
+  })
+    .then((result) => {
+      if (requestId !== syncPullRequestId) return;
+      syncPullPreview = { key, result };
+      renderSyncPreview(result.model);
+    })
+    .catch((error) => {
+      if (requestId !== syncPullRequestId) return;
+      renderSyncPreview(
+        createSyncPreviewModel(
+          createFailedSyncReadPlan({
+            error: error?.message ?? "Cloud fasting history could not be read.",
+            localData: appData,
+          }),
+          { readiness },
+        ),
+      );
+    })
+    .finally(() => {
+      if (requestId === syncPullRequestId) pendingSyncPullKey = null;
+    });
+}
+
 function renderProfileSync() {
   const readiness = authReadiness({
     authStatus: authState.status,
@@ -504,16 +580,7 @@ function renderProfileSync() {
     clientStatus: supabaseClient.status,
     config: supabaseConfig,
   });
-  const cloudReadPlan = cloudReadReadiness.canRead
-    ? createCloudReadPlan({
-        localData: appData,
-        remoteRows: [],
-        user: authState.user,
-      })
-    : createFailedSyncReadPlan({
-        error: cloudReadReadiness.message,
-        localData: appData,
-      });
+  const cloudReadKey = syncPullKey(cloudReadReadiness);
 
   elements.profileBadge.textContent = `${profileLabel()} · ${syncLabel()}`;
   elements.profileMode.textContent = profileLabel();
@@ -531,7 +598,12 @@ function renderProfileSync() {
   elements.signOut.hidden = appData.profile.mode !== "authenticated";
   elements.authHelp.textContent = authHelpText();
   renderMigrationPreview(createMigrationPreviewModel(migrationPlan, { migrationReadiness }));
-  renderSyncPreview(createSyncPreviewModel(cloudReadPlan, { readiness: cloudReadReadiness }));
+  renderSyncPreview(
+    syncPullPreview?.key === cloudReadKey
+      ? syncPullPreview.result.model
+      : fallbackSyncPreview(cloudReadReadiness),
+  );
+  refreshCloudPullPreview(cloudReadReadiness, cloudReadKey);
 }
 
 function applyAuthState(state, { persistMessage } = {}) {
