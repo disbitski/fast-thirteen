@@ -36,7 +36,25 @@ function disabledAction(label = "Read-only preview") {
   };
 }
 
-export function createSyncPreviewModel(plan, { readiness = null } = {}) {
+function applyAction(plan, applyReadiness) {
+  if (plan?.status === "ready" && plan.canApply === true && applyReadiness?.canApply) {
+    return {
+      disabled: false,
+      label: "Apply cloud read",
+      message: applyReadiness.message ?? "This successful read plan can update the local offline copy.",
+    };
+  }
+
+  return {
+    disabled: true,
+    label: "Apply disabled",
+    message:
+      applyReadiness?.message ??
+      "Applying cloud reads is disabled until local finalization support is explicitly enabled.",
+  };
+}
+
+export function createSyncPreviewModel(plan, { applyReadiness = null, readiness = null } = {}) {
   const summary = plan?.summary ?? {};
   const localSessions = summary.localSessions ?? plan?.data?.sessions?.length ?? 0;
   const remoteSessions = summary.remoteSessions ?? 0;
@@ -88,7 +106,7 @@ export function createSyncPreviewModel(plan, { readiness = null } = {}) {
   }
 
   return {
-    action: disabledAction(),
+    action: applyAction(plan, applyReadiness),
     details: [
       `${countLabel(remoteAppliedCount, "remote change")} would merge into local history.`,
       `${countLabel(localKeptCount, "local edit")} ${countVerb(localKeptCount, "stays", "stay")} newer than cloud history.`,

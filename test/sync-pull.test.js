@@ -89,6 +89,30 @@ test("mocked cloud pull builds a ready read plan and preview without mutating lo
   assert.match(result.model.message, /does not write to Supabase/);
 });
 
+test("cloud pull passes explicit apply readiness into the preview action", async () => {
+  const result = await createCloudPullPreview({
+    applyReadiness: {
+      canApply: true,
+      message: "Successful cloud read plans can be applied to the local offline copy.",
+    },
+    localData: localData(),
+    readiness: { canRead: true },
+    repository: {
+      async readFastSessions() {
+        return [row(remoteSession)];
+      },
+    },
+    user,
+  });
+
+  assert.equal(result.status, "ready");
+  assert.deepEqual(result.model.action, {
+    disabled: false,
+    label: "Apply cloud read",
+    message: "Successful cloud read plans can be applied to the local offline copy.",
+  });
+});
+
 test("repository failures return a blocked preview and keep local sync state unchanged", async () => {
   const data = localData();
   const result = await createCloudPullPreview({

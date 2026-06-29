@@ -10,6 +10,7 @@ function missingRepositoryPlan({ localData, now, readiness }) {
 }
 
 export async function createCloudPullPreview({
+  applyReadiness = null,
   localData,
   now = new Date(),
   readiness,
@@ -24,7 +25,7 @@ export async function createCloudPullPreview({
     });
 
     return {
-      model: createSyncPreviewModel(plan, { readiness }),
+      model: createSyncPreviewModel(plan, { applyReadiness, readiness }),
       plan,
       readiness,
       status: "disabled",
@@ -42,7 +43,7 @@ export async function createCloudPullPreview({
     });
 
     return {
-      model: createSyncPreviewModel(plan, { readiness }),
+      model: createSyncPreviewModel(plan, { applyReadiness, readiness }),
       plan,
       readiness,
       status: "failed",
@@ -59,7 +60,7 @@ export async function createCloudPullPreview({
     });
 
     return {
-      model: createSyncPreviewModel(plan, { readiness }),
+      model: createSyncPreviewModel(plan, { applyReadiness, readiness }),
       plan,
       readiness,
       status: plan.status,
@@ -72,7 +73,7 @@ export async function createCloudPullPreview({
     });
 
     return {
-      model: createSyncPreviewModel(plan, { readiness }),
+      model: createSyncPreviewModel(plan, { applyReadiness, readiness }),
       plan,
       readiness,
       status: "failed",

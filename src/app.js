@@ -32,6 +32,7 @@ import { createMigrationPreviewModel } from "./migrationPreview.js";
 import { createBrowserSupabaseClient } from "./supabaseClient.js";
 import { loadSupabaseConfig } from "./supabaseConfig.js";
 import { supabaseMigrationRepositoryReadiness } from "./supabaseMigrationRepository.js";
+import { syncApplyReadiness } from "./syncApply.js";
 import {
   createFailedSyncReadPlan,
   createSupabaseSyncReadRepository,
@@ -511,7 +512,7 @@ function fallbackSyncPreview(readiness) {
       error: readiness.message,
       localData: appData,
     }),
-    { readiness },
+    { applyReadiness: syncApplyReadiness(), readiness },
   );
 }
 
@@ -533,6 +534,7 @@ function refreshCloudPullPreview(readiness, key) {
   });
 
   createCloudPullPreview({
+    applyReadiness: syncApplyReadiness(),
     localData: appData,
     readiness,
     repository,
@@ -551,7 +553,7 @@ function refreshCloudPullPreview(readiness, key) {
             error: error?.message ?? "Cloud fasting history could not be read.",
             localData: appData,
           }),
-          { readiness },
+          { applyReadiness: syncApplyReadiness(), readiness },
         ),
       );
     })

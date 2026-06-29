@@ -30,6 +30,7 @@ const failedPlan = {
 };
 
 const readyPlan = {
+  canApply: true,
   decisions: [
     { id: "remote-new", reason: "remote-session-added", source: "remote" },
     { id: "shared", reason: "duplicate", source: "local" },
@@ -113,6 +114,11 @@ test("maps ready read plans into merge counts and last-sync preview", () => {
   assert.equal(model.status, "ready");
   assert.equal(model.title, "Cloud read preview ready");
   assert.match(model.message, /does not write to Supabase/);
+  assert.deepEqual(model.action, {
+    disabled: true,
+    label: "Apply disabled",
+    message: "Applying cloud reads is disabled until local finalization support is explicitly enabled.",
+  });
   assert.deepEqual(
     model.stats.map((item) => [item.label, item.value, item.tone]),
     [
@@ -131,4 +137,20 @@ test("maps ready read plans into merge counts and last-sync preview", () => {
     "1 deleted fast stays deleted after the merge.",
   ]);
   assert.match(model.lastSync, /Preview sync time:/);
+});
+
+test("enables the ready read plan action only with explicit apply support", () => {
+  const model = createSyncPreviewModel(readyPlan, {
+    applyReadiness: {
+      canApply: true,
+      message: "Successful cloud read plans can be applied to the local offline copy.",
+    },
+    readiness: { canRead: true },
+  });
+
+  assert.deepEqual(model.action, {
+    disabled: false,
+    label: "Apply cloud read",
+    message: "Successful cloud read plans can be applied to the local offline copy.",
+  });
 });
