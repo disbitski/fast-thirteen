@@ -26,3 +26,24 @@ test("sample data is versioned and dashboard-ready", () => {
   assert.equal(sample.settings.targetHours, 13);
   assert.ok(completedSessions.length >= 7);
 });
+
+test("tracker exposes the local-safe push preview surface", () => {
+  const index = readFileSync("index.html", "utf8");
+  const app = readFileSync("src/app.js", "utf8");
+
+  for (const id of [
+    "push-preview",
+    "push-preview-title",
+    "push-preview-message",
+    "push-preview-stats",
+    "push-preview-details",
+    "push-preview-action",
+    "push-preview-action-detail",
+  ]) {
+    assert.match(index, new RegExp(`id="${id}"`));
+  }
+
+  assert.match(app, /createCloudPushPlan/);
+  assert.match(app, /createCloudPushPreviewModel/);
+  assert.match(app, /syncPushReadiness/);
+});

@@ -39,6 +39,11 @@ import {
   syncReadReadiness,
 } from "./syncReadPlan.js";
 import { createCloudPullPreview } from "./syncPull.js";
+import {
+  createCloudPushPlan,
+  createCloudPushPreviewModel,
+  syncPushReadiness,
+} from "./syncPushPlan.js";
 import { createSyncPreviewModel } from "./syncPreview.js";
 
 let appData = loadData(localStorage);
@@ -96,6 +101,13 @@ const elements = {
   profileMenuTitle: document.querySelector("#profile-menu-title"),
   profileMode: document.querySelector("#profile-mode"),
   progressRing: document.querySelector("#progress-ring"),
+  pushPreview: document.querySelector("#push-preview"),
+  pushPreviewAction: document.querySelector("#push-preview-action"),
+  pushPreviewActionDetail: document.querySelector("#push-preview-action-detail"),
+  pushPreviewDetails: document.querySelector("#push-preview-details"),
+  pushPreviewMessage: document.querySelector("#push-preview-message"),
+  pushPreviewStats: document.querySelector("#push-preview-stats"),
+  pushPreviewTitle: document.querySelector("#push-preview-title"),
   saveStatus: document.querySelector("#save-status"),
   sessionDialog: document.querySelector("#session-dialog"),
   sessionEndedAt: document.querySelector("#session-ended-at"),
@@ -493,6 +505,34 @@ function renderSyncPreview(model) {
   elements.syncPreviewActionDetail.textContent = model.action.message;
 }
 
+function renderPushPreview(model) {
+  elements.pushPreview.dataset.previewStatus = model.status;
+  elements.pushPreviewTitle.textContent = model.title;
+  elements.pushPreviewMessage.textContent = model.message;
+  elements.pushPreviewStats.replaceChildren(
+    ...model.stats.map((item) => {
+      const card = document.createElement("div");
+      const term = document.createElement("dt");
+      const description = document.createElement("dd");
+      term.textContent = item.label;
+      description.textContent = item.value;
+      description.dataset.tone = item.tone;
+      card.append(term, description);
+      return card;
+    }),
+  );
+  elements.pushPreviewDetails.replaceChildren(
+    ...model.details.map((detail) => {
+      const item = document.createElement("li");
+      item.textContent = detail;
+      return item;
+    }),
+  );
+  elements.pushPreviewAction.disabled = model.action.disabled;
+  elements.pushPreviewAction.textContent = model.action.label;
+  elements.pushPreviewActionDetail.textContent = model.action.message;
+}
+
 function syncPullKey(readiness) {
   return JSON.stringify({
     canRead: readiness.canRead,
@@ -562,6 +602,12 @@ function refreshCloudPullPreview(readiness, key) {
     });
 }
 
+function remoteSessionsForPush(readKey) {
+  return syncPullPreview?.key === readKey && syncPullPreview.result.plan?.status === "ready"
+    ? syncPullPreview.result.plan.data.sessions
+    : [];
+}
+
 function renderProfileSync() {
   const readiness = authReadiness({
     authStatus: authState.status,
@@ -583,6 +629,17 @@ function renderProfileSync() {
     config: supabaseConfig,
   });
   const cloudReadKey = syncPullKey(cloudReadReadiness);
+  const pushReadiness = syncPushReadiness({
+    authState,
+    clientStatus: supabaseClient.status,
+    config: supabaseConfig,
+  });
+  const pushPlan = createCloudPushPlan({
+    localData: appData,
+    readiness: pushReadiness,
+    remoteSessions: remoteSessionsForPush(cloudReadKey),
+    user: authState.user,
+  });
 
   elements.profileBadge.textContent = `${profileLabel()} · ${syncLabel()}`;
   elements.profileMode.textContent = profileLabel();
@@ -605,6 +662,7 @@ function renderProfileSync() {
       ? syncPullPreview.result.model
       : fallbackSyncPreview(cloudReadReadiness),
   );
+  renderPushPreview(createCloudPushPreviewModel(pushPlan));
   refreshCloudPullPreview(cloudReadReadiness, cloudReadKey);
 }
 
