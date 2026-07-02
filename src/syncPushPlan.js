@@ -195,6 +195,7 @@ export function createCloudPushPlan({
         uploadCount: 0,
       },
       timestamp,
+      user: user ?? null,
     };
   }
 
@@ -266,6 +267,7 @@ export function createCloudPushPlan({
       uploadCount: candidates.filter((candidate) => candidate.action === "upload").length,
     },
     timestamp,
+    user: user ?? null,
   };
 }
 
