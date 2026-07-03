@@ -8,6 +8,12 @@ export const MIGRATION_REPOSITORY_METHODS = Object.freeze([
   "tombstoneSession",
   "confirmMigration",
 ]);
+export const PUSH_REPOSITORY_METHODS = Object.freeze([
+  "uploadSession",
+  "updateSession",
+  "tombstoneSession",
+  "confirmPush",
+]);
 
 export class SupabaseMigrationRepositoryError extends Error {
   constructor(code, message) {
@@ -54,6 +60,12 @@ function assertCanWrite(readiness) {
   }
 }
 
+function assertCanPushWrite(readiness) {
+  if (!readiness.canWrite) {
+    throw new SupabaseMigrationRepositoryError("push-writes-disabled", readiness.message);
+  }
+}
+
 async function executeSupabaseQuery(query, action) {
   const result = typeof query?.throwOnError === "function"
     ? await query.throwOnError()
@@ -80,6 +92,21 @@ export function sessionToFastSessionRow(session, user) {
     target_hours: Number(session.targetHours),
     updated_at: toIso(session.updatedAt, "updatedAt"),
     deleted_at: toIso(session.deletedAt, "deletedAt"),
+  };
+}
+
+export function pushCandidateToFastSessionMutation(candidate, user) {
+  const action = candidate?.action;
+  if (!PUSH_REPOSITORY_METHODS.includes(`${action}Session`)) {
+    throw new SupabaseMigrationRepositoryError("invalid-push-action", `Unsupported push action: ${action}`);
+  }
+
+  return {
+    action,
+    reason: candidate.reason ?? null,
+    row: sessionToFastSessionRow(candidate.session, user),
+    table: FAST_SESSIONS_TABLE,
+    type: "upsert",
   };
 }
 
@@ -175,6 +202,41 @@ export function createMigrationConfirmationResult({ plan, rows = [], user } = {}
   const readBack = normalizeMigrationReadBackRows(rows, { user });
   const blockers = readBack.invalidRows.map((row) => blocker("invalid-read-back-row", row.id, { reason: row.reason }));
   const candidates = plan?.uploadCandidates ?? [];
+
+  for (const candidate of candidates) {
+    const expected = candidate.session;
+    const actual = readBack.sessions.get(expected.id);
+
+    if (!actual) {
+      blockers.push(blocker("missing-read-back-row", expected.id, { action: candidate.action }));
+      continue;
+    }
+
+    if (candidate.action === "tombstone" && !actual.deletedAt) {
+      blockers.push(blocker("tombstone-not-confirmed", expected.id));
+      continue;
+    }
+
+    const fields = changedFields(expected, actual);
+    if (fields.length > 0) {
+      blockers.push(blocker("changed-read-back-row", expected.id, { fields }));
+    }
+  }
+
+  return {
+    blockers,
+    canMarkSynced: blockers.length === 0,
+    confirmedCount: blockers.length === 0 ? candidates.length : 0,
+    expectedCount: candidates.length,
+    readBackCount: readBack.sessions.size,
+    status: blockers.length === 0 ? "confirmed" : "blocked",
+  };
+}
+
+export function createPushConfirmationResult({ plan, rows = [], user } = {}) {
+  const readBack = normalizeMigrationReadBackRows(rows, { user });
+  const blockers = readBack.invalidRows.map((row) => blocker("invalid-read-back-row", row.id, { reason: row.reason }));
+  const candidates = plan?.candidates ?? [];
 
   for (const candidate of candidates) {
     const expected = candidate.session;
@@ -311,6 +373,81 @@ export function supabaseMigrationRepositoryReadiness({
   };
 }
 
+export function supabasePushRepositoryReadiness({
+  client = null,
+  config = {},
+  executeConfirmations = false,
+  executeWrites = false,
+} = {}) {
+  if (!config?.isConfigured) {
+    return {
+      canConfirm: false,
+      canWrite: false,
+      message: "Supabase publishable config is missing; cloud push writes are disabled.",
+      reason: "publishable-config-missing",
+      status: "disabled",
+    };
+  }
+
+  if (!client) {
+    return {
+      canConfirm: false,
+      canWrite: false,
+      message: "Supabase browser client is not ready; cloud push writes are disabled.",
+      reason: "client-missing",
+      status: "disabled",
+    };
+  }
+
+  if (config.syncWritesEnabled !== true) {
+    return {
+      canConfirm: false,
+      canWrite: false,
+      message: "Publishable Supabase config is present, but cloud push write support is disabled.",
+      reason: "write-support-disabled",
+      status: "disabled",
+    };
+  }
+
+  if (executeWrites !== true) {
+    return {
+      canConfirm: false,
+      canWrite: false,
+      message: "Cloud push write support is configured, but execution is disabled in this build.",
+      reason: "executor-disabled",
+      status: "disabled",
+    };
+  }
+
+  if (config.syncConfirmationsEnabled !== true) {
+    return {
+      canConfirm: false,
+      canWrite: false,
+      message: "Cloud push writes require explicit read-back confirmation support before execution.",
+      reason: "confirmation-support-disabled",
+      status: "disabled",
+    };
+  }
+
+  if (executeConfirmations !== true) {
+    return {
+      canConfirm: false,
+      canWrite: false,
+      message: "Cloud push confirmation support is configured, but confirmation is disabled in this build.",
+      reason: "confirmation-disabled",
+      status: "disabled",
+    };
+  }
+
+  return {
+    canConfirm: true,
+    canWrite: true,
+    message: "Supabase cloud push write and confirmation support are explicitly enabled.",
+    reason: null,
+    status: "ready",
+  };
+}
+
 export function createSupabaseMigrationRepository({
   client = null,
   config = {},
@@ -383,6 +520,64 @@ export function createSupabaseMigrationRepository({
         "confirmMigration",
       );
       return createMigrationConfirmationResult({ plan, rows, user });
+    },
+  };
+}
+
+export function createSupabasePushRepository({
+  client = null,
+  config = {},
+  executeConfirmations = false,
+  executeWrites = false,
+} = {}) {
+  const readiness = supabasePushRepositoryReadiness({
+    client,
+    config,
+    executeConfirmations,
+    executeWrites,
+  });
+
+  async function upsertCandidate({ action, reason, session, user } = {}) {
+    assertCanPushWrite(readiness);
+    const from = requireClientTable(client);
+    const mutation = pushCandidateToFastSessionMutation({ action, reason, session }, user);
+    return executeSupabaseQuery(
+      from(FAST_SESSIONS_TABLE).upsert(mutation.row, { onConflict: "user_id,id" }),
+      `${action}Session`,
+    );
+  }
+
+  return {
+    methods: PUSH_REPOSITORY_METHODS,
+    readiness,
+
+    async uploadSession({ reason, session, user } = {}) {
+      return upsertCandidate({ action: "upload", reason, session, user });
+    },
+
+    async updateSession({ reason, session, user } = {}) {
+      return upsertCandidate({ action: "update", reason, session, user });
+    },
+
+    async tombstoneSession({ reason, session, user } = {}) {
+      return upsertCandidate({ action: "tombstone", reason, session, user });
+    },
+
+    async confirmPush({ plan, user } = {}) {
+      assertCanPushWrite(readiness);
+      if (!readiness.canConfirm) {
+        throw new SupabaseMigrationRepositoryError(
+          "push-confirmation-disabled",
+          readiness.message,
+        );
+      }
+      const userId = requireUserId(user);
+      const from = requireClientTable(client);
+      const rows = await executeSupabaseQuery(
+        from(FAST_SESSIONS_TABLE).select("*").eq("user_id", userId),
+        "confirmPush",
+      );
+      return createPushConfirmationResult({ plan, rows, user });
     },
   };
 }
