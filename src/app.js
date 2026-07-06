@@ -31,7 +31,10 @@ import { createGuestMigrationPlan } from "./migrationPlan.js";
 import { createMigrationPreviewModel } from "./migrationPreview.js";
 import { createBrowserSupabaseClient } from "./supabaseClient.js";
 import { loadSupabaseConfig } from "./supabaseConfig.js";
-import { supabaseMigrationRepositoryReadiness } from "./supabaseMigrationRepository.js";
+import {
+  supabaseMigrationRepositoryReadiness,
+  supabasePushRepositoryReadiness,
+} from "./supabaseMigrationRepository.js";
 import { syncApplyReadiness } from "./syncApply.js";
 import {
   createFailedSyncReadPlan,
@@ -44,6 +47,11 @@ import {
   createCloudPushPreviewModel,
   syncPushReadiness,
 } from "./syncPushPlan.js";
+import { createPushFinalizationReadiness } from "./syncPushFinalizer.js";
+import {
+  createSyncOrchestrationModel,
+  createSyncOrchestrationStatusModel,
+} from "./syncOrchestration.js";
 import { createSyncPreviewModel } from "./syncPreview.js";
 
 let appData = loadData(localStorage);
@@ -101,6 +109,13 @@ const elements = {
   profileMenuTitle: document.querySelector("#profile-menu-title"),
   profileMode: document.querySelector("#profile-mode"),
   progressRing: document.querySelector("#progress-ring"),
+  orchestrationPreview: document.querySelector("#orchestration-preview"),
+  orchestrationPreviewAction: document.querySelector("#orchestration-preview-action"),
+  orchestrationPreviewActionDetail: document.querySelector("#orchestration-preview-action-detail"),
+  orchestrationPreviewDetails: document.querySelector("#orchestration-preview-details"),
+  orchestrationPreviewMessage: document.querySelector("#orchestration-preview-message"),
+  orchestrationPreviewStats: document.querySelector("#orchestration-preview-stats"),
+  orchestrationPreviewTitle: document.querySelector("#orchestration-preview-title"),
   pushPreview: document.querySelector("#push-preview"),
   pushPreviewAction: document.querySelector("#push-preview-action"),
   pushPreviewActionDetail: document.querySelector("#push-preview-action-detail"),
@@ -533,6 +548,79 @@ function renderPushPreview(model) {
   elements.pushPreviewActionDetail.textContent = model.action.message;
 }
 
+function actionValue(action) {
+  return action?.enabled ? "Ready" : "Disabled";
+}
+
+function actionTone(action) {
+  return action?.enabled ? "good" : "warn";
+}
+
+function orchestrationStats(model) {
+  return [
+    { label: "Status", value: model.status, tone: model.status === "ready" ? "good" : "warn" },
+    { label: "Read", value: actionValue(model.actions.read), tone: actionTone(model.actions.read) },
+    { label: "Apply", value: actionValue(model.actions.apply), tone: actionTone(model.actions.apply) },
+    { label: "Push", value: actionValue(model.actions.push), tone: actionTone(model.actions.push) },
+    { label: "Finalize", value: actionValue(model.actions.finalizePush), tone: actionTone(model.actions.finalizePush) },
+    {
+      label: "Backups",
+      value: model.backupExpectations.applyRequiresBackup || model.backupExpectations.pushFinalizationRequiresBackup
+        ? "Required"
+        : "Standby",
+      tone: "neutral",
+    },
+  ];
+}
+
+function orchestrationDetails(model, statusModel) {
+  const actionDetails = Object.entries(model.actions).map(([key, item]) =>
+    `${key}: ${item.enabled ? "enabled" : "disabled"} - ${item.message}`,
+  );
+  const backupDetails = [
+    `Apply backup: ${model.backupExpectations.applyRequiresBackup ? "required before apply" : "not required yet"}.`,
+    `Push finalization backup: ${model.backupExpectations.pushFinalizationRequiresBackup ? "required before finalization" : "not required yet"}.`,
+  ];
+  const blockerDetails = model.blockers.map((blocker) =>
+    `${blocker.stage}: ${blocker.code} - ${blocker.message}`,
+  );
+
+  return [
+    ...statusModel.details,
+    ...actionDetails,
+    ...backupDetails,
+    ...blockerDetails,
+  ];
+}
+
+function renderOrchestrationPreview(model, statusModel) {
+  elements.orchestrationPreview.dataset.previewStatus = statusModel.status;
+  elements.orchestrationPreviewTitle.textContent = statusModel.title;
+  elements.orchestrationPreviewMessage.textContent = statusModel.message;
+  elements.orchestrationPreviewStats.replaceChildren(
+    ...orchestrationStats(model).map((item) => {
+      const card = document.createElement("div");
+      const term = document.createElement("dt");
+      const description = document.createElement("dd");
+      term.textContent = item.label;
+      description.textContent = item.value;
+      description.dataset.tone = item.tone;
+      card.append(term, description);
+      return card;
+    }),
+  );
+  elements.orchestrationPreviewDetails.replaceChildren(
+    ...orchestrationDetails(model, statusModel).map((detail) => {
+      const item = document.createElement("li");
+      item.textContent = detail;
+      return item;
+    }),
+  );
+  elements.orchestrationPreviewAction.disabled = statusModel.action.disabled;
+  elements.orchestrationPreviewAction.textContent = statusModel.action.label;
+  elements.orchestrationPreviewActionDetail.textContent = statusModel.action.message;
+}
+
 function syncPullKey(readiness) {
   return JSON.stringify({
     canRead: readiness.canRead,
@@ -628,6 +716,7 @@ function renderProfileSync() {
     clientStatus: supabaseClient.status,
     config: supabaseConfig,
   });
+  const applyReadiness = syncApplyReadiness();
   const cloudReadKey = syncPullKey(cloudReadReadiness);
   const pushReadiness = syncPushReadiness({
     authState,
@@ -639,6 +728,25 @@ function renderProfileSync() {
     readiness: pushReadiness,
     remoteSessions: remoteSessionsForPush(cloudReadKey),
     user: authState.user,
+  });
+  const pushRepositoryReadiness = supabasePushRepositoryReadiness({
+    client: supabaseClient.client,
+    config: supabaseConfig,
+  });
+  const pushFinalizationReadiness = createPushFinalizationReadiness({
+    pushReadiness,
+    repositoryReadiness: pushRepositoryReadiness,
+  });
+  const readPlan = syncPullPreview?.key === cloudReadKey ? syncPullPreview.result.plan : null;
+  const orchestrationModel = createSyncOrchestrationModel({
+    applyReadiness,
+    localData: appData,
+    pushFinalizationReadiness,
+    pushPlan,
+    pushReadiness,
+    pushRepositoryReadiness,
+    readPlan,
+    readReadiness: cloudReadReadiness,
   });
 
   elements.profileBadge.textContent = `${profileLabel()} · ${syncLabel()}`;
@@ -663,6 +771,10 @@ function renderProfileSync() {
       : fallbackSyncPreview(cloudReadReadiness),
   );
   renderPushPreview(createCloudPushPreviewModel(pushPlan));
+  renderOrchestrationPreview(
+    orchestrationModel,
+    createSyncOrchestrationStatusModel(orchestrationModel),
+  );
   refreshCloudPullPreview(cloudReadReadiness, cloudReadKey);
 }
 

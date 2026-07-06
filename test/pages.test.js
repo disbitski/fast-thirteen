@@ -47,3 +47,25 @@ test("tracker exposes the local-safe push preview surface", () => {
   assert.match(app, /createCloudPushPreviewModel/);
   assert.match(app, /syncPushReadiness/);
 });
+
+test("tracker exposes the local-safe sync orchestration surface", () => {
+  const index = readFileSync("index.html", "utf8");
+  const app = readFileSync("src/app.js", "utf8");
+
+  for (const id of [
+    "orchestration-preview",
+    "orchestration-preview-title",
+    "orchestration-preview-message",
+    "orchestration-preview-stats",
+    "orchestration-preview-details",
+    "orchestration-preview-action",
+    "orchestration-preview-action-detail",
+  ]) {
+    assert.match(index, new RegExp(`id="${id}"`));
+  }
+
+  assert.match(app, /createSyncOrchestrationModel/);
+  assert.match(app, /createSyncOrchestrationStatusModel/);
+  assert.match(app, /renderOrchestrationPreview/);
+  assert.match(app, /supabasePushRepositoryReadiness/);
+});
