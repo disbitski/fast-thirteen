@@ -186,6 +186,22 @@ export function longestGoalStreak(sessions) {
   return longest;
 }
 
+export function calculateLifetimeMetrics(sessions, now = new Date(), targetHours = 13) {
+  const completed = completedSessions(sessions);
+  const goalSessions = completed.filter((session) => isComplete(session));
+  const durations = completed.map((session) => durationMs(session) / HOUR_MS);
+  const totalHours = durations.reduce((total, value) => total + value, 0);
+
+  return {
+    averageHours: round1(average(durations)),
+    completedFasts: completed.length,
+    completionRate: completed.length ? Math.round((goalSessions.length / completed.length) * 100) : 0,
+    currentStreak: currentStreak(sessions, now),
+    targetHours,
+    totalHours: round1(totalHours),
+  };
+}
+
 export function calculateAnalytics(sessions, now = new Date(), targetHours = 13, rangeDays = 7) {
   const completed = sessionsInDays(sessions, now, rangeDays);
   const goalSessions = completed.filter((session) => isComplete(session));

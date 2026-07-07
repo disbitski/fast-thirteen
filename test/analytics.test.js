@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   calculateAnalytics,
+  calculateLifetimeMetrics,
   formatHourWindow,
   lastNDays,
   longestGoalStreak,
@@ -137,6 +138,28 @@ test("calculates dashboard analytics for the selected date range", () => {
   assert.equal(sevenDayAnalytics.totalHours, 37.7);
   assert.equal(thirtyDayAnalytics.completedFasts, 4);
   assert.equal(thirtyDayAnalytics.totalHours, 51.2);
+});
+
+test("calculates lifetime metrics from all completed saved fasts", () => {
+  const olderSession = {
+    id: "older",
+    startedAt: "2026-05-20T23:00:00.000Z",
+    endedAt: "2026-05-21T12:30:00.000Z",
+    targetHours: 13,
+    updatedAt: "2026-05-21T12:30:00.000Z",
+    deletedAt: null,
+  };
+  const lifetime = calculateLifetimeMetrics(
+    [...sessions, olderSession],
+    new Date("2026-06-19T12:00:00.000Z"),
+    13,
+  );
+
+  assert.equal(lifetime.completedFasts, 4);
+  assert.equal(lifetime.totalHours, 51.2);
+  assert.equal(lifetime.averageHours, 12.8);
+  assert.equal(lifetime.completionRate, 75);
+  assert.equal(lifetime.currentStreak, 0);
 });
 
 test("builds readable buckets for dashboard range toggles", () => {

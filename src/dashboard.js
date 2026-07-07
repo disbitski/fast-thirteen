@@ -1,4 +1,4 @@
-import { ANALYTICS_RANGES, calculateAnalytics } from "./analytics.js";
+import { ANALYTICS_RANGES, calculateAnalytics, calculateLifetimeMetrics } from "./analytics.js";
 import { mergeData, loadData, normalizeData, saveData } from "./storage.js";
 import { applyTheme, loadTheme, saveTheme } from "./theme.js";
 
@@ -48,6 +48,11 @@ function plural(value, noun) {
 
 function bucketNoun(range) {
   return range.bucket === "day" ? "day" : range.bucket;
+}
+
+function savedSourceLabel(source, data) {
+  const lifetime = calculateLifetimeMetrics(data.sessions, new Date(), data.settings.targetHours);
+  return `${source} · ${plural(lifetime.completedFasts, "completed fast")} saved`;
 }
 
 function renderTheme() {
@@ -137,10 +142,6 @@ function renderInsights(analytics) {
     completedBuckets === 0
       ? `No completed fasts in ${analytics.range.label.toLowerCase()} yet.`
       : `${plural(completedBuckets, `active ${bucketNoun(analytics.range)}`)} · ${plural(hitBuckets, `goal ${bucketNoun(analytics.range)}`)}.`;
-  elements.completedFasts.textContent = analytics.completedFasts;
-  elements.averageHours.textContent = analytics.averageHours.toFixed(1);
-  elements.completionRate.textContent = `${analytics.completionRate}%`;
-  elements.currentStreak.textContent = analytics.currentStreak;
   elements.targetBadge.textContent = `${analytics.targetHours}-hour goal`;
   elements.bestFast.textContent = `${analytics.bestHours.toFixed(1)}h`;
   elements.bestFastNote.textContent = analytics.bestSession
@@ -165,10 +166,16 @@ function renderInsights(analytics) {
 }
 
 function render() {
-  const analytics = calculateAnalytics(appData.sessions, new Date(), appData.settings.targetHours, selectedRangeDays);
+  const now = new Date();
+  const analytics = calculateAnalytics(appData.sessions, now, appData.settings.targetHours, selectedRangeDays);
+  const lifetime = calculateLifetimeMetrics(appData.sessions, now, appData.settings.targetHours);
   renderTheme();
   renderRangePicker(analytics.range);
   renderInsights(analytics);
+  elements.completedFasts.textContent = lifetime.completedFasts;
+  elements.averageHours.textContent = lifetime.averageHours.toFixed(1);
+  elements.completionRate.textContent = `${lifetime.completionRate}%`;
+  elements.currentStreak.textContent = lifetime.currentStreak;
   renderBars(analytics.rangeBuckets, analytics.targetHours);
   renderTrend(analytics.rangeBuckets, analytics.targetHours);
 }
@@ -182,7 +189,7 @@ async function loadSharedData() {
     if (data) {
       appData = appData.sessions.length > 0 ? mergeData(data, appData) : normalizeData(data);
       saveData(localStorage, appData);
-      elements.analyticsSource.textContent = "Saved on this Mac";
+      elements.analyticsSource.textContent = savedSourceLabel("Saved on this Mac", appData);
       render();
     }
   } catch {
@@ -192,7 +199,7 @@ async function loadSharedData() {
 
 async function loadSampleData() {
   if (appData.sessions.length > 0) {
-    elements.analyticsSource.textContent = "Reading this browser";
+    elements.analyticsSource.textContent = savedSourceLabel("Reading this browser", appData);
     return;
   }
 
@@ -202,10 +209,10 @@ async function loadSampleData() {
 
     appData = normalizeData(await response.json());
     saveData(localStorage, appData);
-    elements.analyticsSource.textContent = "Viewing sample data";
+    elements.analyticsSource.textContent = savedSourceLabel("Viewing sample data", appData);
     render();
   } catch {
-    elements.analyticsSource.textContent = "Reading this browser";
+    elements.analyticsSource.textContent = savedSourceLabel("Reading this browser", appData);
   }
 }
 
