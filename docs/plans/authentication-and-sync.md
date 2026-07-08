@@ -71,6 +71,11 @@ When a guest signs in for the first time:
 - Show last successful sync time.
 - Test concurrent edits and offline recovery.
 
+Readiness and safety notes for the current local-safe implementation are in
+[`../cross-device-sync-readiness.md`](../cross-device-sync-readiness.md). That
+runbook should be reviewed before any real Supabase read, write, confirmation,
+or local finalization gates are enabled.
+
 ## Safety And Privacy
 
 - Request only the identity scopes needed for login.

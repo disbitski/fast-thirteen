@@ -111,6 +111,12 @@ Guest migration dry-run planning lives in
 describes how local history will be validated, backed up, deduplicated, and
 previewed before any future cloud writes happen.
 
+Cross-device sync readiness lives in
+[`docs/cross-device-sync-readiness.md`](docs/cross-device-sync-readiness.md).
+It documents the current local-safe sync pipeline, the gated write/finalization
+steps, and the manual checks to run before any real Supabase mutations are
+enabled.
+
 ## Roadmap
 
 - Reminders and target-reached notifications
