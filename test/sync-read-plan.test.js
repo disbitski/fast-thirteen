@@ -288,3 +288,115 @@ test("Supabase sync read repository describes the read-only fast_sessions query"
     ["order", "updated_at", { ascending: true }],
   ]);
 });
+
+test("Supabase sync read repository blocks disabled readiness before touching the client", async () => {
+  const calls = [];
+  const client = {
+    from(table) {
+      calls.push(["from", table]);
+      throw new Error("Client should not be touched while reads are disabled.");
+    },
+  };
+  const repository = createSupabaseSyncReadRepository({
+    client,
+    readiness: {
+      canRead: false,
+      message: "Supabase publishable config is missing; cloud reads are disabled.",
+    },
+  });
+
+  await assert.rejects(
+    () => repository.readFastSessions({ user }),
+    /Supabase publishable config is missing/,
+  );
+  assert.deepEqual(calls, []);
+});
+
+test("Supabase sync read repository requires a signed-in user and table client", async () => {
+  const ready = { canRead: true };
+  const repositoryWithoutClient = createSupabaseSyncReadRepository({
+    readiness: ready,
+  });
+  const repositoryWithoutUser = createSupabaseSyncReadRepository({
+    client: { from() {} },
+    readiness: ready,
+  });
+
+  await assert.rejects(
+    () => repositoryWithoutClient.readFastSessions({ user }),
+    /signed-in user and Supabase table client/,
+  );
+  await assert.rejects(
+    () => repositoryWithoutUser.readFastSessions(),
+    /signed-in user and Supabase table client/,
+  );
+});
+
+test("Supabase sync read repository surfaces read failures without fallback writes", async () => {
+  const calls = [];
+  const client = {
+    from(table) {
+      calls.push(["from", table]);
+      return {
+        select(columns) {
+          calls.push(["select", columns]);
+          return {
+            eq(column, value) {
+              calls.push(["eq", column, value]);
+              return {
+                order(column, options) {
+                  calls.push(["order", column, options]);
+                  return Promise.resolve({
+                    data: null,
+                    error: { message: "RLS rejected test user." },
+                  });
+                },
+              };
+            },
+          };
+        },
+      };
+    },
+  };
+  const repository = createSupabaseSyncReadRepository({
+    client,
+    readiness: { canRead: true },
+  });
+
+  await assert.rejects(
+    () => repository.readFastSessions({ user }),
+    /RLS rejected test user/,
+  );
+  assert.deepEqual(calls, [
+    ["from", FAST_SESSIONS_TABLE],
+    ["select", "*"],
+    ["eq", "user_id", user.id],
+    ["order", "updated_at", { ascending: true }],
+  ]);
+});
+
+test("Supabase sync read repository treats missing row arrays as an empty read", async () => {
+  const client = {
+    from() {
+      return {
+        select() {
+          return {
+            eq() {
+              return {
+                order() {
+                  return Promise.resolve({ data: null, error: null });
+                },
+              };
+            },
+          };
+        },
+      };
+    },
+  };
+  const repository = createSupabaseSyncReadRepository({
+    client,
+    readiness: { canRead: true },
+  });
+
+  assert.deepEqual(await repository.readFastSessions({ user }), []);
+});

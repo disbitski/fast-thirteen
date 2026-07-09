@@ -117,6 +117,52 @@ https://disbitski.github.io/fast-thirteen/
 Check the tracker, analytics dashboard, and all themes after frontend changes.
 For documentation-only changes, no browser verification is required.
 
+## Read-Only Supabase Validation
+
+Use this flow before any upload, update, tombstone, confirmation, or
+finalization gate is enabled. The goal is only to prove that a signed-in test
+profile can read its own `fast_sessions` rows through RLS while local tracking
+continues to work if anything fails.
+
+Prerequisites:
+
+- Use a throwaway Google/Supabase test account.
+- Apply the `profiles` and `fast_sessions` schema with RLS enabled.
+- Keep service-role keys, OAuth secrets, Apple signing keys, and generated
+  client secrets outside Git.
+- Configure only browser-publishable values locally:
+
+```sh
+SUPABASE_URL=https://<project-ref>.supabase.co
+SUPABASE_ANON_KEY=<publishable-anon-key>
+```
+
+Validation steps:
+
+1. Start the local server with publishable Supabase config only.
+2. Sign in with the throwaway Google profile.
+3. Confirm the app still shows existing Local data and can export a backup.
+4. Insert or inspect test-only `fast_sessions` rows for that same Supabase user.
+5. Run the read-only repository path. It must query only
+   `fast_sessions.select("*").eq("user_id", auth.uid()).order("updated_at")`.
+6. Build a `createCloudReadPlan` preview from the returned rows.
+7. Do not apply the plan unless local apply support has been explicitly enabled
+   for the test.
+8. Confirm bad rows are reported as blockers and do not change local history.
+9. Confirm read failures keep local sessions and sync metadata unchanged.
+
+Expected safe failures:
+
+- Missing publishable config: cloud reads disabled, local tracking works.
+- Missing Supabase browser client: cloud reads disabled, local tracking works.
+- Missing authenticated user: cloud reads disabled, local tracking works.
+- RLS or network read failure: preview is blocked, local tracking works.
+- Invalid remote row: read plan fails safely, local tracking works.
+
+This validation is still not a production sync. Passing it means read-only RLS
+and row normalization are behaving correctly; it does not authorize cloud
+writes or local finalization.
+
 ## Before Enabling Real Writes
 
 Do these in order:
