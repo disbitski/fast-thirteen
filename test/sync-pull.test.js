@@ -87,6 +87,15 @@ test("mocked cloud pull builds a ready read plan and preview without mutating lo
   assert.equal(result.model.status, "ready");
   assert.equal(result.model.title, "Cloud read preview ready");
   assert.match(result.model.message, /does not write to Supabase/);
+  assert.equal(result.diagnostics.status, "preview");
+  assert.equal(result.diagnostics.profileMode, "authenticated");
+  assert.equal(result.diagnostics.dataMutated, false);
+  assert.equal(result.diagnostics.localSyncStatusChanged, false);
+  assert.equal(result.diagnostics.plannedSyncStatus, "synced");
+  assert.deepEqual(
+    Object.values(result.diagnostics.stages).map((stage) => stage.status),
+    ["ready", "passed", "ready", "gated"],
+  );
 });
 
 test("cloud pull passes explicit apply readiness into the preview action", async () => {
@@ -111,6 +120,10 @@ test("cloud pull passes explicit apply readiness into the preview action", async
     label: "Apply cloud read",
     message: "Successful cloud read plans can be applied to the local offline copy.",
   });
+  assert.equal(result.diagnostics.status, "apply-ready");
+  assert.equal(result.diagnostics.backupRequired, true);
+  assert.equal(result.diagnostics.stages.localApply.status, "ready");
+  assert.match(result.diagnostics.nextStep, /Preserve a local backup/);
 });
 
 test("repository failures return a blocked preview and keep local sync state unchanged", async () => {
@@ -138,6 +151,17 @@ test("repository failures return a blocked preview and keep local sync state unc
     "1 local session remains available offline.",
     "Local sync status is not changed until a read plan succeeds.",
   ]);
+  assert.equal(result.diagnostics.status, "blocked");
+  assert.deepEqual(result.diagnostics.blockers, [
+    {
+      code: "repository-read-failed",
+      message: "Network offline.",
+      stage: "repositoryRead",
+    },
+  ]);
+  assert.equal(result.diagnostics.stages.repositoryRead.status, "blocked");
+  assert.equal(result.diagnostics.stages.mergePlan.status, "not-run");
+  assert.equal(result.diagnostics.localTrackingAvailable, true);
 });
 
 test("disabled readiness does not call the repository", async () => {
@@ -162,6 +186,10 @@ test("disabled readiness does not call the repository", async () => {
   assert.equal(result.plan.canApply, false);
   assert.equal(result.model.status, "disabled");
   assert.equal(result.model.action.label, "Cloud read disabled");
+  assert.equal(result.diagnostics.status, "disabled");
+  assert.equal(result.diagnostics.stages.readiness.status, "disabled");
+  assert.equal(result.diagnostics.stages.repositoryRead.status, "not-run");
+  assert.equal(result.diagnostics.backupRequired, false);
 });
 
 test("missing repository is blocked even when readiness is true", async () => {
@@ -204,4 +232,15 @@ test("invalid remote rows map to read blockers and preview copy", async () => {
   ]);
   assert.equal(result.model.status, "blocked");
   assert.match(result.model.details[0], /need review/);
+  assert.equal(result.diagnostics.status, "blocked");
+  assert.equal(result.diagnostics.invalidRowCount, 1);
+  assert.equal(result.diagnostics.stages.repositoryRead.status, "passed");
+  assert.equal(result.diagnostics.stages.mergePlan.status, "blocked");
+  assert.deepEqual(result.diagnostics.blockers, [
+    {
+      code: "invalid-remote-rows",
+      message: "Remote fasting history contains rows that need review before import.",
+      stage: "mergePlan",
+    },
+  ]);
 });

@@ -151,6 +151,24 @@ Validation steps:
 8. Confirm bad rows are reported as blockers and do not change local history.
 9. Confirm read failures keep local sessions and sync metadata unchanged.
 
+The pull result includes a deterministic `diagnostics` model for checking each
+handoff without guessing from UI copy:
+
+1. `readiness` confirms publishable config, the browser client, and the signed-in
+   test profile are ready.
+2. `repositoryRead` confirms the `fast_sessions` query ran, or explains why it
+   was not attempted or failed.
+3. `mergePlan` confirms returned rows were validated and merged into a preview
+   by stable session id. Invalid rows block here.
+4. `localApply` remains `gated` until apply support is explicitly enabled. When
+   enabled, diagnostics require a backup before the offline copy can change.
+
+A successful read with local apply disabled reports `preview`. Explicit apply
+support changes that to `apply-ready`, but still does not mutate data by itself.
+Repository failures or invalid rows report `blocked`; missing readiness reports
+`disabled`. In every state, `dataMutated` and `localSyncStatusChanged` remain
+false until `applyCloudReadPlan` is deliberately called and succeeds.
+
 Expected safe failures:
 
 - Missing publishable config: cloud reads disabled, local tracking works.
