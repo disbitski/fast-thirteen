@@ -41,7 +41,10 @@ import {
   createSupabaseSyncReadRepository,
   syncReadReadiness,
 } from "./syncReadPlan.js";
-import { createCloudPullPreview } from "./syncPull.js";
+import {
+  createCloudPullPreview,
+  createCloudReadApplyDiagnostics,
+} from "./syncPull.js";
 import {
   createCloudPushPlan,
   createCloudPushPreviewModel,
@@ -52,7 +55,10 @@ import {
   createSyncOrchestrationModel,
   createSyncOrchestrationStatusModel,
 } from "./syncOrchestration.js";
-import { createSyncPreviewModel } from "./syncPreview.js";
+import {
+  createSyncDiagnosticsViewModel,
+  createSyncPreviewModel,
+} from "./syncPreview.js";
 
 let appData = loadData(localStorage);
 const sessions = appData.sessions;
@@ -132,6 +138,10 @@ const elements = {
   sessionStartedAt: document.querySelector("#session-started-at"),
   sessionSummary: document.querySelector("#session-summary"),
   syncDescription: document.querySelector("#sync-description"),
+  syncDiagnostics: document.querySelector("#sync-diagnostics"),
+  syncDiagnosticsNextStep: document.querySelector("#sync-diagnostics-next-step"),
+  syncDiagnosticsSafety: document.querySelector("#sync-diagnostics-safety"),
+  syncDiagnosticsStages: document.querySelector("#sync-diagnostics-stages"),
   syncPreview: document.querySelector("#sync-preview"),
   syncPreviewAction: document.querySelector("#sync-preview-action"),
   syncPreviewActionDetail: document.querySelector("#sync-preview-action-detail"),
@@ -491,7 +501,39 @@ function renderMigrationPreview(model) {
   elements.migrationConfirmDetail.textContent = model.confirmation.message;
 }
 
-function renderSyncPreview(model) {
+function renderSyncDiagnostics(diagnostics) {
+  const model = createSyncDiagnosticsViewModel(diagnostics);
+  elements.syncDiagnostics.dataset.diagnosticStatus = model.status;
+  elements.syncDiagnosticsStages.replaceChildren(
+    ...model.stages.map((stage) => {
+      const item = document.createElement("li");
+      const heading = document.createElement("div");
+      const index = document.createElement("span");
+      const label = document.createElement("strong");
+      const status = document.createElement("span");
+      const message = document.createElement("small");
+
+      item.className = "sync-diagnostic-stage";
+      item.dataset.stage = stage.key;
+      item.dataset.stageStatus = stage.status;
+      heading.className = "sync-diagnostic-heading";
+      index.className = "sync-diagnostic-index";
+      index.textContent = stage.index;
+      label.textContent = stage.label;
+      status.className = "sync-diagnostic-status";
+      status.dataset.tone = stage.tone;
+      status.textContent = stage.statusLabel;
+      message.textContent = stage.message;
+      heading.append(index, label, status);
+      item.append(heading, message);
+      return item;
+    }),
+  );
+  elements.syncDiagnosticsSafety.textContent = model.safetyItems.join(" · ");
+  elements.syncDiagnosticsNextStep.textContent = model.nextStep;
+}
+
+function renderSyncPreview(model, diagnostics) {
   elements.syncPreview.dataset.previewStatus = model.status;
   elements.syncPreviewTitle.textContent = model.title;
   elements.syncPreviewMessage.textContent = model.message;
@@ -518,6 +560,7 @@ function renderSyncPreview(model) {
   elements.syncPreviewAction.disabled = model.action.disabled;
   elements.syncPreviewAction.textContent = model.action.label;
   elements.syncPreviewActionDetail.textContent = model.action.message;
+  renderSyncDiagnostics(diagnostics);
 }
 
 function renderPushPreview(model) {
@@ -634,14 +677,22 @@ function syncPullKey(readiness) {
   });
 }
 
-function fallbackSyncPreview(readiness) {
-  return createSyncPreviewModel(
-    createFailedSyncReadPlan({
-      error: readiness.message,
-      localData: appData,
+function fallbackSyncPull(readiness, { error = readiness.message, readOutcome = "not-run" } = {}) {
+  const applyReadiness = syncApplyReadiness();
+  const plan = createFailedSyncReadPlan({
+    error,
+    localData: appData,
+  });
+
+  return {
+    diagnostics: createCloudReadApplyDiagnostics({
+      applyReadiness,
+      plan,
+      readOutcome,
+      readiness,
     }),
-    { applyReadiness: syncApplyReadiness(), readiness },
-  );
+    model: createSyncPreviewModel(plan, { applyReadiness, readiness }),
+  };
 }
 
 function refreshCloudPullPreview(readiness, key) {
@@ -671,19 +722,15 @@ function refreshCloudPullPreview(readiness, key) {
     .then((result) => {
       if (requestId !== syncPullRequestId) return;
       syncPullPreview = { key, result };
-      renderSyncPreview(result.model);
+      renderSyncPreview(result.model, result.diagnostics);
     })
     .catch((error) => {
       if (requestId !== syncPullRequestId) return;
-      renderSyncPreview(
-        createSyncPreviewModel(
-          createFailedSyncReadPlan({
-            error: error?.message ?? "Cloud fasting history could not be read.",
-            localData: appData,
-          }),
-          { applyReadiness: syncApplyReadiness(), readiness },
-        ),
-      );
+      const fallback = fallbackSyncPull(readiness, {
+        error: error?.message ?? "Cloud fasting history could not be read.",
+        readOutcome: "failed",
+      });
+      renderSyncPreview(fallback.model, fallback.diagnostics);
     })
     .finally(() => {
       if (requestId === syncPullRequestId) pendingSyncPullKey = null;
@@ -765,11 +812,10 @@ function renderProfileSync() {
   elements.signOut.hidden = appData.profile.mode !== "authenticated";
   elements.authHelp.textContent = authHelpText();
   renderMigrationPreview(createMigrationPreviewModel(migrationPlan, { migrationReadiness }));
-  renderSyncPreview(
-    syncPullPreview?.key === cloudReadKey
-      ? syncPullPreview.result.model
-      : fallbackSyncPreview(cloudReadReadiness),
-  );
+  const pullResult = syncPullPreview?.key === cloudReadKey
+    ? syncPullPreview.result
+    : fallbackSyncPull(cloudReadReadiness);
+  renderSyncPreview(pullResult.model, pullResult.diagnostics);
   renderPushPreview(createCloudPushPreviewModel(pushPlan));
   renderOrchestrationPreview(
     orchestrationModel,

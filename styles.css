@@ -1029,6 +1029,119 @@ h3 {
   content: "Sync gate";
 }
 
+.sync-diagnostics {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--badge);
+}
+
+.sync-diagnostics-heading,
+.sync-diagnostic-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sync-diagnostics-heading {
+  justify-content: space-between;
+}
+
+.sync-diagnostics-heading > div {
+  display: grid;
+  gap: 3px;
+}
+
+.sync-diagnostics-heading span {
+  color: var(--green);
+  font-size: 0.66rem;
+  font-weight: 850;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.sync-diagnostics-heading strong {
+  color: var(--ink);
+  font-size: 0.78rem;
+}
+
+.sync-diagnostics-heading small,
+.sync-diagnostics-next-step,
+.sync-diagnostic-stage small {
+  color: var(--muted);
+}
+
+.sync-diagnostics-stages {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sync-diagnostic-stage {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--card);
+}
+
+.sync-diagnostic-stage[data-stage-status="blocked"] {
+  border-color: var(--active);
+}
+
+.sync-diagnostic-index {
+  color: var(--muted);
+  font-size: 0.64rem;
+  font-weight: 850;
+}
+
+.sync-diagnostic-heading strong {
+  min-width: 0;
+  color: var(--ink);
+  font-size: 0.76rem;
+}
+
+.sync-diagnostic-status {
+  margin-left: auto;
+  padding: 3px 6px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 0.58rem;
+  font-weight: 850;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.sync-diagnostic-status[data-tone="good"] {
+  color: var(--green);
+  border-color: var(--green);
+}
+
+.sync-diagnostic-status[data-tone="warn"] {
+  color: var(--active);
+  border-color: var(--active);
+}
+
+.sync-diagnostic-stage small,
+.sync-diagnostics-next-step {
+  line-height: 1.45;
+}
+
+.sync-diagnostics-next-step {
+  display: block;
+}
+
 .migration-confirmation,
 .sync-preview-action,
 .push-preview-action,
@@ -1428,6 +1541,10 @@ h3 {
     grid-template-columns: 1fr;
   }
 
+  .sync-diagnostics-stages {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .profile-menu-panel {
     left: 0;
     right: auto;
@@ -1506,6 +1623,15 @@ h3 {
   .push-preview,
   .orchestration-preview {
     padding: 20px;
+  }
+
+  .sync-diagnostics-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .sync-diagnostics-stages {
+    grid-template-columns: 1fr;
   }
 
 }

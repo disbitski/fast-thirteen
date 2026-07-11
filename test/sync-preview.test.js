@@ -1,6 +1,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { createSyncPreviewModel } from "../src/syncPreview.js";
+import {
+  createSyncDiagnosticsViewModel,
+  createSyncPreviewModel,
+} from "../src/syncPreview.js";
 
 const failedPlan = {
   data: {
@@ -153,4 +156,59 @@ test("enables the ready read plan action only with explicit apply support", () =
     label: "Apply cloud read",
     message: "Successful cloud read plans can be applied to the local offline copy.",
   });
+});
+
+test("maps cloud read diagnostics into four clear safety stages", () => {
+  const model = createSyncDiagnosticsViewModel({
+    backupRequired: false,
+    dataMutated: false,
+    invalidRowCount: 0,
+    localSyncStatusChanged: false,
+    nextStep: "Applying cloud reads remains disabled.",
+    stages: {
+      readiness: { message: "Signed-in profile is ready.", status: "ready" },
+      repositoryRead: { message: "Rows were read safely.", status: "passed" },
+      mergePlan: { message: "Merge preview is ready.", status: "ready" },
+      localApply: { message: "Local apply is disabled.", status: "gated" },
+    },
+    status: "preview",
+  });
+
+  assert.equal(model.status, "preview");
+  assert.deepEqual(
+    model.stages.map((stage) => [stage.index, stage.label, stage.statusLabel, stage.tone]),
+    [
+      ["01", "Readiness", "Ready", "good"],
+      ["02", "Cloud read", "Passed", "good"],
+      ["03", "Merge plan", "Ready", "good"],
+      ["04", "Local apply", "Gated", "neutral"],
+    ],
+  );
+  assert.deepEqual(model.safetyItems, [
+    "Local data unchanged",
+    "Sync status unchanged",
+    "Apply remains gated",
+  ]);
+  assert.equal(model.nextStep, "Applying cloud reads remains disabled.");
+});
+
+test("surfaces invalid remote rows and backup expectations in diagnostics", () => {
+  const blocked = createSyncDiagnosticsViewModel({
+    invalidRowCount: 2,
+    stages: {
+      mergePlan: { message: "Remote rows need review.", status: "blocked" },
+    },
+    status: "blocked",
+  });
+  const applyReady = createSyncDiagnosticsViewModel({
+    backupRequired: true,
+    stages: {
+      localApply: { message: "Backup required.", status: "ready" },
+    },
+    status: "apply-ready",
+  });
+
+  assert.equal(blocked.stages[2].statusLabel, "2 invalid");
+  assert.equal(blocked.stages[2].tone, "warn");
+  assert.equal(applyReady.safetyItems[2], "Backup required before apply");
 });

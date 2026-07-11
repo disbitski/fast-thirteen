@@ -54,6 +54,64 @@ function applyAction(plan, applyReadiness) {
   };
 }
 
+const DIAGNOSTIC_STAGE_META = [
+  ["readiness", "Readiness"],
+  ["repositoryRead", "Cloud read"],
+  ["mergePlan", "Merge plan"],
+  ["localApply", "Local apply"],
+];
+
+function diagnosticTone(status) {
+  if (["ready", "passed"].includes(status)) return "good";
+  if (status === "blocked") return "warn";
+  return "neutral";
+}
+
+function diagnosticStatusLabel(status, invalidRowCount, key) {
+  if (key === "mergePlan" && status === "blocked" && invalidRowCount > 0) {
+    return `${invalidRowCount} invalid`;
+  }
+
+  return {
+    blocked: "Blocked",
+    disabled: "Disabled",
+    gated: "Gated",
+    "not-run": "Not run",
+    passed: "Passed",
+    ready: "Ready",
+  }[status] ?? "Waiting";
+}
+
+export function createSyncDiagnosticsViewModel(diagnostics = {}) {
+  const source = diagnostics ?? {};
+  const invalidRowCount = source.invalidRowCount ?? 0;
+  const stages = DIAGNOSTIC_STAGE_META.map(([key, label], index) => {
+    const stage = source.stages?.[key] ?? {};
+    const status = stage.status ?? "not-run";
+
+    return {
+      index: String(index + 1).padStart(2, "0"),
+      key,
+      label,
+      message: stage.message ?? `${label} has not run.`,
+      status,
+      statusLabel: diagnosticStatusLabel(status, invalidRowCount, key),
+      tone: diagnosticTone(status),
+    };
+  });
+
+  return {
+    nextStep: source.nextStep ?? "Run a read-only cloud pull to build a merge preview.",
+    safetyItems: [
+      source.dataMutated ? "Local data changed" : "Local data unchanged",
+      source.localSyncStatusChanged ? "Sync status changed" : "Sync status unchanged",
+      source.backupRequired ? "Backup required before apply" : "Apply remains gated",
+    ],
+    stages,
+    status: source.status ?? "disabled",
+  };
+}
+
 export function createSyncPreviewModel(plan, { applyReadiness = null, readiness = null } = {}) {
   const summary = plan?.summary ?? {};
   const localSessions = summary.localSessions ?? plan?.data?.sessions?.length ?? 0;

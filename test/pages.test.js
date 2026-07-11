@@ -69,3 +69,22 @@ test("tracker exposes the local-safe sync orchestration surface", () => {
   assert.match(app, /renderOrchestrationPreview/);
   assert.match(app, /supabasePushRepositoryReadiness/);
 });
+
+test("tracker renders cloud read diagnostics in the sync preview", () => {
+  const index = readFileSync("index.html", "utf8");
+  const app = readFileSync("src/app.js", "utf8");
+
+  for (const id of [
+    "sync-diagnostics",
+    "sync-diagnostics-safety",
+    "sync-diagnostics-stages",
+    "sync-diagnostics-next-step",
+  ]) {
+    assert.match(index, new RegExp(`id="${id}"`));
+  }
+
+  assert.match(app, /createSyncDiagnosticsViewModel/);
+  assert.match(app, /createCloudReadApplyDiagnostics/);
+  assert.match(app, /renderSyncDiagnostics/);
+  assert.match(app, /result\.diagnostics/);
+});

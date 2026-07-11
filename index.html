@@ -195,6 +195,26 @@
             </div>
             <dl class="sync-preview-stats" id="sync-preview-stats"></dl>
             <ul class="sync-preview-details" id="sync-preview-details"></ul>
+            <div
+              class="sync-diagnostics"
+              id="sync-diagnostics"
+              data-diagnostic-status="disabled"
+              aria-label="Cloud read safety diagnostics"
+            >
+              <div class="sync-diagnostics-heading">
+                <div>
+                  <span>Read safety path</span>
+                  <strong id="sync-diagnostics-safety">
+                    Local data unchanged · Sync status unchanged · Apply remains gated
+                  </strong>
+                </div>
+                <small>Signed-in test profile diagnostics</small>
+              </div>
+              <ol class="sync-diagnostics-stages" id="sync-diagnostics-stages"></ol>
+              <small class="sync-diagnostics-next-step" id="sync-diagnostics-next-step">
+                Sign in with configured Supabase auth to run the read-only path.
+              </small>
+            </div>
             <div class="sync-preview-action">
               <button class="secondary-button" id="sync-preview-action" type="button" disabled>
                 Cloud read disabled
