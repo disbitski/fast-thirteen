@@ -2,7 +2,9 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   createSyncDiagnosticsViewModel,
+  createSyncLoadingPreviewModel,
   createSyncPreviewModel,
+  createSyncRefreshControlModel,
 } from "../src/syncPreview.js";
 
 const failedPlan = {
@@ -211,4 +213,47 @@ test("surfaces invalid remote rows and backup expectations in diagnostics", () =
   assert.equal(blocked.stages[2].statusLabel, "2 invalid");
   assert.equal(blocked.stages[2].tone, "warn");
   assert.equal(applyReady.safetyItems[2], "Backup required before apply");
+});
+
+test("maps cloud refresh loading state without enabling apply", () => {
+  const model = createSyncLoadingPreviewModel({
+    sessions: [{ id: "local-fast" }],
+    sync: { lastSyncedAt: null },
+  });
+
+  assert.equal(model.status, "loading");
+  assert.equal(model.title, "Refreshing cloud preview");
+  assert.equal(model.action.disabled, true);
+  assert.equal(model.action.label, "Refreshing...");
+  assert.deepEqual(model.stats.map((item) => item.value), ["Ready", "1", "...", "0", "0", "0"]);
+  assert.match(model.details[1], /offline copy stay unchanged/);
+});
+
+test("maps refresh control disabled loading ready and retry states", () => {
+  const disabled = createSyncRefreshControlModel({
+    readiness: { canRead: false, message: "Sign in first." },
+  });
+  const loading = createSyncRefreshControlModel({
+    readiness: { canRead: true },
+    requestState: { status: "loading" },
+  });
+  const ready = createSyncRefreshControlModel({
+    readiness: { canRead: true },
+    requestState: { status: "ready" },
+  });
+  const blocked = createSyncRefreshControlModel({
+    readiness: { canRead: true },
+    requestState: { message: "Network offline.", status: "blocked" },
+  });
+
+  assert.deepEqual(
+    [disabled, loading, ready, blocked].map((model) => [model.status, model.disabled, model.label]),
+    [
+      ["disabled", true, "Refresh unavailable"],
+      ["loading", true, "Refreshing..."],
+      ["ready", false, "Refresh cloud preview"],
+      ["blocked", false, "Retry cloud preview"],
+    ],
+  );
+  assert.equal(blocked.message, "Network offline.");
 });

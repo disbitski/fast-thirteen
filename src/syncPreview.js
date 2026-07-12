@@ -76,10 +76,78 @@ function diagnosticStatusLabel(status, invalidRowCount, key) {
     blocked: "Blocked",
     disabled: "Disabled",
     gated: "Gated",
+    loading: "Reading",
     "not-run": "Not run",
     passed: "Passed",
     ready: "Ready",
   }[status] ?? "Waiting";
+}
+
+export function createSyncLoadingPreviewModel(localData = {}) {
+  const localSessions = Array.isArray(localData?.sessions) ? localData.sessions.length : 0;
+  const lastSyncedAt = localData?.sync?.lastSyncedAt ?? null;
+
+  return {
+    action: {
+      disabled: true,
+      label: "Refreshing...",
+      message: "This read-only refresh cannot apply data or write to Supabase.",
+    },
+    details: [
+      "Reading signed-in fast_sessions rows through the configured Supabase client.",
+      "Local tracking, backups, and the current offline copy stay unchanged.",
+    ],
+    lastSync: `Last successful sync: ${formatSyncTime(lastSyncedAt)}`,
+    message: "Reading signed-in cloud history without changing local fasting data.",
+    stats: [
+      stat("Readiness", "Ready", "good"),
+      stat("Local", localSessions),
+      stat("Remote", "..."),
+      stat("Apply", 0),
+      stat("Keep local", 0),
+      stat("Duplicates", 0),
+    ],
+    status: "loading",
+    title: "Refreshing cloud preview",
+  };
+}
+
+export function createSyncRefreshControlModel({ readiness = null, requestState = null } = {}) {
+  if (!readiness?.canRead) {
+    return {
+      disabled: true,
+      label: "Refresh unavailable",
+      message: readiness?.message ?? "Sign in with configured Supabase auth to refresh cloud history.",
+      status: "disabled",
+    };
+  }
+
+  if (requestState?.status === "loading") {
+    return {
+      disabled: true,
+      label: "Refreshing...",
+      message: "Reading cloud history now. Local tracking remains available.",
+      status: "loading",
+    };
+  }
+
+  if (requestState?.status === "blocked") {
+    return {
+      disabled: false,
+      label: "Retry cloud preview",
+      message: requestState.message ?? "Retry the read-only cloud preview after reviewing the blocker.",
+      status: "blocked",
+    };
+  }
+
+  return {
+    disabled: false,
+    label: "Refresh cloud preview",
+    message: requestState?.status === "ready"
+      ? "Run the read-only query again. No local data or cloud rows will be changed."
+      : "Read signed-in cloud history without applying or writing data.",
+    status: requestState?.status === "ready" ? "ready" : "idle",
+  };
 }
 
 export function createSyncDiagnosticsViewModel(diagnostics = {}) {

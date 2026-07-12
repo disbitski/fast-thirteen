@@ -79,12 +79,16 @@ test("tracker renders cloud read diagnostics in the sync preview", () => {
     "sync-diagnostics-safety",
     "sync-diagnostics-stages",
     "sync-diagnostics-next-step",
+    "sync-preview-refresh",
+    "sync-preview-refresh-detail",
   ]) {
     assert.match(index, new RegExp(`id="${id}"`));
   }
 
   assert.match(app, /createSyncDiagnosticsViewModel/);
   assert.match(app, /createCloudReadApplyDiagnostics/);
+  assert.match(app, /createCloudPullRequestController/);
+  assert.match(app, /createSyncRefreshControlModel/);
   assert.match(app, /renderSyncDiagnostics/);
-  assert.match(app, /result\.diagnostics/);
+  assert.match(app, /syncPullController\.refresh/);
 });

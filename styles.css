@@ -1055,6 +1055,27 @@ h3 {
   gap: 3px;
 }
 
+.sync-diagnostics-heading-actions {
+  justify-items: end;
+  max-width: 310px;
+  text-align: right;
+}
+
+.sync-refresh-button {
+  padding: 7px 11px;
+  font-size: 0.68rem;
+}
+
+.sync-refresh-button[data-refresh-status="loading"] {
+  border-color: var(--green);
+  color: var(--green);
+}
+
+.sync-refresh-button[data-refresh-status="blocked"] {
+  border-color: var(--active);
+  color: var(--active);
+}
+
 .sync-diagnostics-heading span {
   color: var(--green);
   font-size: 0.66rem;
@@ -1175,6 +1196,10 @@ h3 {
 .push-preview[data-preview-status="blocked"],
 .orchestration-preview[data-preview-status="blocked"] {
   border-color: var(--active);
+}
+
+.sync-preview[data-preview-status="loading"] {
+  border-color: var(--green);
 }
 
 .number-control input:focus-visible,
@@ -1628,6 +1653,12 @@ h3 {
   .sync-diagnostics-heading {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .sync-diagnostics-heading-actions {
+    justify-items: start;
+    max-width: none;
+    text-align: left;
   }
 
   .sync-diagnostics-stages {

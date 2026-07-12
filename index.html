@@ -208,7 +208,21 @@
                     Local data unchanged · Sync status unchanged · Apply remains gated
                   </strong>
                 </div>
-                <small>Signed-in test profile diagnostics</small>
+                <div class="sync-diagnostics-heading-actions">
+                  <small>Signed-in test profile diagnostics</small>
+                  <button
+                    class="secondary-button sync-refresh-button"
+                    id="sync-preview-refresh"
+                    type="button"
+                    aria-describedby="sync-preview-refresh-detail"
+                    disabled
+                  >
+                    Refresh unavailable
+                  </button>
+                  <small id="sync-preview-refresh-detail">
+                    Sign in with configured Supabase auth to refresh cloud history.
+                  </small>
+                </div>
               </div>
               <ol class="sync-diagnostics-stages" id="sync-diagnostics-stages"></ol>
               <small class="sync-diagnostics-next-step" id="sync-diagnostics-next-step">

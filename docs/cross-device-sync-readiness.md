@@ -169,6 +169,14 @@ Repository failures or invalid rows report `blocked`; missing readiness reports
 `disabled`. In every state, `dataMutated` and `localSyncStatusChanged` remain
 false until `applyCloudReadPlan` is deliberately called and succeeds.
 
+The profile/settings refresh control uses the same read controller as automatic
+preview loading. It is unavailable until read readiness passes, shows a loading
+state while the read-only query runs, and changes to a retry action after a
+blocker. Automatic reads are deduplicated, while an explicit retry starts a new
+request. If local data or the signed-in profile changes during a request, the
+older response is ignored and cannot replace the newer preview. Refresh never
+calls local apply or any Supabase mutation method.
+
 Expected safe failures:
 
 - Missing publishable config: cloud reads disabled, local tracking works.

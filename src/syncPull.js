@@ -26,6 +26,7 @@ export function createCloudReadApplyDiagnostics({
   const readEnabled = readiness?.canRead === true;
   const readSucceeded = readOutcome === "succeeded";
   const readFailed = readOutcome === "failed";
+  const readLoading = readOutcome === "loading";
   const planReady = readSucceeded && plan?.status === "ready" && plan.canApply === true;
   const planBlocked = readSucceeded && plan?.status === "failed";
   const applyEnabled = planReady && applyReadiness?.canApply === true;
@@ -56,12 +57,22 @@ export function createCloudReadApplyDiagnostics({
       canProceed: readSucceeded,
       message: !readEnabled
         ? "Repository read was not attempted because cloud reads are disabled."
-        : readSucceeded
-          ? "Signed-in fast_sessions rows were read without changing local data."
-          : readFailed
-            ? plan?.message ?? "Cloud fasting history could not be read."
-            : "Repository read has not run.",
-      status: !readEnabled ? "not-run" : readSucceeded ? "passed" : readFailed ? "blocked" : "not-run",
+        : readLoading
+          ? "Reading signed-in fast_sessions rows without changing local data."
+          : readSucceeded
+            ? "Signed-in fast_sessions rows were read without changing local data."
+            : readFailed
+              ? plan?.message ?? "Cloud fasting history could not be read."
+              : "Repository read has not run.",
+      status: !readEnabled
+        ? "not-run"
+        : readLoading
+          ? "loading"
+          : readSucceeded
+            ? "passed"
+            : readFailed
+              ? "blocked"
+              : "not-run",
     }),
     mergePlan: diagnosticStage({
       canProceed: planReady,
@@ -85,13 +96,15 @@ export function createCloudReadApplyDiagnostics({
 
   const status = !readEnabled
     ? "disabled"
-    : readFailed || planBlocked
-      ? "blocked"
-      : applyEnabled
-        ? "apply-ready"
-        : planReady
-          ? "preview"
-          : "waiting";
+    : readLoading
+      ? "loading"
+      : readFailed || planBlocked
+        ? "blocked"
+        : applyEnabled
+          ? "apply-ready"
+          : planReady
+            ? "preview"
+            : "waiting";
 
   return {
     backupRequired: applyEnabled,
@@ -102,13 +115,15 @@ export function createCloudReadApplyDiagnostics({
     localTrackingAvailable: true,
     nextStep: status === "disabled"
       ? readiness?.message ?? "Enable cloud read readiness for a signed-in test profile."
-      : status === "blocked"
-        ? blockers[0]?.message ?? "Resolve the cloud read blocker before continuing."
-        : status === "apply-ready"
-          ? "Preserve a local backup before applying this successful read plan."
-          : status === "preview"
-            ? applyReadiness?.message ?? "Review the merge preview while local apply remains disabled."
-            : "Run a read-only cloud pull to build a merge preview.",
+      : status === "loading"
+        ? "Wait for the read-only cloud preview to finish. Local tracking remains available."
+        : status === "blocked"
+          ? blockers[0]?.message ?? "Resolve the cloud read blocker before continuing."
+          : status === "apply-ready"
+            ? "Preserve a local backup before applying this successful read plan."
+            : status === "preview"
+              ? applyReadiness?.message ?? "Review the merge preview while local apply remains disabled."
+              : "Run a read-only cloud pull to build a merge preview.",
     plannedSyncStatus: planReady ? plan?.syncStatus?.next?.status ?? null : null,
     profileMode: plan?.data?.profile?.mode ?? "guest",
     stages,
