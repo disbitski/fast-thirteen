@@ -92,3 +92,13 @@ test("tracker renders cloud read diagnostics in the sync preview", () => {
   assert.match(app, /renderSyncDiagnostics/);
   assert.match(app, /syncPullController\.refresh/);
 });
+
+test("tracker bootstraps Supabase only through the local-safe SDK controller", () => {
+  const index = readFileSync("index.html", "utf8");
+  const app = readFileSync("src/app.js", "utf8");
+
+  assert.doesNotMatch(index, /cdn\.jsdelivr\.net\/npm\/@supabase\/supabase-js/);
+  assert.match(app, /createSupabaseSdkBootstrap/);
+  assert.match(app, /initializeSupabaseAuth/);
+  assert.match(app, /bootstrapState\.status !== "ready"/);
+});

@@ -3,6 +3,7 @@ export const AUTH_READINESS = Object.freeze({
   CLIENT_ERROR: "client-error",
   LOCAL_ONLY: "local-only",
   OAUTH_PENDING: "oauth-pending",
+  SDK_LOADING: "sdk-loading",
   SDK_MISSING: "sdk-missing",
 });
 
@@ -20,6 +21,14 @@ export function authReadiness({ authStatus, clientStatus, config } = {}) {
       label: "Guest mode",
       message: "Add Supabase publishable config to enable Google sign-in readiness.",
       status: AUTH_READINESS.LOCAL_ONLY,
+    };
+  }
+
+  if (clientStatus === "loading") {
+    return {
+      label: "Loading SDK",
+      message: "Loading the pinned Supabase browser SDK. Local tracking remains available.",
+      status: AUTH_READINESS.SDK_LOADING,
     };
   }
 

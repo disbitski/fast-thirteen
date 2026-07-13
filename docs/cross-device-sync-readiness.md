@@ -53,6 +53,8 @@ Implemented:
 - Scenario coverage for concurrent edits, offline recovery, duplicate
   avoidance, tombstone precedence, and local-newer versus remote-newer
   decisions.
+- Browser-safe, exact-version Supabase SDK bootstrap that runs only when
+  publishable config exists and falls back to local tracking on load failure.
 
 Still gated:
 
@@ -137,6 +139,12 @@ SUPABASE_URL=https://<project-ref>.supabase.co
 SUPABASE_ANON_KEY=<publishable-anon-key>
 ```
 
+The browser bootstrap loads the exact SDK version declared in
+`src/supabaseSdkBootstrap.js`. Before using a throwaway profile, confirm the UI
+moves from `Loading SDK` to an auth-ready state. A `Client issue` state means
+the CDN, network, or client initialization failed; stop cloud validation there
+and continue using Local data.
+
 Validation steps:
 
 1. Start the local server with publishable Supabase config only.
@@ -179,8 +187,10 @@ calls local apply or any Supabase mutation method.
 
 Expected safe failures:
 
-- Missing publishable config: cloud reads disabled, local tracking works.
-- Missing Supabase browser client: cloud reads disabled, local tracking works.
+- Missing publishable config: SDK is not requested, cloud reads are disabled,
+  and local tracking works.
+- Supabase SDK or network load failure: auth and cloud reads are disabled,
+  local tracking works, and reloading the page may bootstrap again.
 - Missing authenticated user: cloud reads disabled, local tracking works.
 - RLS or network read failure: preview is blocked, local tracking works.
 - Invalid remote row: read plan fails safely, local tracking works.

@@ -102,6 +102,11 @@ The local server exposes `/config.js` with only browser-publishable Supabase
 values: `SUPABASE_URL` and `SUPABASE_ANON_KEY`. If either value is missing,
 authentication is disabled and local-only tracking continues to work.
 
+When both values exist, the app loads one exact-version Supabase browser SDK
+for Google auth and read-only validation. Missing config or a failed SDK/network
+request leaves Guest mode and Local data fully operational; no cloud write gate
+is enabled by this bootstrap.
+
 Google OAuth setup readiness lives in
 [`docs/google-oauth-readiness.md`](docs/google-oauth-readiness.md). It documents
 the Supabase and Google Cloud steps without committing credentials.

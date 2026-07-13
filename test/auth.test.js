@@ -140,6 +140,26 @@ test("configured auth wrapper reports not-ready without a browser client", async
   assert.deepEqual(await service.currentAuthState(), service.initialState());
 });
 
+test("configured auth wrapper reports browser SDK loading safely", () => {
+  const service = createAuthService({
+    clientStatus: "loading",
+    config: {
+      supabaseUrl: "https://example.supabase.co",
+      supabaseAnonKey: "sb_publishable_test",
+      isConfigured: true,
+    },
+  });
+
+  assert.deepEqual(service.initialState(), {
+    configured: true,
+    error: null,
+    message: "Loading the Supabase browser SDK. Local tracking still works.",
+    session: null,
+    status: "loading",
+    user: null,
+  });
+});
+
 test("maps cancelled OAuth callback into a local-safe auth state", () => {
   const state = readAuthCallbackState(
     new URLSearchParams({

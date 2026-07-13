@@ -103,9 +103,15 @@ export function createAuthService({ clientStatus, config, createClient, supabase
       });
     }
     if (clientStatus && clientStatus !== "ready") {
+      const messages = {
+        error: "Supabase browser SDK could not load. Local tracking still works.",
+        loading: "Loading the Supabase browser SDK. Local tracking still works.",
+      };
       return authState({
         configured: true,
-        message: "Supabase is configured, but the browser client is not loaded yet.",
+        message:
+          messages[clientStatus] ??
+          "Supabase is configured, but the browser client is not loaded yet.",
         status: clientStatus,
       });
     }

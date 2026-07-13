@@ -24,6 +24,20 @@ test("auth readiness reports SDK missing when config exists without browser SDK"
   );
 });
 
+test("auth readiness reports pinned SDK loading while local tracking stays available", () => {
+  assert.deepEqual(
+    authReadiness({
+      clientStatus: "loading",
+      config: { isConfigured: true },
+    }),
+    {
+      label: "Loading SDK",
+      message: "Loading the pinned Supabase browser SDK. Local tracking remains available.",
+      status: AUTH_READINESS.SDK_LOADING,
+    },
+  );
+});
+
 test("auth readiness reports OAuth pending when config and SDK are ready", () => {
   assert.deepEqual(
     authReadiness({

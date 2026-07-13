@@ -29,8 +29,8 @@ import { recentSessionsForDays } from "./analytics.js";
 import { authReadiness } from "./authReadiness.js";
 import { createGuestMigrationPlan } from "./migrationPlan.js";
 import { createMigrationPreviewModel } from "./migrationPreview.js";
-import { createBrowserSupabaseClient } from "./supabaseClient.js";
 import { loadSupabaseConfig } from "./supabaseConfig.js";
+import { createSupabaseSdkBootstrap } from "./supabaseSdkBootstrap.js";
 import {
   supabaseMigrationRepositoryReadiness,
   supabasePushRepositoryReadiness,
@@ -70,11 +70,9 @@ let editingSessionId = null;
 let deleteConfirmationPending = false;
 let selectedTheme = applyTheme(document.documentElement, loadTheme(localStorage));
 const supabaseConfig = loadSupabaseConfig(globalThis);
-const supabaseClient = createBrowserSupabaseClient({
-  config: supabaseConfig,
-  source: globalThis,
-});
-const authService = createAuthService({
+const supabaseSdkBootstrap = createSupabaseSdkBootstrap();
+let supabaseClient = supabaseSdkBootstrap.prepare(supabaseConfig);
+let authService = createAuthService({
   config: supabaseConfig,
   clientStatus: supabaseClient.status,
   supabaseClient: supabaseClient.client,
@@ -316,11 +314,11 @@ function authHelpText() {
     return "Google sign-in was cancelled. Local tracking still works.";
   }
 
-  if (authState.status === "not-ready") {
+  if (["loading", "not-ready"].includes(supabaseClient.status)) {
     return "Supabase config is present, but the browser client is not loaded yet.";
   }
 
-  if (authState.error || authState.status === "error") {
+  if (supabaseClient.status === "error" || authState.error || authState.status === "error") {
     return "Could not read the current auth session. Local tracking still works.";
   }
 
@@ -820,7 +818,8 @@ function renderProfileSync() {
   elements.authReadinessStatus.dataset.readinessStatus = readiness.status;
   elements.authReadinessDetail.textContent = readiness.message;
   elements.googleSignIn.hidden = !authService.isConfigured() || appData.profile.mode === "authenticated";
-  elements.googleSignIn.disabled = ["loading", "redirecting"].includes(authState.status);
+  elements.googleSignIn.disabled =
+    supabaseClient.status !== "ready" || ["loading", "redirecting"].includes(authState.status);
   elements.signOut.hidden = appData.profile.mode !== "authenticated";
   elements.authHelp.textContent = authHelpText();
   renderMigrationPreview(createMigrationPreviewModel(migrationPlan, { migrationReadiness }));
@@ -1025,10 +1024,28 @@ for (const option of elements.themeOptions) {
 
 render();
 loadSharedData();
-authService
-  .currentAuthState()
-  .then((state) => applyAuthState(state, { persistMessage: "Profile updated locally" }))
-  .catch(() => {
+
+async function initializeSupabaseAuth() {
+  const bootstrapState = await supabaseSdkBootstrap.load({
+    config: supabaseConfig,
+    source: globalThis,
+  });
+  supabaseClient = bootstrapState;
+  authService = createAuthService({
+    config: supabaseConfig,
+    clientStatus: supabaseClient.status,
+    supabaseClient: supabaseClient.client,
+  });
+
+  if (bootstrapState.status !== "ready") {
+    if (!callbackAuthState) applyAuthState(authService.initialState());
+    return;
+  }
+
+  try {
+    const state = await authService.currentAuthState();
+    applyAuthState(state, { persistMessage: "Profile updated locally" });
+  } catch {
     applyAuthState({
       configured: authService.isConfigured(),
       error: true,
@@ -1036,12 +1053,16 @@ authService
       status: "guest",
       user: null,
     });
+  }
+
+  authService.onAuthStateChange((state) => {
+    applyAuthState(state, {
+      persistMessage: state.status === "authenticated" ? "Profile updated locally" : null,
+    });
   });
-authService.onAuthStateChange((state) => {
-  applyAuthState(state, {
-    persistMessage: state.status === "authenticated" ? "Profile updated locally" : null,
-  });
-});
+}
+
+void initializeSupabaseAuth();
 setInterval(() => {
   renderHero();
   if (activeSession) renderHistory();

@@ -826,6 +826,11 @@ h3 {
   background: var(--green);
 }
 
+.readiness-pill[data-readiness-status="sdk-loading"] {
+  color: var(--green);
+  border-color: var(--green);
+}
+
 .readiness-pill[data-readiness-status="client-error"] {
   color: var(--active);
 }

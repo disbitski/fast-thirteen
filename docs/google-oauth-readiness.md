@@ -10,10 +10,37 @@ starting, ending, editing, deleting, exporting, or importing fasts.
 - Local-only tracking is the default.
 - `/config.js` may expose only `SUPABASE_URL` and `SUPABASE_ANON_KEY`.
 - The Google button stays hidden until Supabase publishable config exists.
-- If config exists but the browser SDK is missing, the app reports `SDK missing`
-  instead of attempting OAuth.
+- When config exists, the app loads the official Supabase browser client from
+  jsDelivr at the exact version pinned in `src/supabaseSdkBootstrap.js`.
+- The SDK is never requested without publishable config. Loading and failure
+  states keep Guest mode, Local data, and every fasting action available.
+- Google sign-in and cloud reads stay disabled until SDK bootstrap reports
+  `ready`.
 - Provider secrets, service-role keys, Apple signing keys, and generated client
   secrets must stay outside Git.
+
+## Browser SDK Bootstrap
+
+The static app does not commit a Supabase bundle or add an unconditional SDK
+tag to `index.html`. `createSupabaseSdkBootstrap` requests the official v2
+browser package only after `loadSupabaseConfig` finds both a valid project URL
+and publishable key.
+
+The package URL is pinned to `@supabase/supabase-js@2.105.3`. Update the
+constant and its tests deliberately when upgrading; do not switch it to a
+floating `@2` URL in application code.
+
+Bootstrap states are local-safe:
+
+- `disabled`: publishable config is missing and no SDK request is made.
+- `loading`: one deduplicated SDK request is in progress.
+- `ready`: one browser client is available for auth and read-only validation.
+- `error`: the SDK or network failed; auth/cloud controls remain gated while
+  local tracking continues.
+
+The Supabase JavaScript installation guide documents browser CDN loading, and
+the app uses the same official package distribution with an exact version pin:
+<https://supabase.com/docs/reference/javascript/installing>.
 
 ## Supabase Dashboard Setup
 
@@ -64,6 +91,11 @@ SUPABASE_PROJECT_ID=<project-ref>
 ```
 
 Do not commit `.env`. The committed `.env.example` remains blank on purpose.
+
+Start `npm start` from the shell that exports these values. The server emits
+only the two browser-publishable values through `/config.js`. Opening the
+static GitHub Pages demo without config must remain in Guest mode, make no SDK
+request, and expose no project-specific values.
 
 If Supabase local development is used later, store the Google secret outside
 Git and reference it from local Supabase config, for example:
