@@ -102,3 +102,22 @@ test("tracker bootstraps Supabase only through the local-safe SDK controller", (
   assert.match(app, /initializeSupabaseAuth/);
   assert.match(app, /bootstrapState\.status !== "ready"/);
 });
+
+test("tracker renders each Google OAuth readiness gate", () => {
+  const index = readFileSync("index.html", "utf8");
+  const app = readFileSync("src/app.js", "utf8");
+
+  for (const id of [
+    "oauth-readiness-grid",
+    "oauth-sdk-status",
+    "oauth-provider-status",
+    "oauth-redirect-status",
+    "oauth-callback-status",
+    "oauth-signin-status",
+  ]) {
+    assert.match(index, new RegExp(`id="${id}"`));
+  }
+
+  assert.match(app, /renderOAuthReadiness/);
+  assert.match(app, /!readiness\.canSignIn/);
+});

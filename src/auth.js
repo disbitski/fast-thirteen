@@ -1,4 +1,5 @@
 import { emptyData, normalizeProfile } from "./storage.js";
+import { createGoogleOAuthReadiness } from "./googleOAuthReadiness.js";
 
 const DEFAULT_AUTH_MESSAGE = "Local tracking still works.";
 
@@ -73,6 +74,12 @@ export function readAuthCallbackState(searchParams = new URLSearchParams()) {
   });
 }
 
+export function resolveAuthCallbackState(callbackState, nextState) {
+  if (!callbackState || nextState?.status === "authenticated") return nextState;
+  if (!nextState?.event || nextState.event === "INITIAL_SESSION") return callbackState;
+  return nextState;
+}
+
 export function cleanAuthCallbackUrl(location = globalThis.location, history = globalThis.history) {
   if (!location?.search || !history?.replaceState) return;
 
@@ -86,8 +93,15 @@ export function cleanAuthCallbackUrl(location = globalThis.location, history = g
   history.replaceState({}, "", nextUrl);
 }
 
-export function createAuthService({ clientStatus, config, createClient, supabaseClient } = {}) {
+export function createAuthService({
+  clientStatus,
+  config,
+  createClient,
+  location = globalThis.location,
+  supabaseClient,
+} = {}) {
   let client = supabaseClient ?? null;
+  const resolvedClientStatus = clientStatus ?? (supabaseClient ? "ready" : "not-ready");
 
   function isConfigured() {
     return Boolean(config?.isConfigured);
@@ -102,7 +116,7 @@ export function createAuthService({ clientStatus, config, createClient, supabase
         status: "disabled",
       });
     }
-    if (clientStatus && clientStatus !== "ready") {
+    if (resolvedClientStatus !== "ready") {
       const messages = {
         error: "Supabase browser SDK could not load. Local tracking still works.",
         loading: "Loading the Supabase browser SDK. Local tracking still works.",
@@ -110,9 +124,9 @@ export function createAuthService({ clientStatus, config, createClient, supabase
       return authState({
         configured: true,
         message:
-          messages[clientStatus] ??
+          messages[resolvedClientStatus] ??
           "Supabase is configured, but the browser client is not loaded yet.",
-        status: clientStatus,
+        status: resolvedClientStatus,
       });
     }
     return authState({
@@ -159,6 +173,20 @@ export function createAuthService({ clientStatus, config, createClient, supabase
       };
     }
 
+    const readiness = createGoogleOAuthReadiness({
+      clientStatus: resolvedClientStatus,
+      config,
+      location,
+      redirectTo,
+    });
+    if (!readiness.canSignIn) {
+      return {
+        ok: false,
+        status: readiness.status,
+        message: readiness.message,
+      };
+    }
+
     const authClient = getClient();
     if (!authClient?.auth?.signInWithOAuth) {
       return {
@@ -171,7 +199,7 @@ export function createAuthService({ clientStatus, config, createClient, supabase
     const { data, error } = await authClient.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: redirectTo ?? globalThis.location?.origin,
+        redirectTo: readiness.redirectTo,
       },
     });
 

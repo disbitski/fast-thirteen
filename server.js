@@ -28,6 +28,11 @@ function browserConfig() {
   return {
     supabaseUrl: process.env.SUPABASE_URL?.trim() || null,
     supabaseAnonKey: process.env.SUPABASE_ANON_KEY?.trim() || null,
+    googleProviderEnabled: process.env.SUPABASE_GOOGLE_PROVIDER_ENABLED === "true",
+    authRedirectOrigins: (process.env.SUPABASE_AUTH_REDIRECT_ORIGINS ?? "")
+      .split(",")
+      .map((value) => value.trim())
+      .filter(Boolean),
     migrationWritesEnabled: process.env.SUPABASE_MIGRATION_WRITES_ENABLED === "true",
     migrationConfirmationsEnabled: process.env.SUPABASE_MIGRATION_CONFIRMATIONS_ENABLED === "true",
     migrationFinalizationEnabled: process.env.SUPABASE_MIGRATION_FINALIZATION_ENABLED === "true",

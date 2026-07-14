@@ -98,14 +98,19 @@ Schema and row-level-security planning lives in
 `.env.example` contains placeholders only; real OAuth secrets, service-role
 keys, and Apple signing material must stay outside Git.
 
-The local server exposes `/config.js` with only browser-publishable Supabase
-values: `SUPABASE_URL` and `SUPABASE_ANON_KEY`. If either value is missing,
-authentication is disabled and local-only tracking continues to work.
+The local server exposes `/config.js` with browser-publishable Supabase values:
+the project URL, publishable key, provider-readiness flag, and redirect-origin
+allowlist. If the project URL or key is missing, authentication is disabled and
+local-only tracking continues to work.
 
 When both values exist, the app loads one exact-version Supabase browser SDK
 for Google auth and read-only validation. Missing config or a failed SDK/network
 request leaves Guest mode and Local data fully operational; no cloud write gate
 is enabled by this bootstrap.
+
+Google sign-in additionally requires a default-off public provider flag and an
+exact redirect-origin allowlist. The profile area shows SDK, provider, redirect,
+callback, and sign-in readiness independently before OAuth can start.
 
 Google OAuth setup readiness lives in
 [`docs/google-oauth-readiness.md`](docs/google-oauth-readiness.md). It documents

@@ -36,6 +36,24 @@ function cleanBoolean(value) {
   return value === true || value === "true";
 }
 
+function cleanOrigin(value) {
+  const url = cleanUrl(value);
+  if (!url) return null;
+
+  const parsed = new URL(url);
+  if (parsed.username || parsed.password || parsed.origin === "null") return null;
+  return parsed.origin;
+}
+
+function cleanOrigins(value) {
+  const values = Array.isArray(value)
+    ? value
+    : typeof value === "string"
+      ? value.split(",")
+      : [];
+  return [...new Set(values.map(cleanOrigin).filter(Boolean))];
+}
+
 export function normalizeSupabaseConfig(value = {}) {
   const supabaseUrl = cleanUrl(value.supabaseUrl ?? value.SUPABASE_URL);
   const supabaseAnonKey = cleanPublishableKey(
@@ -50,8 +68,16 @@ export function normalizeSupabaseConfig(value = {}) {
   const migrationFinalizationEnabled = cleanBoolean(
     value.migrationFinalizationEnabled ?? value.SUPABASE_MIGRATION_FINALIZATION_ENABLED,
   );
+  const googleProviderEnabled = cleanBoolean(
+    value.googleProviderEnabled ?? value.SUPABASE_GOOGLE_PROVIDER_ENABLED,
+  );
+  const authRedirectOrigins = cleanOrigins(
+    value.authRedirectOrigins ?? value.SUPABASE_AUTH_REDIRECT_ORIGINS,
+  );
 
   return {
+    authRedirectOrigins,
+    googleProviderEnabled,
     supabaseUrl,
     supabaseAnonKey,
     migrationConfirmationsEnabled,

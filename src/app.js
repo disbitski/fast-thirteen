@@ -24,6 +24,7 @@ import {
   createAuthService,
   mapAuthStateToProfile,
   readAuthCallbackState,
+  resolveAuthCallbackState,
 } from "./auth.js";
 import { recentSessionsForDays } from "./analytics.js";
 import { authReadiness } from "./authReadiness.js";
@@ -75,6 +76,7 @@ let supabaseClient = supabaseSdkBootstrap.prepare(supabaseConfig);
 let authService = createAuthService({
   config: supabaseConfig,
   clientStatus: supabaseClient.status,
+  location: globalThis.location,
   supabaseClient: supabaseClient.client,
 });
 const callbackAuthState = readAuthCallbackState(
@@ -154,6 +156,11 @@ const elements = {
   authHelp: document.querySelector("#auth-help"),
   authReadinessDetail: document.querySelector("#auth-readiness-detail"),
   authReadinessStatus: document.querySelector("#auth-readiness-status"),
+  oauthCallbackStatus: document.querySelector("#oauth-callback-status"),
+  oauthProviderStatus: document.querySelector("#oauth-provider-status"),
+  oauthRedirectStatus: document.querySelector("#oauth-redirect-status"),
+  oauthSdkStatus: document.querySelector("#oauth-sdk-status"),
+  oauthSignInStatus: document.querySelector("#oauth-signin-status"),
   signOut: document.querySelector("#sign-out"),
   statusLabel: document.querySelector("#status-label"),
   targetCopy: document.querySelector("#target-copy"),
@@ -293,36 +300,8 @@ function syncDescription() {
   return "Tracking locally now. Cloud sync can plug in later.";
 }
 
-function authHelpText() {
-  if (!authService.isConfigured()) {
-    return "Google sign-in is disabled until Supabase publishable config is added. Local tracking still works.";
-  }
-
-  if (authState.message) {
-    return authState.message;
-  }
-
-  if (authState.status === "loading") {
-    return "Checking Google sign-in status...";
-  }
-
-  if (authState.status === "authenticated") {
-    return "Signed in with Google. Cloud sync will use this profile in the next milestone.";
-  }
-
-  if (authState.status === "cancelled") {
-    return "Google sign-in was cancelled. Local tracking still works.";
-  }
-
-  if (["loading", "not-ready"].includes(supabaseClient.status)) {
-    return "Supabase config is present, but the browser client is not loaded yet.";
-  }
-
-  if (supabaseClient.status === "error" || authState.error || authState.status === "error") {
-    return "Could not read the current auth session. Local tracking still works.";
-  }
-
-  return "Google sign-in wiring is ready for OAuth credentials.";
+function authHelpText(readiness) {
+  return authState.message ?? readiness.message;
 }
 
 function profileMenuDetail() {
@@ -751,11 +730,29 @@ function remoteSessionsForPush(readKey) {
     : [];
 }
 
+function renderOAuthReadiness(readiness) {
+  const statuses = {
+    callback: elements.oauthCallbackStatus,
+    provider: elements.oauthProviderStatus,
+    redirect: elements.oauthRedirectStatus,
+    sdk: elements.oauthSdkStatus,
+    signIn: elements.oauthSignInStatus,
+  };
+
+  for (const [name, element] of Object.entries(statuses)) {
+    const stage = readiness.stages[name];
+    element.textContent = stage.label;
+    element.dataset.oauthStatus = stage.status;
+    element.parentElement.title = stage.message;
+  }
+}
+
 function renderProfileSync() {
   const readiness = authReadiness({
-    authStatus: authState.status,
+    authState,
     clientStatus: supabaseClient.status,
     config: supabaseConfig,
+    location: globalThis.location,
   });
   const migrationPlan = createGuestMigrationPlan({
     authState,
@@ -819,9 +816,10 @@ function renderProfileSync() {
   elements.authReadinessDetail.textContent = readiness.message;
   elements.googleSignIn.hidden = !authService.isConfigured() || appData.profile.mode === "authenticated";
   elements.googleSignIn.disabled =
-    supabaseClient.status !== "ready" || ["loading", "redirecting"].includes(authState.status);
+    !readiness.canSignIn || ["loading", "redirecting"].includes(authState.status);
   elements.signOut.hidden = appData.profile.mode !== "authenticated";
-  elements.authHelp.textContent = authHelpText();
+  elements.authHelp.textContent = authHelpText(readiness);
+  renderOAuthReadiness(readiness);
   renderMigrationPreview(createMigrationPreviewModel(migrationPlan, { migrationReadiness }));
   const displayResult = pullResult
     ?? (pullState.key === cloudReadKey && pullState.status === "blocked"
@@ -962,6 +960,17 @@ elements.exportButton.addEventListener("click", () => {
 elements.importButton.addEventListener("click", () => elements.importFile.click());
 
 elements.googleSignIn.addEventListener("click", async () => {
+  const readiness = authReadiness({
+    authState,
+    clientStatus: supabaseClient.status,
+    config: supabaseConfig,
+    location: globalThis.location,
+  });
+  if (!readiness.canSignIn) {
+    elements.authHelp.textContent = readiness.message;
+    return;
+  }
+
   applyAuthState({
     ...authState,
     message: "Opening Google sign-in...",
@@ -1034,6 +1043,7 @@ async function initializeSupabaseAuth() {
   authService = createAuthService({
     config: supabaseConfig,
     clientStatus: supabaseClient.status,
+    location: globalThis.location,
     supabaseClient: supabaseClient.client,
   });
 
@@ -1044,7 +1054,8 @@ async function initializeSupabaseAuth() {
 
   try {
     const state = await authService.currentAuthState();
-    applyAuthState(state, { persistMessage: "Profile updated locally" });
+    const resolvedState = resolveAuthCallbackState(callbackAuthState, state);
+    applyAuthState(resolvedState, { persistMessage: "Profile updated locally" });
   } catch {
     applyAuthState({
       configured: authService.isConfigured(),
@@ -1056,8 +1067,10 @@ async function initializeSupabaseAuth() {
   }
 
   authService.onAuthStateChange((state) => {
-    applyAuthState(state, {
-      persistMessage: state.status === "authenticated" ? "Profile updated locally" : null,
+    const resolvedState = resolveAuthCallbackState(callbackAuthState, state);
+    applyAuthState(resolvedState, {
+      persistMessage:
+        resolvedState.status === "authenticated" ? "Profile updated locally" : null,
     });
   });
 }

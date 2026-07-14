@@ -9,6 +9,7 @@ import {
   mapAuthStateToProfile,
   mapSupabaseSession,
   readAuthCallbackState,
+  resolveAuthCallbackState,
 } from "../src/auth.js";
 
 const repoRoot = fileURLToPath(new URL("..", import.meta.url));
@@ -52,6 +53,93 @@ test("missing auth config leaves Google sign-in disabled", async () => {
     status: "disabled",
     message: "Google sign-in needs Supabase publishable config first.",
   });
+});
+
+test("provider-disabled auth never calls Google OAuth", async () => {
+  let oauthCalls = 0;
+  const service = createAuthService({
+    clientStatus: "ready",
+    config: {
+      authRedirectOrigins: ["http://127.0.0.1:4173"],
+      googleProviderEnabled: false,
+      isConfigured: true,
+    },
+    location: { href: "http://127.0.0.1:4173/" },
+    supabaseClient: {
+      auth: {
+        async signInWithOAuth() {
+          oauthCalls += 1;
+          return {};
+        },
+      },
+    },
+  });
+
+  const result = await service.signInWithGoogle();
+  assert.equal(result.ok, false);
+  assert.equal(result.status, "provider-disabled");
+  assert.equal(oauthCalls, 0);
+});
+
+test("unlisted redirect origin never calls Google OAuth", async () => {
+  let oauthCalls = 0;
+  const service = createAuthService({
+    clientStatus: "ready",
+    config: {
+      authRedirectOrigins: ["http://127.0.0.1:4173"],
+      googleProviderEnabled: true,
+      isConfigured: true,
+    },
+    location: { href: "http://192.168.86.99:4173/" },
+    supabaseClient: {
+      auth: {
+        async signInWithOAuth() {
+          oauthCalls += 1;
+          return {};
+        },
+      },
+    },
+  });
+
+  const result = await service.signInWithGoogle();
+  assert.equal(result.ok, false);
+  assert.equal(result.status, "redirect-blocked");
+  assert.equal(oauthCalls, 0);
+});
+
+test("ready Google OAuth uses the GitHub Pages project return URL", async () => {
+  const calls = [];
+  const service = createAuthService({
+    clientStatus: "ready",
+    config: {
+      authRedirectOrigins: ["https://disbitski.github.io"],
+      googleProviderEnabled: true,
+      isConfigured: true,
+    },
+    location: {
+      href: "https://disbitski.github.io/fast-thirteen/index.html?source=test#profile",
+    },
+    supabaseClient: {
+      auth: {
+        async signInWithOAuth(value) {
+          calls.push(value);
+          return { data: { url: "https://accounts.google.com/" } };
+        },
+      },
+    },
+  });
+
+  assert.deepEqual(await service.signInWithGoogle(), {
+    ok: true,
+    status: "redirecting",
+    data: { url: "https://accounts.google.com/" },
+  });
+  assert.deepEqual(calls, [{
+    provider: "google",
+    options: {
+      redirectTo: "https://disbitski.github.io/fast-thirteen/",
+    },
+  }]);
 });
 
 test("maps Supabase session user into authenticated profile state", () => {
@@ -170,6 +258,34 @@ test("maps cancelled OAuth callback into a local-safe auth state", () => {
 
   assert.equal(state.status, "cancelled");
   assert.equal(state.message, "Google sign-in was cancelled. Local tracking still works.");
+});
+
+test("callback feedback survives guest session hydration but yields to later auth events", () => {
+  const callbackState = readAuthCallbackState(
+    new URLSearchParams({ error: "access_denied" }),
+  );
+  const initialGuest = {
+    configured: true,
+    event: "INITIAL_SESSION",
+    status: "guest",
+    user: null,
+  };
+  const signedOut = {
+    configured: true,
+    event: "SIGNED_OUT",
+    status: "signed-out",
+    user: null,
+  };
+  const authenticated = {
+    configured: true,
+    event: "SIGNED_IN",
+    status: "authenticated",
+    user: { id: "user-123" },
+  };
+
+  assert.equal(resolveAuthCallbackState(callbackState, initialGuest), callbackState);
+  assert.equal(resolveAuthCallbackState(callbackState, signedOut), signedOut);
+  assert.equal(resolveAuthCallbackState(callbackState, authenticated), authenticated);
 });
 
 test("cleans OAuth callback error params while preserving unrelated params", () => {

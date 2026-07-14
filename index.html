@@ -145,6 +145,32 @@
             <div class="profile-actions">
               <span class="sync-pill" id="sync-status">Local data</span>
               <span class="readiness-pill" id="auth-readiness-status">Guest mode</span>
+              <div
+                class="oauth-readiness-grid"
+                id="oauth-readiness-grid"
+                aria-label="Google sign-in readiness"
+              >
+                <span class="oauth-readiness-step">
+                  <small>SDK</small>
+                  <strong id="oauth-sdk-status">Waiting</strong>
+                </span>
+                <span class="oauth-readiness-step">
+                  <small>Provider</small>
+                  <strong id="oauth-provider-status">Disabled</strong>
+                </span>
+                <span class="oauth-readiness-step">
+                  <small>Redirect</small>
+                  <strong id="oauth-redirect-status">Blocked</strong>
+                </span>
+                <span class="oauth-readiness-step">
+                  <small>Callback</small>
+                  <strong id="oauth-callback-status">Clear</strong>
+                </span>
+                <span class="oauth-readiness-step">
+                  <small>Sign in</small>
+                  <strong id="oauth-signin-status">Blocked</strong>
+                </span>
+              </div>
               <button class="secondary-button" id="google-sign-in" type="button" hidden>
                 Continue with Google
               </button>

@@ -809,6 +809,52 @@ h3 {
   max-width: 560px;
 }
 
+.oauth-readiness-grid {
+  display: grid;
+  flex-basis: 100%;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 6px;
+  width: 100%;
+}
+
+.oauth-readiness-step {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  padding: 7px 8px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--badge);
+  text-align: left;
+}
+
+.oauth-readiness-step small {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 0.58rem;
+  font-weight: 760;
+  letter-spacing: 0.08em;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+}
+
+.oauth-readiness-step strong {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 0.68rem;
+  text-overflow: ellipsis;
+}
+
+.oauth-readiness-step strong[data-oauth-status="ready"],
+.oauth-readiness-step strong[data-oauth-status="loading"] {
+  color: var(--green);
+}
+
+.oauth-readiness-step strong[data-oauth-status="blocked"],
+.oauth-readiness-step strong[data-oauth-status="cancelled"] {
+  color: var(--active);
+}
+
 .sync-pill[data-sync-status="error"] {
   color: var(--active);
 }
@@ -820,7 +866,7 @@ h3 {
 }
 
 .readiness-pill[data-readiness-status="authenticated"],
-.readiness-pill[data-readiness-status="oauth-pending"] {
+.readiness-pill[data-readiness-status="oauth-ready"] {
   color: var(--accent-ink);
   border-color: var(--green);
   background: var(--green);
@@ -833,6 +879,14 @@ h3 {
 
 .readiness-pill[data-readiness-status="client-error"] {
   color: var(--active);
+}
+
+.readiness-pill[data-readiness-status="provider-disabled"],
+.readiness-pill[data-readiness-status="redirect-blocked"],
+.readiness-pill[data-readiness-status="callback-error"],
+.readiness-pill[data-readiness-status="callback-cancelled"] {
+  color: var(--active);
+  border-color: var(--active);
 }
 
 .readiness-pill[data-readiness-status="sdk-missing"] {
@@ -1586,6 +1640,14 @@ h3 {
 }
 
 @media (max-width: 480px) {
+  .oauth-readiness-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .oauth-readiness-step:last-child {
+    grid-column: 1 / -1;
+  }
+
   .topbar {
     align-items: flex-start;
     flex-direction: column;

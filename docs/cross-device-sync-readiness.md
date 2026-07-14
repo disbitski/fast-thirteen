@@ -137,6 +137,8 @@ Prerequisites:
 ```sh
 SUPABASE_URL=https://<project-ref>.supabase.co
 SUPABASE_ANON_KEY=<publishable-anon-key>
+SUPABASE_GOOGLE_PROVIDER_ENABLED=true
+SUPABASE_AUTH_REDIRECT_ORIGINS=http://127.0.0.1:4173
 ```
 
 The browser bootstrap loads the exact SDK version declared in
@@ -145,9 +147,16 @@ moves from `Loading SDK` to an auth-ready state. A `Client issue` state means
 the CDN, network, or client initialization failed; stop cloud validation there
 and continue using Local data.
 
+Before setting the public provider flag to `true`, configure Google in the
+Supabase dashboard and add the exact local application return URL to Supabase
+Auth Redirect URLs. Confirm the UI reports `Ready`, `Enabled`, `Allowed`,
+`Clear`, and `Ready` across its five Google sign-in stages. This only enables
+the OAuth attempt; every cloud mutation gate remains off.
+
 Validation steps:
 
-1. Start the local server with publishable Supabase config only.
+1. Start the local server with publishable Supabase and explicit OAuth readiness
+   config only.
 2. Sign in with the throwaway Google profile.
 3. Confirm the app still shows existing Local data and can export a backup.
 4. Insert or inspect test-only `fast_sessions` rows for that same Supabase user.

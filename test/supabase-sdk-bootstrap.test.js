@@ -7,6 +7,8 @@ import {
 } from "../src/supabaseSdkBootstrap.js";
 
 const configured = {
+  authRedirectOrigins: ["http://127.0.0.1:4173"],
+  googleProviderEnabled: true,
   supabaseUrl: "https://example.supabase.co",
   supabaseAnonKey: "sb_publishable_test",
   isConfigured: true,
