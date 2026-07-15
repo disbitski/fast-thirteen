@@ -132,7 +132,6 @@ test("ready Google OAuth uses the GitHub Pages project return URL", async () => 
   assert.deepEqual(await service.signInWithGoogle(), {
     ok: true,
     status: "redirecting",
-    data: { url: "https://accounts.google.com/" },
   });
   assert.deepEqual(calls, [{
     provider: "google",
@@ -140,6 +139,20 @@ test("ready Google OAuth uses the GitHub Pages project return URL", async () => 
       redirectTo: "https://disbitski.github.io/fast-thirteen/",
     },
   }]);
+});
+
+test("authenticated state omits Supabase and provider tokens", () => {
+  const state = mapSupabaseSession({
+    access_token: "supabase-access-token",
+    provider_token: "google-provider-token",
+    refresh_token: "supabase-refresh-token",
+    user: { id: "user-123", email: "dave@example.com" },
+  });
+
+  assert.deepEqual(state.session, {
+    user: { id: "user-123", email: "dave@example.com" },
+  });
+  assert.doesNotMatch(JSON.stringify(state), /provider-token|access-token|refresh-token/);
 });
 
 test("maps Supabase session user into authenticated profile state", () => {

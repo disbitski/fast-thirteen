@@ -221,6 +221,30 @@
             </div>
             <dl class="sync-preview-stats" id="sync-preview-stats"></dl>
             <ul class="sync-preview-details" id="sync-preview-details"></ul>
+            <details
+              class="oauth-validation"
+              id="oauth-validation"
+              data-validation-status="local-only"
+              open
+            >
+              <summary>
+                <span>
+                  <small>OAuth + cloud read</small>
+                  <strong id="oauth-validation-title">Local-safe validation</strong>
+                </span>
+                <span class="oauth-validation-status" id="oauth-validation-status">
+                  local only
+                </span>
+              </summary>
+              <p id="oauth-validation-message">
+                Google validation is gated. Guest mode and Local data remain available.
+              </p>
+              <dl class="oauth-validation-stats" id="oauth-validation-stats"></dl>
+              <ol class="oauth-validation-stages" id="oauth-validation-stages"></ol>
+              <small class="oauth-validation-safety" id="oauth-validation-safety">
+                Local data unchanged · Sync status unchanged · Provider tokens omitted · Apply and writes disabled
+              </small>
+            </details>
             <div
               class="sync-diagnostics"
               id="sync-diagnostics"

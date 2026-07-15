@@ -28,6 +28,8 @@ import {
 } from "./auth.js";
 import { recentSessionsForDays } from "./analytics.js";
 import { authReadiness } from "./authReadiness.js";
+import { createGoogleOAuthLaunchController } from "./googleOAuthController.js";
+import { createOAuthReadValidationReport } from "./oauthValidationReport.js";
 import { createGuestMigrationPlan } from "./migrationPlan.js";
 import { createMigrationPreviewModel } from "./migrationPreview.js";
 import { loadSupabaseConfig } from "./supabaseConfig.js";
@@ -161,6 +163,13 @@ const elements = {
   oauthRedirectStatus: document.querySelector("#oauth-redirect-status"),
   oauthSdkStatus: document.querySelector("#oauth-sdk-status"),
   oauthSignInStatus: document.querySelector("#oauth-signin-status"),
+  oauthValidation: document.querySelector("#oauth-validation"),
+  oauthValidationMessage: document.querySelector("#oauth-validation-message"),
+  oauthValidationSafety: document.querySelector("#oauth-validation-safety"),
+  oauthValidationStages: document.querySelector("#oauth-validation-stages"),
+  oauthValidationStats: document.querySelector("#oauth-validation-stats"),
+  oauthValidationStatus: document.querySelector("#oauth-validation-status"),
+  oauthValidationTitle: document.querySelector("#oauth-validation-title"),
   signOut: document.querySelector("#sign-out"),
   statusLabel: document.querySelector("#status-label"),
   targetCopy: document.querySelector("#target-copy"),
@@ -173,6 +182,16 @@ const elements = {
 
 const syncPullController = createCloudPullRequestController({
   executePull: createCloudPullPreview,
+  onStateChange() {
+    renderProfileSync();
+  },
+});
+
+const oauthLaunchController = createGoogleOAuthLaunchController({
+  initialAuthState: authState,
+  launch({ redirectTo }) {
+    return authService.signInWithGoogle({ redirectTo });
+  },
   onStateChange() {
     renderProfileSync();
   },
@@ -300,7 +319,10 @@ function syncDescription() {
   return "Tracking locally now. Cloud sync can plug in later.";
 }
 
-function authHelpText(readiness) {
+function authHelpText(readiness, launchState) {
+  if (launchState?.status && launchState.status !== "idle") {
+    return launchState.message;
+  }
   return authState.message ?? readiness.message;
 }
 
@@ -686,6 +708,7 @@ function fallbackSyncPull(readiness, { error = readiness.message, readOutcome = 
       readiness,
     }),
     model: createSyncPreviewModel(plan, { applyReadiness, readiness }),
+    plan,
   };
 }
 
@@ -747,6 +770,67 @@ function renderOAuthReadiness(readiness) {
   }
 }
 
+function validationTone(status) {
+  if (status === "passed") return "good";
+  if (status === "blocked") return "warn";
+  return "muted";
+}
+
+function renderOAuthValidationReport(model) {
+  elements.oauthValidation.dataset.validationStatus = model.status;
+  elements.oauthValidationStatus.textContent = model.status.replaceAll("-", " ");
+  elements.oauthValidationStatus.dataset.tone = model.status === "ready"
+    ? "good"
+    : model.status === "blocked"
+      ? "warn"
+      : "muted";
+  elements.oauthValidationTitle.textContent = model.title;
+  elements.oauthValidationMessage.textContent = model.message;
+  elements.oauthValidationStats.replaceChildren(
+    ...[
+      ["Local sessions", model.summary.localSessionCount],
+      ["Cloud rows", model.summary.remoteSessionCount],
+      ["Duplicates", model.summary.duplicateCount],
+      ["Invalid rows", model.summary.invalidRowCount],
+    ].map(([label, value]) => {
+      const card = document.createElement("div");
+      const term = document.createElement("dt");
+      const description = document.createElement("dd");
+      term.textContent = label;
+      description.textContent = value;
+      description.dataset.tone = value > 0 && label === "Invalid rows" ? "warn" : "good";
+      card.append(term, description);
+      return card;
+    }),
+  );
+  elements.oauthValidationStages.replaceChildren(
+    ...model.stages.map((stage, index) => {
+      const item = document.createElement("li");
+      const heading = document.createElement("div");
+      const number = document.createElement("span");
+      const label = document.createElement("strong");
+      const status = document.createElement("span");
+      const message = document.createElement("small");
+      item.dataset.stage = stage.key;
+      item.dataset.stageStatus = stage.status;
+      number.textContent = String(index + 1).padStart(2, "0");
+      label.textContent = stage.label;
+      status.textContent = stage.status.replaceAll("-", " ");
+      status.dataset.tone = validationTone(stage.status);
+      message.textContent = stage.message;
+      heading.append(number, label, status);
+      item.append(heading, message);
+      return item;
+    }),
+  );
+  elements.oauthValidationSafety.textContent = [
+    "Local data unchanged",
+    "Sync status unchanged",
+    "Provider tokens omitted",
+    "Apply and writes disabled",
+  ].join(" · ");
+}
+
 function renderProfileSync() {
   const readiness = authReadiness({
     authState,
@@ -790,6 +874,7 @@ function renderProfileSync() {
     repositoryReadiness: pushRepositoryReadiness,
   });
   const pullState = syncPullController.current();
+  const oauthLaunchState = oauthLaunchController.current();
   const pullResult = pullState.key === cloudReadKey ? pullState.result : null;
   const readPlan = pullResult?.plan ?? null;
   const orchestrationModel = createSyncOrchestrationModel({
@@ -816,9 +901,10 @@ function renderProfileSync() {
   elements.authReadinessDetail.textContent = readiness.message;
   elements.googleSignIn.hidden = !authService.isConfigured() || appData.profile.mode === "authenticated";
   elements.googleSignIn.disabled =
-    !readiness.canSignIn || ["loading", "redirecting"].includes(authState.status);
+    !readiness.canSignIn
+    || ["loading", "redirecting"].includes(oauthLaunchState.status);
   elements.signOut.hidden = appData.profile.mode !== "authenticated";
-  elements.authHelp.textContent = authHelpText(readiness);
+  elements.authHelp.textContent = authHelpText(readiness, oauthLaunchState);
   renderOAuthReadiness(readiness);
   renderMigrationPreview(createMigrationPreviewModel(migrationPlan, { migrationReadiness }));
   const displayResult = pullResult
@@ -838,6 +924,13 @@ function renderProfileSync() {
       requestState: pullState,
     }),
   );
+  renderOAuthValidationReport(createOAuthReadValidationReport({
+    authState,
+    launchState: oauthLaunchState,
+    oauthReadiness: readiness,
+    pullResult: displayResult,
+    requestState: pullState,
+  }));
   renderPushPreview(createCloudPushPreviewModel(pushPlan));
   renderOrchestrationPreview(
     orchestrationModel,
@@ -848,6 +941,7 @@ function renderProfileSync() {
 
 function applyAuthState(state, { persistMessage } = {}) {
   authState = state;
+  oauthLaunchController.observeAuthState(state);
 
   if (state.status === "authenticated") {
     appData.profile = mapAuthStateToProfile(state);
@@ -966,25 +1060,7 @@ elements.googleSignIn.addEventListener("click", async () => {
     config: supabaseConfig,
     location: globalThis.location,
   });
-  if (!readiness.canSignIn) {
-    elements.authHelp.textContent = readiness.message;
-    return;
-  }
-
-  applyAuthState({
-    ...authState,
-    message: "Opening Google sign-in...",
-    status: "redirecting",
-  });
-  const result = await authService.signInWithGoogle();
-  if (!result.ok) {
-    applyAuthState({
-      ...authState,
-      error: result.error ?? null,
-      message: result.message,
-      status: result.status,
-    });
-  }
+  await oauthLaunchController.start({ readiness });
 });
 
 elements.signOut.addEventListener("click", async () => {

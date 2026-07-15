@@ -55,6 +55,11 @@ Implemented:
   decisions.
 - Browser-safe, exact-version Supabase SDK bootstrap that runs only when
   publishable config exists and falls back to local tracking on load failure.
+- Local-safe Google OAuth launch control with readiness gating, in-flight
+  deduplication, durable callback feedback, and token-free app state.
+- One deterministic OAuth/read validation report that summarizes readiness,
+  the test profile's RLS/read result, invalid rows, merge preview, and disabled
+  apply/write gates without exposing raw cloud rows.
 
 Still gated:
 
@@ -193,6 +198,13 @@ blocker. Automatic reads are deduplicated, while an explicit retry starts a new
 request. If local data or the signed-in profile changes during a request, the
 older response is ignored and cannot replace the newer preview. Refresh never
 calls local apply or any Supabase mutation method.
+
+The adjacent OAuth/read validation report is a summary, not another execution
+path. It composes the existing OAuth readiness and pull diagnostics into eight
+stages and exposes only counts. `ready` means the throwaway profile passed OAuth,
+the read-only `fast_sessions` query, and merge planning. `blocked` surfaces the
+read/RLS or invalid-row reason. Both states keep local apply and every cloud
+write gate disabled, keep sync metadata unchanged, and omit provider tokens.
 
 Expected safe failures:
 

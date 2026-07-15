@@ -121,3 +121,25 @@ test("tracker renders each Google OAuth readiness gate", () => {
   assert.match(app, /renderOAuthReadiness/);
   assert.match(app, /!readiness\.canSignIn/);
 });
+
+test("tracker exposes the token-free OAuth controller and read validation report", () => {
+  const index = readFileSync("index.html", "utf8");
+  const app = readFileSync("src/app.js", "utf8");
+
+  for (const id of [
+    "oauth-validation",
+    "oauth-validation-title",
+    "oauth-validation-status",
+    "oauth-validation-message",
+    "oauth-validation-stats",
+    "oauth-validation-stages",
+    "oauth-validation-safety",
+  ]) {
+    assert.match(index, new RegExp(`id="${id}"`));
+  }
+
+  assert.match(app, /createGoogleOAuthLaunchController/);
+  assert.match(app, /createOAuthReadValidationReport/);
+  assert.match(app, /oauthLaunchController\.start/);
+  assert.match(app, /renderOAuthValidationReport/);
+});

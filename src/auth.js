@@ -26,7 +26,7 @@ export function mapSupabaseSession(session) {
 
   return authState({
     configured: true,
-    session: session ?? null,
+    session: user ? { user } : null,
     status: user?.id ? "authenticated" : "guest",
     user,
   });
@@ -196,7 +196,7 @@ export function createAuthService({
       };
     }
 
-    const { data, error } = await authClient.auth.signInWithOAuth({
+    const { error } = await authClient.auth.signInWithOAuth({
       provider: "google",
       options: {
         redirectTo: readiness.redirectTo,
@@ -215,7 +215,6 @@ export function createAuthService({
     return {
       ok: true,
       status: "redirecting",
-      data,
     };
   }
 

@@ -20,6 +20,14 @@ starting, ending, editing, deleting, exporting, or importing fasts.
   `ready`.
 - SDK, provider, redirect, callback, and sign-in gates are shown separately in
   the profile/settings area.
+- OAuth launch runs through a dedicated controller that requires the already
+  computed readiness model, deduplicates repeated attempts, and reports
+  loading, redirecting, cancelled, failed, or authenticated state.
+- Supabase session and OAuth launch results are reduced to the identity and
+  status needed by the app. Provider, access, and refresh tokens are neither
+  exposed by the controller nor retained in Fast Thirteen auth state.
+- The profile/settings area combines OAuth readiness with the existing
+  read-only `fast_sessions` path in one deterministic validation report.
 - Provider secrets, service-role keys, Apple signing keys, and generated client
   secrets must stay outside Git.
 
@@ -130,7 +138,48 @@ The five readiness stages mean:
 - `Sign in`: every non-secret preflight passed and the button may call OAuth.
 
 Cancellation and callback errors remain visible but do not touch local fasting
-data. When all configuration gates still pass, the user may retry sign-in.
+data. That feedback survives Supabase's initial guest-session hydration instead
+of disappearing immediately. When all configuration gates still pass, the
+user may retry sign-in.
+
+## OAuth Launch Controller
+
+`src/googleOAuthController.js` is the only UI launch path for Google OAuth. It
+accepts a precomputed `createGoogleOAuthReadiness` result and rejects the launch
+before calling Supabase unless `canSignIn` and `redirectTo` are both present.
+The auth service repeats the same checks as a second boundary.
+
+The controller:
+
+- shares one in-flight launch for repeated clicks to the same redirect;
+- keeps Local data available in every state;
+- turns callback cancellation and errors into retryable user feedback;
+- yields to a real authenticated event or explicit sign-out;
+- never returns raw Supabase OAuth response data to the UI; and
+- never stores provider, access, or refresh tokens.
+
+An accepted launch changes only controller state. It does not migrate guest
+history, apply cloud rows, write `fast_sessions`, or mark local metadata as
+synced.
+
+## Read-Only Validation Report
+
+`src/oauthValidationReport.js` combines eight checks for a configured
+throwaway profile:
+
+1. pinned browser SDK readiness;
+2. explicit Google provider readiness;
+3. exact redirect-origin readiness;
+4. authenticated callback state;
+5. the read-only `fast_sessions` repository and RLS result;
+6. stable-id merge preview and invalid-row result;
+7. the disabled local-apply gate; and
+8. the disabled cloud-write gate.
+
+The report exposes aggregate local, cloud, duplicate, and invalid-row counts,
+not raw session rows. A passed report proves only that OAuth and read planning
+worked for the test profile. Local apply, upload, update, tombstone,
+confirmation, finalization, and Apple login remain disabled.
 
 If Supabase local development is used later, store the Google secret outside
 Git and reference it from local Supabase config, for example:
