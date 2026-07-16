@@ -139,7 +139,9 @@ test("tracker exposes the token-free OAuth controller and read validation report
   }
 
   assert.match(app, /createGoogleOAuthLaunchController/);
+  assert.match(app, /createAuthProfileCoordinator/);
   assert.match(app, /createOAuthReadValidationReport/);
+  assert.match(app, /authProfileCoordinator\.scopeKey/);
   assert.match(app, /oauthLaunchController\.start/);
   assert.match(app, /renderOAuthValidationReport/);
 });

@@ -131,3 +131,67 @@ test("stale responses cannot replace a newer cloud preview", async () => {
   assert.equal(current.ignored, false);
   assert.equal(controller.current().result.marker, "current");
 });
+
+test("sign-out invalidation clears a pending profile read", async () => {
+  const pending = deferred();
+  const controller = createCloudPullRequestController({
+    async executePull() {
+      return pending.promise;
+    },
+  });
+  const refresh = controller.refresh({
+    identityKey: "profile:1:user-a",
+    key: "user-a-generation-1",
+    readiness: { canRead: true },
+  });
+
+  const invalidated = controller.invalidate({
+    message: "Signed out. Previous cloud preview data was cleared.",
+    reason: "signed-out",
+  });
+  pending.resolve({ ...readyResult, marker: "user-a" });
+  const stale = await refresh;
+
+  assert.equal(invalidated.status, "invalidated");
+  assert.equal(invalidated.reason, "signed-out");
+  assert.equal(invalidated.identityKey, null);
+  assert.equal(invalidated.result, null);
+  assert.equal(stale.ignored, true);
+  assert.equal(stale.stale, true);
+  assert.equal(controller.current().status, "invalidated");
+});
+
+test("user A completion cannot replace user B profile read", async () => {
+  const userA = deferred();
+  const userB = deferred();
+  const pending = [userA, userB];
+  let calls = 0;
+  const controller = createCloudPullRequestController({
+    async executePull() {
+      return pending[calls++].promise;
+    },
+  });
+
+  const readA = controller.refresh({
+    identityKey: "profile:1:user-a",
+    key: "user-a-generation-1",
+    readiness: { canRead: true },
+  });
+  controller.invalidate({ reason: "authenticated-user-changed" });
+  const readB = controller.refresh({
+    identityKey: "profile:2:user-b",
+    key: "user-b-generation-2",
+    readiness: { canRead: true },
+  });
+
+  userA.resolve({ ...readyResult, marker: "user-a" });
+  const staleA = await readA;
+  userB.resolve({ ...readyResult, marker: "user-b" });
+  const currentB = await readB;
+
+  assert.equal(staleA.ignored, true);
+  assert.equal(currentB.ignored, false);
+  assert.equal(controller.current().identityKey, "profile:2:user-b");
+  assert.equal(controller.current().result.marker, "user-b");
+  assert.doesNotMatch(JSON.stringify(controller.current()), /user-a/);
+});

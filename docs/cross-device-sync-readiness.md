@@ -206,6 +206,38 @@ the read-only `fast_sessions` query, and merge planning. `blocked` surfaces the
 read/RLS or invalid-row reason. Both states keep local apply and every cloud
 write gate disabled, keep sync metadata unchanged, and omit provider tokens.
 
+Authenticated preview state is isolated by `src/authProfileCoordinator.js`.
+Each authenticated lifecycle receives a generation-scoped identity key. A
+user change, sign-out, expired session, or auth refresh failure invalidates the
+pull controller immediately and clears its rows and counts. Signing the same
+user out and back in also creates a new generation, so a late response from the
+older lifecycle cannot become current. The validation report accepts pull
+diagnostics only when the request identity matches the current profile scope.
+
+### Two-Profile RLS Verification
+
+Use two throwaway profiles with clearly different test rows. Never use personal
+fasting records for this check.
+
+1. Create throwaway profiles A and B through the configured Google provider.
+2. Insert one recognizable `fast_sessions` row for A and a different row for B.
+3. Sign in as A and refresh the read-only preview.
+4. Confirm the report shows only A's cloud-row count and that local apply and
+   cloud writes remain disabled.
+5. Start another A refresh, then sign out before it finishes.
+6. Confirm the report resets cloud rows, duplicates, and invalid rows to zero
+   while retaining the Local sessions count.
+7. Sign in as B and refresh the preview.
+8. Confirm no A row, count, blocker, or stale completion appears for B.
+9. Confirm B sees only B's row. If A's row appears, stop validation and review
+   the `fast_sessions` select RLS policy before doing anything else.
+10. Sign B out, sign A back in, and confirm the new A lifecycle does not reuse
+    the previous A request or report generation.
+11. Simulate an expired or failed auth refresh and confirm the preview clears,
+    Guest mode and Local data remain usable, and sync metadata stays unchanged.
+12. Export a local backup and compare local history before and after the full
+    test. It must be unchanged.
+
 Expected safe failures:
 
 - Missing publishable config: SDK is not requested, cloud reads are disabled,

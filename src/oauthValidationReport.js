@@ -122,20 +122,37 @@ function summaryFromPlan(plan) {
 export function createOAuthReadValidationReport({
   authState = null,
   launchState = null,
+  localData = null,
   oauthReadiness = null,
+  profileScope = null,
   pullResult = null,
   requestState = null,
 } = {}) {
   const authenticated = Boolean(authState?.status === "authenticated" && authState.user?.id);
-  const diagnostics = pullResult?.diagnostics ?? null;
-  const plan = pullResult?.plan ?? null;
-  const summary = summaryFromPlan(plan);
+  const identityMatched = Boolean(
+    authenticated
+    && profileScope?.identityKey
+    && requestState?.identityKey === profileScope.identityKey,
+  );
+  const scopedPullResult = identityMatched ? pullResult : null;
+  const diagnostics = scopedPullResult?.diagnostics ?? null;
+  const plan = scopedPullResult?.plan ?? null;
+  const summary = {
+    ...summaryFromPlan(plan),
+    localSessionCount:
+      plan?.summary?.localSessions
+      ?? (Array.isArray(localData?.sessions) ? localData.sessions.length : 0),
+  };
   const stages = [
     readinessStage("sdk", "SDK", oauthReadiness?.stages?.sdk),
     readinessStage("provider", "Provider", oauthReadiness?.stages?.provider),
     readinessStage("redirect", "Redirect", oauthReadiness?.stages?.redirect),
     authStage(authState, launchState),
-    readStage({ authenticated, diagnostics, requestState }),
+    readStage({
+      authenticated,
+      diagnostics,
+      requestState: identityMatched ? requestState : null,
+    }),
     mergeStage(diagnostics),
     stage(
       "localApply",
@@ -197,12 +214,15 @@ export function createOAuthReadValidationReport({
       cloudWritesEnabled: false,
       localApplyEnabled: false,
     },
+    identityMatched,
     localDataUnchanged: true,
     localSyncStatusChanged: false,
     localTrackingAvailable: true,
     message,
     providerTokensExposed: false,
     providerTokensStored: false,
+    profileGeneration: profileScope?.generation ?? 0,
+    profileScoped: authenticated,
     stages,
     status,
     summary,

@@ -21,8 +21,10 @@ export function createCloudPullRequestController({
 
   let requestId = 0;
   let state = {
+    identityKey: null,
     key: null,
     message: "Cloud preview has not been read yet.",
+    reason: null,
     result: null,
     status: "idle",
   };
@@ -42,14 +44,37 @@ export function createCloudPullRequestController({
 
     requestId += 1;
     return publish({
+      identityKey: null,
       key: null,
       message,
+      reason: "readiness-disabled",
       result: null,
       status: "disabled",
     });
   }
 
-  async function refresh({ force = false, key, readiness, ...input } = {}) {
+  function invalidate({
+    message = "Authenticated profile changed. Previous cloud preview was cleared.",
+    reason = "profile-transition",
+  } = {}) {
+    requestId += 1;
+    return publish({
+      identityKey: null,
+      key: null,
+      message,
+      reason,
+      result: null,
+      status: "invalidated",
+    });
+  }
+
+  async function refresh({
+    force = false,
+    identityKey = null,
+    key,
+    readiness,
+    ...input
+  } = {}) {
     if (!readiness?.canRead) {
       const disabledState = disable(readiness?.message);
       return {
@@ -72,8 +97,10 @@ export function createCloudPullRequestController({
     const activeRequestId = ++requestId;
     const previousResult = state.key === key ? state.result : null;
     publish({
+      identityKey,
       key,
       message: "Reading signed-in cloud history without changing local data.",
+      reason: null,
       result: previousResult,
       status: "loading",
     });
@@ -93,8 +120,10 @@ export function createCloudPullRequestController({
       }
 
       const blockedState = publish({
+        identityKey,
         key,
         message: error?.message ?? "Cloud fasting history could not be read.",
+        reason: "repository-read-failed",
         result: null,
         status: "blocked",
       });
@@ -119,8 +148,10 @@ export function createCloudPullRequestController({
 
     const status = mappedStatus(result);
     const completedState = publish({
+      identityKey,
       key,
       message: stateMessage(status, result),
+      reason: status === "blocked" ? "read-plan-blocked" : null,
       result,
       status,
     });
@@ -136,6 +167,7 @@ export function createCloudPullRequestController({
   return {
     current,
     disable,
+    invalidate,
     refresh,
   };
 }

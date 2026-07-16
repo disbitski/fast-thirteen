@@ -28,6 +28,7 @@ import {
 } from "./auth.js";
 import { recentSessionsForDays } from "./analytics.js";
 import { authReadiness } from "./authReadiness.js";
+import { createAuthProfileCoordinator } from "./authProfileCoordinator.js";
 import { createGoogleOAuthLaunchController } from "./googleOAuthController.js";
 import { createOAuthReadValidationReport } from "./oauthValidationReport.js";
 import { createGuestMigrationPlan } from "./migrationPlan.js";
@@ -184,6 +185,16 @@ const syncPullController = createCloudPullRequestController({
   executePull: createCloudPullPreview,
   onStateChange() {
     renderProfileSync();
+  },
+});
+
+const authProfileCoordinator = createAuthProfileCoordinator({
+  initialAuthState: authState,
+  onInvalidate(transition) {
+    syncPullController.invalidate({
+      message: transition.message,
+      reason: transition.reason,
+    });
   },
 });
 
@@ -681,7 +692,7 @@ function renderOrchestrationPreview(model, statusModel) {
 }
 
 function syncPullKey(readiness) {
-  return JSON.stringify({
+  const resourceKey = JSON.stringify({
     canRead: readiness.canRead,
     reason: readiness.reason,
     sessionState: sessions
@@ -689,8 +700,8 @@ function syncPullKey(readiness) {
       .sort()
       .join("|"),
     syncUpdatedAt: appData.sync.updatedAt,
-    userId: authState.user?.id ?? null,
   });
+  return authProfileCoordinator.scopeKey(resourceKey);
 }
 
 function fallbackSyncPull(readiness, { error = readiness.message, readOutcome = "not-run" } = {}) {
@@ -738,6 +749,7 @@ function refreshCloudPullPreview(readiness, key, { force = false } = {}) {
   void syncPullController.refresh({
     applyReadiness: syncApplyReadiness(),
     force,
+    identityKey: authProfileCoordinator.current().identityKey,
     key,
     localData: appData,
     readiness,
@@ -748,7 +760,10 @@ function refreshCloudPullPreview(readiness, key, { force = false } = {}) {
 
 function remoteSessionsForPush(readKey) {
   const state = syncPullController.current();
-  return state.key === readKey && state.result?.plan?.status === "ready"
+  const profileScope = authProfileCoordinator.current();
+  return state.key === readKey
+    && state.identityKey === profileScope.identityKey
+    && state.result?.plan?.status === "ready"
     ? state.result.plan.data.sessions
     : [];
 }
@@ -824,6 +839,7 @@ function renderOAuthValidationReport(model) {
     }),
   );
   elements.oauthValidationSafety.textContent = [
+    "Profile-scoped preview",
     "Local data unchanged",
     "Sync status unchanged",
     "Provider tokens omitted",
@@ -853,6 +869,7 @@ function renderProfileSync() {
     config: supabaseConfig,
   });
   const applyReadiness = syncApplyReadiness();
+  const profileScope = authProfileCoordinator.current();
   const cloudReadKey = syncPullKey(cloudReadReadiness);
   const pushReadiness = syncPushReadiness({
     authState,
@@ -875,7 +892,22 @@ function renderProfileSync() {
   });
   const pullState = syncPullController.current();
   const oauthLaunchState = oauthLaunchController.current();
-  const pullResult = pullState.key === cloudReadKey ? pullState.result : null;
+  const pullStateMatches = Boolean(
+    profileScope.identityKey
+    && pullState.identityKey === profileScope.identityKey
+    && pullState.key === cloudReadKey,
+  );
+  const scopedPullState = pullStateMatches
+    ? pullState
+    : {
+        identityKey: profileScope.identityKey,
+        key: cloudReadKey,
+        message: profileScope.message,
+        reason: null,
+        result: null,
+        status: cloudReadReadiness.canRead ? "idle" : "disabled",
+      };
+  const pullResult = pullStateMatches ? pullState.result : null;
   const readPlan = pullResult?.plan ?? null;
   const orchestrationModel = createSyncOrchestrationModel({
     applyReadiness,
@@ -908,9 +940,9 @@ function renderProfileSync() {
   renderOAuthReadiness(readiness);
   renderMigrationPreview(createMigrationPreviewModel(migrationPlan, { migrationReadiness }));
   const displayResult = pullResult
-    ?? (pullState.key === cloudReadKey && pullState.status === "blocked"
+    ?? (scopedPullState.status === "blocked"
       ? fallbackSyncPull(cloudReadReadiness, {
-        error: pullState.message,
+        error: scopedPullState.message,
         readOutcome: "failed",
       })
       : cloudReadReadiness.canRead
@@ -921,15 +953,17 @@ function renderProfileSync() {
     displayResult.diagnostics,
     createSyncRefreshControlModel({
       readiness: cloudReadReadiness,
-      requestState: pullState,
+      requestState: scopedPullState,
     }),
   );
   renderOAuthValidationReport(createOAuthReadValidationReport({
     authState,
     launchState: oauthLaunchState,
+    localData: appData,
     oauthReadiness: readiness,
+    profileScope,
     pullResult: displayResult,
-    requestState: pullState,
+    requestState: scopedPullState,
   }));
   renderPushPreview(createCloudPushPreviewModel(pushPlan));
   renderOrchestrationPreview(
@@ -941,23 +975,31 @@ function renderProfileSync() {
 
 function applyAuthState(state, { persistMessage } = {}) {
   authState = state;
-  oauthLaunchController.observeAuthState(state);
+  let shouldPersistProfile = false;
+  let resolvedPersistMessage = persistMessage;
 
   if (state.status === "authenticated") {
     appData.profile = mapAuthStateToProfile(state);
-    persistData(persistMessage ?? "Profile updated locally");
-    return;
+    shouldPersistProfile = true;
+    resolvedPersistMessage ??= "Profile updated locally";
+  } else if (
+    ["error", "guest", "signed-out"].includes(state.status)
+    && appData.profile.mode === "authenticated"
+  ) {
+    appData.profile = mapAuthStateToProfile(state);
+    shouldPersistProfile = true;
+    resolvedPersistMessage ??= state.status === "error"
+      ? "Auth session unavailable; using local data"
+      : state.status === "signed-out"
+        ? "Signed out locally"
+        : "Using guest profile locally";
   }
 
-  if (state.status === "signed-out") {
-    appData.profile = mapAuthStateToProfile(state);
-    persistData(persistMessage ?? "Signed out locally");
-    return;
-  }
+  authProfileCoordinator.observeAuthState(state);
+  oauthLaunchController.observeAuthState(state);
 
-  if (state.status === "guest" && appData.profile.mode === "authenticated") {
-    appData.profile = mapAuthStateToProfile(state);
-    persistData(persistMessage ?? "Using guest profile locally");
+  if (shouldPersistProfile) {
+    persistData(resolvedPersistMessage);
     return;
   }
 
@@ -1066,6 +1108,10 @@ elements.googleSignIn.addEventListener("click", async () => {
 elements.signOut.addEventListener("click", async () => {
   elements.authHelp.textContent = "Signing out...";
   const result = await authService.signOut();
+  if (!result.ok) {
+    elements.authHelp.textContent = result.message;
+    return;
+  }
   applyAuthState(
     {
       configured: authService.isConfigured(),

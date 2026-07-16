@@ -181,6 +181,17 @@ not raw session rows. A passed report proves only that OAuth and read planning
 worked for the test profile. Local apply, upload, update, tombstone,
 confirmation, finalization, and Apple login remain disabled.
 
+`src/authProfileCoordinator.js` supplies the report and pull controller with a
+generation-scoped profile identity. It invalidates pending and completed cloud
+preview state when the authenticated user changes, signs out, expires, or hits
+an auth refresh failure. Re-entering the same account after sign-out receives a
+new generation. This prevents old rows or aggregate counts from crossing an
+auth lifecycle even when an older network response completes late.
+
+The coordinator and report retain no provider, access, or refresh tokens.
+Callback cancellation remains visible in Guest mode without creating an
+authenticated profile scope.
+
 If Supabase local development is used later, store the Google secret outside
 Git and reference it from local Supabase config, for example:
 
