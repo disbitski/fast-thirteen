@@ -200,9 +200,10 @@ older response is ignored and cannot replace the newer preview. Refresh never
 calls local apply or any Supabase mutation method.
 
 The adjacent OAuth/read validation report is a summary, not another execution
-path. It composes the existing OAuth readiness and pull diagnostics into eight
-stages and exposes only counts. `ready` means the throwaway profile passed OAuth,
-the read-only `fast_sessions` query, and merge planning. `blocked` surfaces the
+path. It composes the existing OAuth readiness, token-free session health, and
+pull diagnostics into nine stages and exposes only counts. `ready` means the
+throwaway profile passed OAuth, the read-only `fast_sessions` query, and merge
+planning. `blocked` surfaces the
 read/RLS or invalid-row reason. Both states keep local apply and every cloud
 write gate disabled, keep sync metadata unchanged, and omit provider tokens.
 
@@ -213,6 +214,35 @@ pull controller immediately and clears its rows and counts. Signing the same
 user out and back in also creates a new generation, so a late response from the
 older lifecycle cannot become current. The validation report accepts pull
 diagnostics only when the request identity matches the current profile scope.
+
+The session-health card is driven by `src/authSessionHealth.js`. It normalizes
+Supabase auth lifecycle events, displays the last local `getSession()` check,
+and explains whether profile preview state is scoped, protected, inactive, or
+reset. The manual Check session action is deduplicated and stale-response safe.
+It can only re-read auth state; it cannot launch OAuth, read `fast_sessions`,
+apply a merge plan, update sync metadata, or call any Supabase mutation method.
+
+### Session Health Recovery Checks
+
+1. Load without Supabase config and confirm `Local fallback`, Guest mode, Local
+   data, and a disabled Check session action.
+2. With publishable config and the SDK ready, run Check session while signed
+   out. Confirm a last-check time appears and fasting history is unchanged.
+3. Sign in with throwaway profile A. Confirm `Session healthy` and a
+   profile-scoped preview message without a user id or token in the UI.
+4. Trigger `TOKEN_REFRESHED` and `USER_UPDATED` for A. Confirm the profile
+   generation and current cloud preview remain stable.
+5. Start two manual checks together. Confirm they share one `getSession()` call.
+6. Start a check for A, then sign in as profile B before A finishes. Confirm A's
+   late result is ignored and no A counts appear for B.
+7. Simulate an expired session. Confirm the health card reports `Session
+   expired`, the prior preview resets, and Guest mode remains usable.
+8. Simulate a session-read or refresh failure. Confirm `Refresh failed`, retry
+   guidance, zero old cloud counts, and a disabled local-apply/write path.
+9. Retry successfully and confirm a new isolated profile lifecycle is created
+   before any read-only cloud preview can run.
+10. Compare exported fasting data and local sync metadata before and after the
+    checks. Sessions, sync status, and sync timestamps must be unchanged.
 
 ### Two-Profile RLS Verification
 

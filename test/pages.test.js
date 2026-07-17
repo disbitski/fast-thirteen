@@ -145,3 +145,27 @@ test("tracker exposes the token-free OAuth controller and read validation report
   assert.match(app, /oauthLaunchController\.start/);
   assert.match(app, /renderOAuthValidationReport/);
 });
+
+test("tracker exposes local-safe session health and recovery controls", () => {
+  const index = readFileSync("index.html", "utf8");
+  const app = readFileSync("src/app.js", "utf8");
+
+  for (const id of [
+    "session-health",
+    "session-health-status",
+    "session-health-message",
+    "session-health-last-check",
+    "session-health-preview",
+    "session-health-recovery",
+    "session-health-check",
+  ]) {
+    assert.match(index, new RegExp(`id="${id}"`));
+  }
+
+  assert.match(app, /createAuthSessionHealthController/);
+  assert.match(app, /authService\.currentAuthState\(\)/);
+  assert.match(app, /authSessionHealthController\.check/);
+  assert.match(app, /authSessionHealthController\.observeAuthState/);
+  assert.match(app, /sessionHealth: authSessionHealthController\.current\(\)/);
+  assert.match(app, /persistAuthProfileState/);
+});

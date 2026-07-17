@@ -229,3 +229,39 @@ test("sign-out resets validation counts while preserving local history", () => {
   assert.equal(report.profileScoped, false);
   assert.deepEqual(localData, snapshot);
 });
+
+test("refresh failure resets old cloud counts and blocks validation without local mutation", () => {
+  const localData = {
+    sessions: [{ id: "local-1" }, { id: "local-2" }],
+    sync: { status: "local", updatedAt: "2026-07-16T11:00:00.000Z" },
+  };
+  const snapshot = structuredClone(localData);
+  const report = createOAuthReadValidationReport({
+    authState: { error: true, status: "error", user: null },
+    localData,
+    oauthReadiness,
+    profileScope: {
+      generation: 2,
+      identityKey: null,
+    },
+    pullResult: readyPullResult(),
+    requestState: {
+      identityKey: "profile:1:user-a",
+      status: "ready",
+    },
+    sessionHealth: {
+      lastCheckedAt: "2026-07-17T11:00:00.000Z",
+      message: "The auth session could not be verified.",
+      profilePreviewReset: true,
+      status: "refresh-failed",
+    },
+  });
+
+  assert.equal(report.status, "blocked");
+  assert.equal(report.sessionHealthStatus, "refresh-failed");
+  assert.equal(report.sessionProfilePreviewReset, true);
+  assert.equal(report.summary.localSessionCount, 2);
+  assert.equal(report.summary.remoteSessionCount, 0);
+  assert.equal(report.stages.find((item) => item.key === "sessionHealth").status, "blocked");
+  assert.deepEqual(localData, snapshot);
+});

@@ -41,6 +41,39 @@ function authStage(authState, launchState) {
   );
 }
 
+function sessionHealthStage(sessionHealth, authenticated) {
+  if (!sessionHealth) {
+    return authenticated
+      ? stage(
+          "sessionHealth",
+          "Session health",
+          "The authenticated session is available for profile-scoped validation.",
+          "passed",
+        )
+      : stage(
+          "sessionHealth",
+          "Session health",
+          "No authenticated session is active. Local tracking remains available.",
+          "disabled",
+        );
+  }
+
+  const statuses = {
+    checking: "loading",
+    expired: "blocked",
+    healthy: "passed",
+    "local-fallback": "disabled",
+    "refresh-failed": "blocked",
+    "signed-out": "disabled",
+  };
+  return stage(
+    "sessionHealth",
+    "Session health",
+    sessionHealth.message,
+    statuses[sessionHealth.status] ?? "waiting",
+  );
+}
+
 function readStage({ authenticated, diagnostics, requestState }) {
   if (!authenticated) {
     return stage(
@@ -127,6 +160,7 @@ export function createOAuthReadValidationReport({
   profileScope = null,
   pullResult = null,
   requestState = null,
+  sessionHealth = null,
 } = {}) {
   const authenticated = Boolean(authState?.status === "authenticated" && authState.user?.id);
   const identityMatched = Boolean(
@@ -148,6 +182,7 @@ export function createOAuthReadValidationReport({
     readinessStage("provider", "Provider", oauthReadiness?.stages?.provider),
     readinessStage("redirect", "Redirect", oauthReadiness?.stages?.redirect),
     authStage(authState, launchState),
+    sessionHealthStage(sessionHealth, authenticated),
     readStage({
       authenticated,
       diagnostics,
@@ -170,6 +205,9 @@ export function createOAuthReadValidationReport({
   const readBlocked = stages.some((item) =>
     ["repositoryRead", "mergePreview"].includes(item.key) && item.status === "blocked",
   );
+  const sessionBlocked = stages.some((item) =>
+    item.key === "sessionHealth" && item.status === "blocked",
+  );
   const readReady = stages
     .filter((item) => ["repositoryRead", "mergePreview"].includes(item.key))
     .every((item) => item.status === "passed");
@@ -185,7 +223,12 @@ export function createOAuthReadValidationReport({
   let title = "Read-only validation waiting";
   let message = "Complete Google readiness and use a throwaway profile to validate cloud reads.";
 
-  if (!authenticated && preflightBlocked) {
+  if (sessionBlocked) {
+    status = "blocked";
+    title = "Session recovery needed";
+    message = stages.find((item) => item.key === "sessionHealth")?.message
+      ?? "The authenticated session needs attention before read-only validation.";
+  } else if (!authenticated && preflightBlocked) {
     status = "local-only";
     title = "Local-safe validation";
     message = "Google validation is gated. Guest mode and Local data remain fully available.";
@@ -223,6 +266,9 @@ export function createOAuthReadValidationReport({
     providerTokensStored: false,
     profileGeneration: profileScope?.generation ?? 0,
     profileScoped: authenticated,
+    sessionHealthStatus: sessionHealth?.status ?? (authenticated ? "healthy" : "local-fallback"),
+    sessionLastCheckedAt: sessionHealth?.lastCheckedAt ?? null,
+    sessionProfilePreviewReset: Boolean(sessionHealth?.profilePreviewReset),
     stages,
     status,
     summary,

@@ -36,12 +36,19 @@ test("profile coordinator scopes the same user stably and isolates a user switch
     ...authenticated("user-a"),
   });
   const refreshedKeyA = coordinator.scopeKey("fast-sessions");
+  const updatedA = coordinator.observeAuthState({
+    event: "USER_UPDATED",
+    ...authenticated("user-a"),
+  });
+  const updatedKeyA = coordinator.scopeKey("fast-sessions");
   const userB = coordinator.observeAuthState(authenticated("user-b"));
   const keyB = coordinator.scopeKey("fast-sessions");
 
   assert.equal(userA.generation, 1);
   assert.equal(refreshedA.generation, 1);
   assert.equal(refreshedKeyA, keyA);
+  assert.equal(updatedA.generation, 1);
+  assert.equal(updatedKeyA, keyA);
   assert.equal(userB.generation, 2);
   assert.notEqual(keyB, keyA);
   assert.deepEqual(

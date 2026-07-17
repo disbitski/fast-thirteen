@@ -164,17 +164,18 @@ synced.
 
 ## Read-Only Validation Report
 
-`src/oauthValidationReport.js` combines eight checks for a configured
+`src/oauthValidationReport.js` combines nine checks for a configured
 throwaway profile:
 
 1. pinned browser SDK readiness;
 2. explicit Google provider readiness;
 3. exact redirect-origin readiness;
 4. authenticated callback state;
-5. the read-only `fast_sessions` repository and RLS result;
-6. stable-id merge preview and invalid-row result;
-7. the disabled local-apply gate; and
-8. the disabled cloud-write gate.
+5. token-free authenticated session health;
+6. the read-only `fast_sessions` repository and RLS result;
+7. stable-id merge preview and invalid-row result;
+8. the disabled local-apply gate; and
+9. the disabled cloud-write gate.
 
 The report exposes aggregate local, cloud, duplicate, and invalid-row counts,
 not raw session rows. A passed report proves only that OAuth and read planning
@@ -191,6 +192,27 @@ auth lifecycle even when an older network response completes late.
 The coordinator and report retain no provider, access, or refresh tokens.
 Callback cancellation remains visible in Guest mode without creating an
 authenticated profile scope.
+
+## Session Health And Recovery
+
+`src/authSessionHealth.js` normalizes `INITIAL_SESSION`, `SIGNED_IN`,
+`TOKEN_REFRESHED`, `USER_UPDATED`, and `SIGNED_OUT` into a small token-free
+health model. Session checks can also report `checking`, `expired`,
+`refresh-failed`, and `local-fallback` without retaining the Supabase session,
+user id, provider token, access token, or refresh token.
+
+The profile/settings card shows the current health label, last local session
+check, recovery guidance, and whether a previous profile preview was reset. Its
+manual action calls only `auth.getSession()` through `currentAuthState()`. It
+does not launch OAuth, query `fast_sessions`, apply cloud rows, mutate fasting
+history, or update local sync metadata.
+
+Repeated checks share one in-flight request. A sign-out, expiry, auth event, or
+profile generation change makes an older completion stale. Successful
+`TOKEN_REFRESHED` and `USER_UPDATED` events for the same user keep the current
+profile generation, while a different user starts a new isolated generation.
+Profile persistence is separate from fasting sync metadata, so auth recovery
+cannot mark Local data synced or change its last-sync timestamp.
 
 If Supabase local development is used later, store the Google secret outside
 Git and reference it from local Supabase config, for example:

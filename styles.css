@@ -855,6 +855,106 @@ h3 {
   color: var(--active);
 }
 
+.session-health {
+  display: grid;
+  flex-basis: 100%;
+  gap: 8px;
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--badge);
+  text-align: left;
+}
+
+.session-health[data-session-health="healthy"] {
+  border-color: var(--green);
+}
+
+.session-health[data-session-health="expired"],
+.session-health[data-session-health="refresh-failed"] {
+  border-color: var(--active);
+}
+
+.session-health-heading,
+.session-health-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.session-health-heading span {
+  display: grid;
+  gap: 2px;
+}
+
+.session-health-heading small {
+  color: var(--muted);
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.session-health-heading strong {
+  color: var(--ink);
+  font-size: 0.78rem;
+}
+
+.session-health[data-session-health="healthy"] .session-health-heading strong,
+.session-health[data-session-health="checking"] .session-health-heading strong {
+  color: var(--green);
+}
+
+.session-health[data-session-health="expired"] .session-health-heading strong,
+.session-health[data-session-health="refresh-failed"] .session-health-heading strong {
+  color: var(--active);
+}
+
+.session-health p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.72rem;
+  line-height: 1.45;
+}
+
+.session-health-check {
+  flex: 0 0 auto;
+  padding: 7px 10px;
+  font-size: 0.68rem;
+}
+
+.session-health-check:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.session-health-meta {
+  align-items: flex-start;
+  color: var(--muted);
+  font-size: 0.66rem;
+}
+
+.session-health-meta small:last-child {
+  color: var(--green);
+  text-align: right;
+}
+
+.session-health[data-session-health="expired"] .session-health-meta small:last-child,
+.session-health[data-session-health="refresh-failed"] .session-health-meta small:last-child,
+.session-health[data-session-health="signed-out"] .session-health-meta small:last-child {
+  color: var(--active);
+}
+
+.session-health-recovery {
+  padding-top: 7px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 0.66rem;
+  line-height: 1.45;
+}
+
 .sync-pill[data-sync-status="error"] {
   color: var(--active);
 }
@@ -1842,6 +1942,16 @@ h3 {
 }
 
 @media (max-width: 480px) {
+  .session-health-heading,
+  .session-health-meta {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .session-health-meta small:last-child {
+    text-align: left;
+  }
+
   .oauth-readiness-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }

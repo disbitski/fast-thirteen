@@ -171,6 +171,38 @@
                   <strong id="oauth-signin-status">Blocked</strong>
                 </span>
               </div>
+              <section
+                class="session-health"
+                id="session-health"
+                data-session-health="local-fallback"
+                aria-label="Session health"
+              >
+                <div class="session-health-heading">
+                  <span>
+                    <small>Session health</small>
+                    <strong id="session-health-status" role="status">Local fallback</strong>
+                  </span>
+                  <button
+                    class="secondary-button session-health-check"
+                    id="session-health-check"
+                    type="button"
+                    aria-describedby="session-health-recovery"
+                    disabled
+                  >
+                    Check unavailable
+                  </button>
+                </div>
+                <p id="session-health-message">
+                  No authenticated session is active. Local tracking still works.
+                </p>
+                <div class="session-health-meta">
+                  <small id="session-health-last-check">No local session check yet.</small>
+                  <small id="session-health-preview">No authenticated profile preview is active.</small>
+                </div>
+                <small class="session-health-recovery" id="session-health-recovery">
+                  Keep tracking locally or sign in after every Google readiness check passes.
+                </small>
+              </section>
               <button class="secondary-button" id="google-sign-in" type="button" hidden>
                 Continue with Google
               </button>

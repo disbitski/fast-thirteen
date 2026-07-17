@@ -29,6 +29,7 @@ import {
 import { recentSessionsForDays } from "./analytics.js";
 import { authReadiness } from "./authReadiness.js";
 import { createAuthProfileCoordinator } from "./authProfileCoordinator.js";
+import { createAuthSessionHealthController } from "./authSessionHealth.js";
 import { createGoogleOAuthLaunchController } from "./googleOAuthController.js";
 import { createOAuthReadValidationReport } from "./oauthValidationReport.js";
 import { createGuestMigrationPlan } from "./migrationPlan.js";
@@ -133,6 +134,13 @@ const elements = {
   pushPreviewStats: document.querySelector("#push-preview-stats"),
   pushPreviewTitle: document.querySelector("#push-preview-title"),
   saveStatus: document.querySelector("#save-status"),
+  sessionHealth: document.querySelector("#session-health"),
+  sessionHealthCheck: document.querySelector("#session-health-check"),
+  sessionHealthLastCheck: document.querySelector("#session-health-last-check"),
+  sessionHealthMessage: document.querySelector("#session-health-message"),
+  sessionHealthPreview: document.querySelector("#session-health-preview"),
+  sessionHealthRecovery: document.querySelector("#session-health-recovery"),
+  sessionHealthStatus: document.querySelector("#session-health-status"),
   sessionDialog: document.querySelector("#session-dialog"),
   sessionEndedAt: document.querySelector("#session-ended-at"),
   sessionError: document.querySelector("#session-error"),
@@ -198,6 +206,17 @@ const authProfileCoordinator = createAuthProfileCoordinator({
   },
 });
 
+const authSessionHealthController = createAuthSessionHealthController({
+  checkSession() {
+    return authService.currentAuthState();
+  },
+  initialAuthState: authState,
+  initialScopeKey: authProfileCoordinator.current().identityKey,
+  onStateChange() {
+    renderProfileSync();
+  },
+});
+
 const oauthLaunchController = createGoogleOAuthLaunchController({
   initialAuthState: authState,
   launch({ redirectTo }) {
@@ -220,6 +239,15 @@ function persistData(message = "Saved locally") {
   const result = saveData(localStorage, appData);
   appData = result.data;
   elements.saveStatus.textContent = result.saved ? message : "Could not save locally";
+  renderProfileSync();
+  saveSharedData(appData);
+}
+
+function persistAuthProfileState(message) {
+  appData.sessions = sessions;
+  const result = saveData(localStorage, appData);
+  appData = result.data;
+  elements.saveStatus.textContent = result.saved ? message : "Could not save profile locally";
   renderProfileSync();
   saveSharedData(appData);
 }
@@ -347,6 +375,37 @@ function profileMenuDetail() {
   }
 
   return "Local data is active.";
+}
+
+function sameAuthProfile(left, right) {
+  return ["mode", "userId", "email", "displayName", "provider"]
+    .every((field) => left?.[field] === right?.[field]);
+}
+
+function sessionCheckEnabled() {
+  return Boolean(authService.isConfigured() && supabaseClient.status === "ready");
+}
+
+function renderSessionHealth() {
+  const model = authSessionHealthController.current();
+  const enabled = sessionCheckEnabled();
+  const checking = model.status === "checking";
+  elements.sessionHealth.dataset.sessionHealth = model.status;
+  elements.sessionHealthStatus.textContent = model.label;
+  elements.sessionHealthMessage.textContent = model.message;
+  elements.sessionHealthPreview.textContent = model.previewMessage;
+  elements.sessionHealthRecovery.textContent = model.recovery;
+  elements.sessionHealthLastCheck.textContent = model.lastCheckedAt
+    ? `Last local check ${formatDate(model.lastCheckedAt)} at ${formatTime(model.lastCheckedAt)}.`
+    : "No local session check yet.";
+  elements.sessionHealthCheck.disabled = !enabled || checking;
+  elements.sessionHealthCheck.textContent = checking
+    ? "Checking session..."
+    : !enabled
+      ? "Check unavailable"
+      : ["expired", "refresh-failed"].includes(model.status)
+        ? "Retry session check"
+        : "Check session";
 }
 
 function toLocalInputValue(value) {
@@ -938,6 +997,7 @@ function renderProfileSync() {
   elements.signOut.hidden = appData.profile.mode !== "authenticated";
   elements.authHelp.textContent = authHelpText(readiness, oauthLaunchState);
   renderOAuthReadiness(readiness);
+  renderSessionHealth();
   renderMigrationPreview(createMigrationPreviewModel(migrationPlan, { migrationReadiness }));
   const displayResult = pullResult
     ?? (scopedPullState.status === "blocked"
@@ -964,6 +1024,7 @@ function renderProfileSync() {
     profileScope,
     pullResult: displayResult,
     requestState: scopedPullState,
+    sessionHealth: authSessionHealthController.current(),
   }));
   renderPushPreview(createCloudPushPreviewModel(pushPlan));
   renderOrchestrationPreview(
@@ -973,15 +1034,18 @@ function renderProfileSync() {
   refreshCloudPullPreview(cloudReadReadiness, cloudReadKey);
 }
 
-function applyAuthState(state, { persistMessage } = {}) {
+function applyAuthState(state, { healthCheckedAt = null, persistMessage } = {}) {
   authState = state;
   let shouldPersistProfile = false;
   let resolvedPersistMessage = persistMessage;
 
   if (state.status === "authenticated") {
-    appData.profile = mapAuthStateToProfile(state);
-    shouldPersistProfile = true;
-    resolvedPersistMessage ??= "Profile updated locally";
+    const nextProfile = mapAuthStateToProfile(state);
+    if (!sameAuthProfile(appData.profile, nextProfile)) {
+      appData.profile = nextProfile;
+      shouldPersistProfile = true;
+      resolvedPersistMessage ??= "Profile updated locally";
+    }
   } else if (
     ["error", "guest", "signed-out"].includes(state.status)
     && appData.profile.mode === "authenticated"
@@ -995,11 +1059,15 @@ function applyAuthState(state, { persistMessage } = {}) {
         : "Using guest profile locally";
   }
 
-  authProfileCoordinator.observeAuthState(state);
+  const profileScope = authProfileCoordinator.observeAuthState(state);
   oauthLaunchController.observeAuthState(state);
+  authSessionHealthController.observeAuthState(state, {
+    checkedAt: healthCheckedAt,
+    scopeKey: profileScope.identityKey,
+  });
 
   if (shouldPersistProfile) {
-    persistData(resolvedPersistMessage);
+    persistAuthProfileState(resolvedPersistMessage);
     return;
   }
 
@@ -1079,6 +1147,25 @@ elements.syncPreviewRefresh.addEventListener("click", () => {
     config: supabaseConfig,
   });
   refreshCloudPullPreview(readiness, syncPullKey(readiness), { force: true });
+});
+
+async function runLocalSessionCheck({ persistMessage = null } = {}) {
+  const result = await authSessionHealthController.check({
+    enabled: sessionCheckEnabled(),
+    scopeKey: authProfileCoordinator.current().identityKey,
+  });
+  if (!result.accepted || result.ignored || !result.authState) return result;
+
+  const resolvedState = resolveAuthCallbackState(callbackAuthState, result.authState);
+  applyAuthState(resolvedState, {
+    healthCheckedAt: result.checkedAt,
+    persistMessage,
+  });
+  return result;
+}
+
+elements.sessionHealthCheck.addEventListener("click", () => {
+  void runLocalSessionCheck();
 });
 
 elements.exportButton.addEventListener("click", () => {
@@ -1174,19 +1261,7 @@ async function initializeSupabaseAuth() {
     return;
   }
 
-  try {
-    const state = await authService.currentAuthState();
-    const resolvedState = resolveAuthCallbackState(callbackAuthState, state);
-    applyAuthState(resolvedState, { persistMessage: "Profile updated locally" });
-  } catch {
-    applyAuthState({
-      configured: authService.isConfigured(),
-      error: true,
-      message: "Could not read the current auth session. Local tracking still works.",
-      status: "guest",
-      user: null,
-    });
-  }
+  await runLocalSessionCheck({ persistMessage: "Profile updated locally" });
 
   authService.onAuthStateChange((state) => {
     const resolvedState = resolveAuthCallbackState(callbackAuthState, state);
