@@ -884,6 +884,15 @@ h3 {
   gap: 10px;
 }
 
+.session-health-check-detail {
+  display: grid;
+  gap: 3px;
+}
+
+.session-health-check-detail small:last-child {
+  color: var(--muted);
+}
+
 .session-health-heading span {
   display: grid;
   gap: 2px;
@@ -936,14 +945,14 @@ h3 {
   font-size: 0.66rem;
 }
 
-.session-health-meta small:last-child {
+.session-health-meta > small {
   color: var(--green);
   text-align: right;
 }
 
-.session-health[data-session-health="expired"] .session-health-meta small:last-child,
-.session-health[data-session-health="refresh-failed"] .session-health-meta small:last-child,
-.session-health[data-session-health="signed-out"] .session-health-meta small:last-child {
+.session-health[data-session-health="expired"] .session-health-meta > small,
+.session-health[data-session-health="refresh-failed"] .session-health-meta > small,
+.session-health[data-session-health="signed-out"] .session-health-meta > small {
   color: var(--active);
 }
 
@@ -1948,7 +1957,7 @@ h3 {
     flex-direction: column;
   }
 
-  .session-health-meta small:last-child {
+  .session-health-meta > small {
     text-align: left;
   }
 

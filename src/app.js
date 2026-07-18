@@ -29,7 +29,11 @@ import {
 import { recentSessionsForDays } from "./analytics.js";
 import { authReadiness } from "./authReadiness.js";
 import { createAuthProfileCoordinator } from "./authProfileCoordinator.js";
-import { createAuthSessionHealthController } from "./authSessionHealth.js";
+import {
+  AUTH_SESSION_CHECK_SOURCE,
+  createAuthSessionHealthController,
+} from "./authSessionHealth.js";
+import { createAuthSessionRecoveryCoordinator } from "./authSessionRecovery.js";
 import { createGoogleOAuthLaunchController } from "./googleOAuthController.js";
 import { createOAuthReadValidationReport } from "./oauthValidationReport.js";
 import { createGuestMigrationPlan } from "./migrationPlan.js";
@@ -140,6 +144,7 @@ const elements = {
   sessionHealthMessage: document.querySelector("#session-health-message"),
   sessionHealthPreview: document.querySelector("#session-health-preview"),
   sessionHealthRecovery: document.querySelector("#session-health-recovery"),
+  sessionHealthSource: document.querySelector("#session-health-source"),
   sessionHealthStatus: document.querySelector("#session-health-status"),
   sessionDialog: document.querySelector("#session-dialog"),
   sessionEndedAt: document.querySelector("#session-ended-at"),
@@ -196,6 +201,12 @@ const syncPullController = createCloudPullRequestController({
   },
 });
 
+const authSessionRecoveryCoordinator = createAuthSessionRecoveryCoordinator({
+  checkSession({ source }) {
+    return runLocalSessionCheck({ source });
+  },
+});
+
 const authProfileCoordinator = createAuthProfileCoordinator({
   initialAuthState: authState,
   onInvalidate(transition) {
@@ -203,6 +214,7 @@ const authProfileCoordinator = createAuthProfileCoordinator({
       message: transition.message,
       reason: transition.reason,
     });
+    authSessionRecoveryCoordinator.invalidate({ reason: transition.reason });
   },
 });
 
@@ -394,10 +406,20 @@ function renderSessionHealth() {
   elements.sessionHealthStatus.textContent = model.label;
   elements.sessionHealthMessage.textContent = model.message;
   elements.sessionHealthPreview.textContent = model.previewMessage;
-  elements.sessionHealthRecovery.textContent = model.recovery;
+  elements.sessionHealthRecovery.textContent =
+    `${model.recovery} Visible resume and reconnect signals recheck auth only.`;
   elements.sessionHealthLastCheck.textContent = model.lastCheckedAt
     ? `Last local check ${formatDate(model.lastCheckedAt)} at ${formatTime(model.lastCheckedAt)}.`
     : "No local session check yet.";
+  const sourceLabels = {
+    initial: "App start",
+    manual: "Manual",
+    reconnect: "Connection restored",
+    resume: "App resumed",
+  };
+  elements.sessionHealthSource.textContent = model.lastCheckSource
+    ? `Last check source: ${sourceLabels[model.lastCheckSource]}.`
+    : "Last check source: Not checked.";
   elements.sessionHealthCheck.disabled = !enabled || checking;
   elements.sessionHealthCheck.textContent = checking
     ? "Checking session..."
@@ -1034,7 +1056,11 @@ function renderProfileSync() {
   refreshCloudPullPreview(cloudReadReadiness, cloudReadKey);
 }
 
-function applyAuthState(state, { healthCheckedAt = null, persistMessage } = {}) {
+function applyAuthState(state, {
+  healthCheckSource = null,
+  healthCheckedAt = null,
+  persistMessage,
+} = {}) {
   authState = state;
   let shouldPersistProfile = false;
   let resolvedPersistMessage = persistMessage;
@@ -1062,6 +1088,7 @@ function applyAuthState(state, { healthCheckedAt = null, persistMessage } = {}) 
   const profileScope = authProfileCoordinator.observeAuthState(state);
   oauthLaunchController.observeAuthState(state);
   authSessionHealthController.observeAuthState(state, {
+    checkSource: healthCheckSource,
     checkedAt: healthCheckedAt,
     scopeKey: profileScope.identityKey,
   });
@@ -1149,15 +1176,20 @@ elements.syncPreviewRefresh.addEventListener("click", () => {
   refreshCloudPullPreview(readiness, syncPullKey(readiness), { force: true });
 });
 
-async function runLocalSessionCheck({ persistMessage = null } = {}) {
+async function runLocalSessionCheck({
+  persistMessage = null,
+  source = AUTH_SESSION_CHECK_SOURCE.MANUAL,
+} = {}) {
   const result = await authSessionHealthController.check({
     enabled: sessionCheckEnabled(),
+    source,
     scopeKey: authProfileCoordinator.current().identityKey,
   });
   if (!result.accepted || result.ignored || !result.authState) return result;
 
   const resolvedState = resolveAuthCallbackState(callbackAuthState, result.authState);
   applyAuthState(resolvedState, {
+    healthCheckSource: result.checkSource,
     healthCheckedAt: result.checkedAt,
     persistMessage,
   });
@@ -1165,7 +1197,24 @@ async function runLocalSessionCheck({ persistMessage = null } = {}) {
 }
 
 elements.sessionHealthCheck.addEventListener("click", () => {
-  void runLocalSessionCheck();
+  void runLocalSessionCheck({ source: AUTH_SESSION_CHECK_SOURCE.MANUAL });
+});
+
+function authRecoveryContext() {
+  return {
+    enabled: sessionCheckEnabled(),
+    online: globalThis.navigator?.onLine !== false,
+    scopeKey: authProfileCoordinator.current().identityKey,
+    visibilityState: document.visibilityState ?? "visible",
+  };
+}
+
+document.addEventListener("visibilitychange", () => {
+  void authSessionRecoveryCoordinator.resume(authRecoveryContext());
+});
+
+globalThis.addEventListener("online", () => {
+  void authSessionRecoveryCoordinator.reconnect(authRecoveryContext());
 });
 
 elements.exportButton.addEventListener("click", () => {
@@ -1261,7 +1310,10 @@ async function initializeSupabaseAuth() {
     return;
   }
 
-  await runLocalSessionCheck({ persistMessage: "Profile updated locally" });
+  await runLocalSessionCheck({
+    persistMessage: "Profile updated locally",
+    source: AUTH_SESSION_CHECK_SOURCE.INITIAL,
+  });
 
   authService.onAuthStateChange((state) => {
     const resolvedState = resolveAuthCallbackState(callbackAuthState, state);

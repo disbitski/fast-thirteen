@@ -202,10 +202,13 @@ health model. Session checks can also report `checking`, `expired`,
 user id, provider token, access token, or refresh token.
 
 The profile/settings card shows the current health label, last local session
-check, recovery guidance, and whether a previous profile preview was reset. Its
-manual action calls only `auth.getSession()` through `currentAuthState()`. It
-does not launch OAuth, query `fast_sessions`, apply cloud rows, mutate fasting
-history, or update local sync metadata.
+check and its initial/manual/resume/reconnect source, recovery guidance, and
+whether a previous profile preview was reset. Its manual action and the
+cooldown-gated visible-resume/online-reconnect coordinator call only
+`auth.getSession()` through `currentAuthState()`. They do not launch OAuth,
+query `fast_sessions`, apply cloud rows, mutate fasting history, or update local
+sync metadata. Hidden, offline, disabled, duplicate, and rapid repeat signals
+are ignored.
 
 Repeated checks share one in-flight request. A sign-out, expiry, auth event, or
 profile generation change makes an older completion stale. Successful

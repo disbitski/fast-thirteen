@@ -157,15 +157,22 @@ test("tracker exposes local-safe session health and recovery controls", () => {
     "session-health-last-check",
     "session-health-preview",
     "session-health-recovery",
+    "session-health-source",
     "session-health-check",
   ]) {
     assert.match(index, new RegExp(`id="${id}"`));
   }
 
   assert.match(app, /createAuthSessionHealthController/);
+  assert.match(app, /createAuthSessionRecoveryCoordinator/);
   assert.match(app, /authService\.currentAuthState\(\)/);
   assert.match(app, /authSessionHealthController\.check/);
   assert.match(app, /authSessionHealthController\.observeAuthState/);
   assert.match(app, /sessionHealth: authSessionHealthController\.current\(\)/);
   assert.match(app, /persistAuthProfileState/);
+  assert.match(app, /addEventListener\("visibilitychange"/);
+  assert.match(app, /addEventListener\("online"/);
+  assert.match(app, /authSessionRecoveryCoordinator\.resume/);
+  assert.match(app, /authSessionRecoveryCoordinator\.reconnect/);
+  assert.match(app, /authSessionRecoveryCoordinator\.invalidate/);
 });

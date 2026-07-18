@@ -7,6 +7,13 @@ export const AUTH_SESSION_HEALTH_STATUS = Object.freeze({
   SIGNED_OUT: "signed-out",
 });
 
+export const AUTH_SESSION_CHECK_SOURCE = Object.freeze({
+  INITIAL: "initial",
+  MANUAL: "manual",
+  RECONNECT: "reconnect",
+  RESUME: "resume",
+});
+
 const KNOWN_AUTH_EVENTS = new Set([
   "INITIAL_SESSION",
   "SIGNED_IN",
@@ -38,6 +45,11 @@ function authenticated(authState) {
 function checkedTimestamp(value, fallback = null) {
   if (typeof value !== "string" || Number.isNaN(Date.parse(value))) return fallback;
   return new Date(value).toISOString();
+}
+
+function checkedSource(value, checkedAt, fallback = null) {
+  if (!checkedAt) return fallback;
+  return Object.values(AUTH_SESSION_CHECK_SOURCE).includes(value) ? value : fallback;
 }
 
 function statusFromAuth(authState, previous) {
@@ -118,6 +130,7 @@ function statusCopy(status, authState, hadAuthenticatedSession) {
 
 export function createAuthSessionHealthModel({
   authState = null,
+  checkSource = null,
   checkedAt = null,
   previous = null,
 } = {}) {
@@ -126,6 +139,11 @@ export function createAuthSessionHealthModel({
     || Boolean(previous?.hadAuthenticatedSession);
   const copy = statusCopy(status, authState, hadAuthenticatedSession);
   const lastCheckedAt = checkedTimestamp(checkedAt, previous?.lastCheckedAt ?? null);
+  const lastCheckSource = checkedSource(
+    checkSource,
+    checkedAt,
+    previous?.lastCheckSource ?? null,
+  );
 
   return Object.freeze({
     canRetry: status !== AUTH_SESSION_HEALTH_STATUS.CHECKING,
@@ -133,6 +151,7 @@ export function createAuthSessionHealthModel({
     event: normalizedEvent(authState, checkedAt),
     hadAuthenticatedSession,
     label: copy.label,
+    lastCheckSource,
     lastCheckedAt,
     localDataUnchanged: true,
     localSyncStatusChanged: false,
@@ -189,7 +208,11 @@ export function createAuthSessionHealthController({
     pending = null;
   }
 
-  function observeAuthState(authState, { checkedAt = null, scopeKey = activeScopeKey } = {}) {
+  function observeAuthState(authState, {
+    checkSource = null,
+    checkedAt = null,
+    scopeKey = activeScopeKey,
+  } = {}) {
     const scopeChanged = scopeKey !== activeScopeKey;
     const observedLifecycleEvent = KNOWN_AUTH_EVENTS.has(authState?.event);
     const terminalState = ["error", "guest", "signed-out"].includes(authState?.status);
@@ -197,10 +220,19 @@ export function createAuthSessionHealthController({
       invalidatePending();
     }
     activeScopeKey = scopeKey;
-    return publish(createAuthSessionHealthModel({ authState, checkedAt, previous: state }));
+    return publish(createAuthSessionHealthModel({
+      authState,
+      checkSource,
+      checkedAt,
+      previous: state,
+    }));
   }
 
-  async function check({ enabled = false, scopeKey = activeScopeKey } = {}) {
+  async function check({
+    enabled = false,
+    source = AUTH_SESSION_CHECK_SOURCE.MANUAL,
+    scopeKey = activeScopeKey,
+  } = {}) {
     if (!enabled) {
       return {
         accepted: false,
@@ -230,8 +262,12 @@ export function createAuthSessionHealthController({
 
     const promise = Promise.resolve()
       .then(() => checkSession())
-      .then((authState) => ({ authState, checkedAt: now() }))
-      .catch(() => ({ authState: failedCheckAuthState(), checkedAt: now() }))
+      .then((authState) => ({ authState, checkedAt: now(), checkSource: source }))
+      .catch(() => ({
+        authState: failedCheckAuthState(),
+        checkedAt: now(),
+        checkSource: source,
+      }))
       .then((result) => {
         if (activeRequestId !== requestId || activeScopeKey !== scopeKey) {
           return {
@@ -250,6 +286,7 @@ export function createAuthSessionHealthController({
           ...result,
           state: createAuthSessionHealthModel({
             authState: result.authState,
+            checkSource: result.checkSource,
             checkedAt: result.checkedAt,
             previous: state,
           }),

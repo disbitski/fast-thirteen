@@ -217,10 +217,14 @@ diagnostics only when the request identity matches the current profile scope.
 
 The session-health card is driven by `src/authSessionHealth.js`. It normalizes
 Supabase auth lifecycle events, displays the last local `getSession()` check,
-and explains whether profile preview state is scoped, protected, inactive, or
-reset. The manual Check session action is deduplicated and stale-response safe.
-It can only re-read auth state; it cannot launch OAuth, read `fast_sessions`,
-apply a merge plan, update sync metadata, or call any Supabase mutation method.
+its initial/manual/resume/reconnect source, and whether profile preview state is
+scoped, protected, inactive, or reset. The manual Check session action is
+deduplicated and stale-response safe. `src/authSessionRecovery.js` reuses that
+controller when a configured browser becomes visible or returns online. Hidden,
+offline, disabled, duplicate, and cooldown-window signals are ignored. Both
+paths can only re-read auth state; they cannot launch OAuth, read
+`fast_sessions`, apply a merge plan, update sync metadata, or call any Supabase
+mutation method.
 
 ### Session Health Recovery Checks
 
@@ -243,6 +247,31 @@ apply a merge plan, update sync metadata, or call any Supabase mutation method.
    before any read-only cloud preview can run.
 10. Compare exported fasting data and local sync metadata before and after the
     checks. Sessions, sync status, and sync timestamps must be unchanged.
+
+### Resume And Reconnect Recovery Checks
+
+1. With publishable config and the SDK ready, sign in with a throwaway profile
+   and confirm the health card reports `Session healthy`.
+2. Put the tab in the background, return to it, and confirm one auth-only check
+   runs with `Last check source: App resumed`.
+3. Repeat the background/foreground cycle within one minute. Confirm cooldown
+   suppresses the duplicate check and the previous check time remains stable.
+4. Switch the browser offline, return to a visible tab, and confirm no session
+   check runs while offline.
+5. Restore connectivity with the tab visible. Confirm one auth-only check runs
+   with `Last check source: Connection restored`.
+6. Restore connectivity while the tab is hidden. Confirm no check runs until a
+   later visible signal passes readiness and cooldown.
+7. Start a resume check for profile A, then switch to profile B before it
+   finishes. Confirm A's late completion is ignored and no A preview state is
+   visible for B.
+8. Trigger a same-user token refresh and confirm the profile lifecycle and
+   preview scope stay stable.
+9. Inspect the UI and serialized health/recovery models. Confirm no user id,
+   provider token, access token, or refresh token is present.
+10. Compare fasting sessions and sync metadata before and after all checks.
+    They must be unchanged, and every local apply/write action must stay
+    disabled.
 
 ### Two-Profile RLS Verification
 

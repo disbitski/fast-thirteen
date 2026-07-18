@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
+  AUTH_SESSION_CHECK_SOURCE,
   AUTH_SESSION_HEALTH_STATUS,
   createAuthSessionHealthController,
   createAuthSessionHealthModel,
@@ -30,6 +31,7 @@ function deferred() {
 test("normalizes successful Supabase lifecycle events without retaining identity or tokens", () => {
   let model = createAuthSessionHealthModel({
     authState: authenticated("INITIAL_SESSION"),
+    checkSource: AUTH_SESSION_CHECK_SOURCE.INITIAL,
     checkedAt: "2026-07-17T11:00:00.000Z",
   });
 
@@ -44,6 +46,7 @@ test("normalizes successful Supabase lifecycle events without retaining identity
   }
 
   assert.equal(model.lastCheckedAt, "2026-07-17T11:00:00.000Z");
+  assert.equal(model.lastCheckSource, AUTH_SESSION_CHECK_SOURCE.INITIAL);
   assert.doesNotMatch(
     JSON.stringify(model),
     /user-a|must-not-escape|access_token|provider_token|refresh_token/,
@@ -106,8 +109,16 @@ test("manual checks deduplicate one local getSession request", async () => {
     now: () => "2026-07-17T11:05:00.000Z",
   });
 
-  const first = controller.check({ enabled: true, scopeKey: "profile:1:user-a" });
-  const second = controller.check({ enabled: true, scopeKey: "profile:1:user-a" });
+  const first = controller.check({
+    enabled: true,
+    source: AUTH_SESSION_CHECK_SOURCE.MANUAL,
+    scopeKey: "profile:1:user-a",
+  });
+  const second = controller.check({
+    enabled: true,
+    source: AUTH_SESSION_CHECK_SOURCE.RESUME,
+    scopeKey: "profile:1:user-a",
+  });
   assert.equal(controller.current().status, AUTH_SESSION_HEALTH_STATUS.CHECKING);
   pending.resolve(authenticated("TOKEN_REFRESHED"));
   const [firstResult, secondResult] = await Promise.all([first, second]);
@@ -117,6 +128,25 @@ test("manual checks deduplicate one local getSession request", async () => {
   assert.equal(secondResult.accepted, false);
   assert.equal(secondResult.deduplicated, true);
   assert.equal(firstResult.state.lastCheckedAt, "2026-07-17T11:05:00.000Z");
+  assert.equal(firstResult.state.lastCheckSource, AUTH_SESSION_CHECK_SOURCE.MANUAL);
+  assert.equal(secondResult.state.lastCheckSource, AUTH_SESSION_CHECK_SOURCE.MANUAL);
+});
+
+test("a same-user refresh preserves profile health and the last automatic check source", () => {
+  const checked = createAuthSessionHealthModel({
+    authState: authenticated("SIGNED_IN"),
+    checkSource: AUTH_SESSION_CHECK_SOURCE.RECONNECT,
+    checkedAt: "2026-07-18T11:00:00.000Z",
+  });
+  const refreshed = createAuthSessionHealthModel({
+    authState: authenticated("TOKEN_REFRESHED"),
+    previous: checked,
+  });
+
+  assert.equal(refreshed.status, AUTH_SESSION_HEALTH_STATUS.HEALTHY);
+  assert.equal(refreshed.lastCheckSource, AUTH_SESSION_CHECK_SOURCE.RECONNECT);
+  assert.equal(refreshed.profilePreviewReset, false);
+  assert.doesNotMatch(JSON.stringify(refreshed), /user-a|must-not-escape/);
 });
 
 test("a stale user A check cannot replace user B session health", async () => {
