@@ -273,6 +273,41 @@ mutation method.
     They must be unchanged, and every local apply/write action must stay
     disabled.
 
+### Session Freshness And Expiry Checks
+
+`src/authSessionFreshness.js` reduces Supabase `expires_at` metadata to one ISO
+timestamp. It never retains a provider, access, or refresh token. The model
+reports `Fresh`, `Expiring soon`, `Revalidation due`, `Checking freshness`,
+`Expiry unavailable`, or `Local fallback` without exposing a user id.
+
+The expiry controller keeps one timer for the current authenticated lifecycle.
+It first wakes the UI at the expiring-soon boundary, then requests one
+auth-only `getSession()` recheck at expiry. A same-user `TOKEN_REFRESHED` event
+keeps the profile generation and replaces the old timer with the new expiry.
+Sign-out, refresh failure, user change, hidden state, or offline state cancels
+or suppresses the timer. Repeated expired observations use a cooldown instead
+of creating a recheck loop. The timer cannot launch OAuth, query
+`fast_sessions`, apply cloud rows, update sync metadata, or enable writes.
+
+1. Sign in with a throwaway profile and confirm `Session freshness: Fresh`
+   includes only a local date and time.
+2. Use a short test expiry and confirm the label moves to `Expiring soon`
+   without making a network request.
+3. Reach expiry and confirm one check with source `Session expiry` calls only
+   `auth.getSession()`.
+4. Trigger `TOKEN_REFRESHED` for the same user and confirm the profile scope is
+   unchanged while the displayed expiry and scheduled timer move forward.
+5. Hide the tab or go offline before expiry and confirm the timer is cancelled.
+   Restore visibility/connectivity and confirm normal resume/reconnect safety
+   gates rebuild the current schedule.
+6. Start an expiry check for profile A, switch to profile B, and confirm A's
+   completion is ignored and cannot replace B's freshness or preview state.
+7. Supply missing or malformed expiry metadata and confirm `Expiry unavailable`
+   or a token-free fallback instead of an exception.
+8. Compare local fasting history and sync metadata before and after every
+   scenario. They must be unchanged and all apply/write gates must remain
+   disabled.
+
 ### Two-Profile RLS Verification
 
 Use two throwaway profiles with clearly different test rows. Never use personal

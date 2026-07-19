@@ -3,6 +3,13 @@ import { createGoogleOAuthReadiness } from "./googleOAuthReadiness.js";
 
 const DEFAULT_AUTH_MESSAGE = "Local tracking still works.";
 
+function safeSessionExpiresAt(value) {
+  const seconds = Number(value);
+  if (!Number.isFinite(seconds) || seconds <= 0) return null;
+  const date = new Date(seconds * 1000);
+  return Number.isNaN(date.getTime()) ? null : date.toISOString();
+}
+
 export function authState({
   configured = false,
   error = null,
@@ -23,10 +30,11 @@ export function authState({
 
 export function mapSupabaseSession(session) {
   const user = session?.user ?? null;
+  const expiresAt = safeSessionExpiresAt(session?.expires_at);
 
   return authState({
     configured: true,
-    session: user ? { user } : null,
+    session: user ? { ...(expiresAt ? { expiresAt } : {}), user } : null,
     status: user?.id ? "authenticated" : "guest",
     user,
   });

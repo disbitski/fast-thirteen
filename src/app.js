@@ -33,6 +33,7 @@ import {
   AUTH_SESSION_CHECK_SOURCE,
   createAuthSessionHealthController,
 } from "./authSessionHealth.js";
+import { createAuthSessionExpiryController } from "./authSessionFreshness.js";
 import { createAuthSessionRecoveryCoordinator } from "./authSessionRecovery.js";
 import { createGoogleOAuthLaunchController } from "./googleOAuthController.js";
 import { createOAuthReadValidationReport } from "./oauthValidationReport.js";
@@ -140,6 +141,7 @@ const elements = {
   saveStatus: document.querySelector("#save-status"),
   sessionHealth: document.querySelector("#session-health"),
   sessionHealthCheck: document.querySelector("#session-health-check"),
+  sessionHealthFreshness: document.querySelector("#session-health-freshness"),
   sessionHealthLastCheck: document.querySelector("#session-health-last-check"),
   sessionHealthMessage: document.querySelector("#session-health-message"),
   sessionHealthPreview: document.querySelector("#session-health-preview"),
@@ -207,6 +209,15 @@ const authSessionRecoveryCoordinator = createAuthSessionRecoveryCoordinator({
   },
 });
 
+const authSessionExpiryController = createAuthSessionExpiryController({
+  checkSession({ source }) {
+    return runLocalSessionCheck({ source });
+  },
+  onStateChange() {
+    renderProfileSync();
+  },
+});
+
 const authProfileCoordinator = createAuthProfileCoordinator({
   initialAuthState: authState,
   onInvalidate(transition) {
@@ -215,6 +226,7 @@ const authProfileCoordinator = createAuthProfileCoordinator({
       reason: transition.reason,
     });
     authSessionRecoveryCoordinator.invalidate({ reason: transition.reason });
+    authSessionExpiryController.invalidate({ reason: transition.reason });
   },
 });
 
@@ -225,6 +237,7 @@ const authSessionHealthController = createAuthSessionHealthController({
   initialAuthState: authState,
   initialScopeKey: authProfileCoordinator.current().identityKey,
   onStateChange() {
+    scheduleAuthExpiryCheck();
     renderProfileSync();
   },
 });
@@ -400,6 +413,7 @@ function sessionCheckEnabled() {
 
 function renderSessionHealth() {
   const model = authSessionHealthController.current();
+  const freshness = authSessionExpiryController.current().freshness;
   const enabled = sessionCheckEnabled();
   const checking = model.status === "checking";
   elements.sessionHealth.dataset.sessionHealth = model.status;
@@ -412,6 +426,7 @@ function renderSessionHealth() {
     ? `Last local check ${formatDate(model.lastCheckedAt)} at ${formatTime(model.lastCheckedAt)}.`
     : "No local session check yet.";
   const sourceLabels = {
+    expiry: "Session expiry",
     initial: "App start",
     manual: "Manual",
     reconnect: "Connection restored",
@@ -420,6 +435,12 @@ function renderSessionHealth() {
   elements.sessionHealthSource.textContent = model.lastCheckSource
     ? `Last check source: ${sourceLabels[model.lastCheckSource]}.`
     : "Last check source: Not checked.";
+  elements.sessionHealthFreshness.dataset.freshnessStatus = freshness.status;
+  elements.sessionHealthFreshness.textContent = freshness.expiresAt
+    && ["healthy", "expiring"].includes(freshness.status)
+    ? `Session freshness: ${freshness.label} until ${formatDate(freshness.expiresAt)} at ${formatTime(freshness.expiresAt)}.`
+    : `Session freshness: ${freshness.label}.`;
+  elements.sessionHealthFreshness.title = freshness.message;
   elements.sessionHealthCheck.disabled = !enabled || checking;
   elements.sessionHealthCheck.textContent = checking
     ? "Checking session..."
@@ -1209,12 +1230,29 @@ function authRecoveryContext() {
   };
 }
 
+function scheduleAuthExpiryCheck() {
+  return authSessionExpiryController.observe({
+    authState,
+    enabled: sessionCheckEnabled(),
+    healthState: authSessionHealthController.current(),
+    online: globalThis.navigator?.onLine !== false,
+    scopeKey: authProfileCoordinator.current().identityKey,
+    visibilityState: document.visibilityState ?? "visible",
+  });
+}
+
 document.addEventListener("visibilitychange", () => {
+  scheduleAuthExpiryCheck();
   void authSessionRecoveryCoordinator.resume(authRecoveryContext());
 });
 
 globalThis.addEventListener("online", () => {
+  scheduleAuthExpiryCheck();
   void authSessionRecoveryCoordinator.reconnect(authRecoveryContext());
+});
+
+globalThis.addEventListener("offline", () => {
+  scheduleAuthExpiryCheck();
 });
 
 elements.exportButton.addEventListener("click", () => {

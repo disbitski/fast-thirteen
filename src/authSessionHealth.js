@@ -8,6 +8,7 @@ export const AUTH_SESSION_HEALTH_STATUS = Object.freeze({
 });
 
 export const AUTH_SESSION_CHECK_SOURCE = Object.freeze({
+  EXPIRY: "expiry",
   INITIAL: "initial",
   MANUAL: "manual",
   RECONNECT: "reconnect",

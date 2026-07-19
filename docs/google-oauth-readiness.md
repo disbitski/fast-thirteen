@@ -217,6 +217,23 @@ profile generation, while a different user starts a new isolated generation.
 Profile persistence is separate from fasting sync metadata, so auth recovery
 cannot mark Local data synced or change its last-sync timestamp.
 
+## Token-Free Session Freshness
+
+Supabase session hydration may include `expires_at` as Unix seconds.
+`mapSupabaseSession` converts only that value to an ISO timestamp and continues
+to omit provider, access, and refresh tokens. `src/authSessionFreshness.js`
+uses the timestamp to model healthy, expiring, expired, checking, unknown, and
+local-fallback states with an injected clock.
+
+One lifecycle-scoped timer updates the UI at the warning boundary and performs
+one auth-only recheck at expiry. It reuses `currentAuthState()` and the existing
+session-health controller, so request deduplication and stale-profile isolation
+still apply. A same-user token refresh reschedules the timer without changing
+the profile generation. Hidden, offline, disabled, signed-out, failed-refresh,
+and changed-profile states cancel or suppress it. No expiry path can query
+fasting rows, launch OAuth, mutate Local data, update sync metadata, or enable
+cloud writes.
+
 If Supabase local development is used later, store the Google secret outside
 Git and reference it from local Supabase config, for example:
 

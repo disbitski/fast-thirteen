@@ -893,6 +893,15 @@ h3 {
   color: var(--muted);
 }
 
+.session-health-freshness[data-freshness-status="healthy"] {
+  color: var(--green);
+}
+
+.session-health-freshness[data-freshness-status="expired"],
+.session-health-freshness[data-freshness-status="expiring"] {
+  color: var(--active);
+}
+
 .session-health-heading span {
   display: grid;
   gap: 2px;
