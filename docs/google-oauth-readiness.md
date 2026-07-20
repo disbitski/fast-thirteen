@@ -234,6 +234,18 @@ and changed-profile states cancel or suppress it. No expiry path can query
 fasting rows, launch OAuth, mutate Local data, update sync metadata, or enable
 cloud writes.
 
+## Cross-Tab Lifecycle Isolation
+
+The Supabase auth subscription can receive lifecycle changes initiated in
+another browser tab. `src/authLifecycleCoordinator.js` deduplicates identical
+events, synchronizes the direct startup session check, and forwards only
+supported lifecycle transitions into the existing profile isolation path. A
+same-user refresh preserves the lifecycle generation. Sign-out, expiry,
+refresh failure, and authenticated-user changes reset the prior profile's
+preview scope before stale work can complete. Coordinator status is token-free,
+does not expose a user id, and cannot launch OAuth, query fasting rows, mutate
+Local data, update sync metadata, or enable writes.
+
 If Supabase local development is used later, store the Google secret outside
 Git and reference it from local Supabase config, for example:
 

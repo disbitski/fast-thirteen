@@ -308,6 +308,47 @@ of creating a recheck loop. The timer cannot launch OAuth, query
    scenario. They must be unchanged and all apply/write gates must remain
    disabled.
 
+### Cross-Tab Auth Lifecycle Checks
+
+Supabase delivers auth lifecycle changes through `onAuthStateChange`, including
+changes broadcast from another browser tab. `src/authLifecycleCoordinator.js`
+now places a token-free boundary in front of that subscription. It accepts
+`INITIAL_SESSION`, `SIGNED_IN`, `TOKEN_REFRESHED`, `USER_UPDATED`, and
+`SIGNED_OUT`, and normalizes signed-out, expired, and refresh-failed fallback
+states before they reach profile-scoped preview controllers.
+
+The coordinator suppresses an identical repeated event for the same lifecycle.
+A same-user refresh keeps the current lifecycle generation and replaces the
+expiry schedule only once. A remote sign-out, session expiry, refresh failure,
+or user A to user B transition is applied before stale cloud reads can finish,
+so the existing profile coordinator invalidates read previews, recovery work,
+and expiry timers. The direct startup `getSession()` result also seeds the
+coordinator, preventing the first later subscription refresh from looking like
+a new profile. Fingerprints are internal and never appear in the coordinator's
+state; user ids and provider, access, and refresh tokens are omitted.
+
+Use two tabs with two throwaway profiles for this local-safe check:
+
+1. Sign in as profile A in tab one and allow tab two to receive the Supabase
+   lifecycle event. Confirm both tabs keep profile-scoped previews isolated.
+2. Trigger a same-user token refresh. Confirm the lifecycle generation remains
+   stable and only one updated expiry schedule remains active.
+3. Deliver the identical refresh event again. Confirm it is marked duplicate
+   and does not reapply profile state or start another timer.
+4. Start a read-only `fast_sessions` preview for profile A, then sign in as
+   profile B in the other tab before the read finishes. Confirm A's completion
+   is stale, the previous result/counts are cleared, and B gets a new isolated
+   lifecycle generation.
+5. Sign out in either tab. Confirm the other tab cancels expiry/recovery work,
+   clears profile previews, and falls back to Guest mode and Local data.
+6. Simulate session expiry and refresh failure. Confirm both map to preview
+   reset states without launching OAuth or reading fasting rows.
+7. Inspect lifecycle model output and browser copy. Confirm no user id or
+   provider, access, or refresh token is present.
+8. Compare fasting history and sync metadata before and after every scenario.
+   They must be unchanged, and local apply plus all write gates must remain
+   disabled.
+
 ### Two-Profile RLS Verification
 
 Use two throwaway profiles with clearly different test rows. Never use personal

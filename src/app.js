@@ -29,6 +29,7 @@ import {
 import { recentSessionsForDays } from "./analytics.js";
 import { authReadiness } from "./authReadiness.js";
 import { createAuthProfileCoordinator } from "./authProfileCoordinator.js";
+import { createAuthLifecycleCoordinator } from "./authLifecycleCoordinator.js";
 import {
   AUTH_SESSION_CHECK_SOURCE,
   createAuthSessionHealthController,
@@ -249,6 +250,17 @@ const oauthLaunchController = createGoogleOAuthLaunchController({
   },
   onStateChange() {
     renderProfileSync();
+  },
+});
+
+const authLifecycleCoordinator = createAuthLifecycleCoordinator({
+  initialAuthState: authState,
+  applyAuthState(state) {
+    const resolvedState = resolveAuthCallbackState(callbackAuthState, state);
+    applyAuthState(resolvedState, {
+      persistMessage:
+        resolvedState.status === "authenticated" ? "Profile updated locally" : null,
+    });
   },
 });
 
@@ -1083,6 +1095,7 @@ function applyAuthState(state, {
   persistMessage,
 } = {}) {
   authState = state;
+  authLifecycleCoordinator.synchronizeAuthState(state);
   let shouldPersistProfile = false;
   let resolvedPersistMessage = persistMessage;
 
@@ -1354,11 +1367,7 @@ async function initializeSupabaseAuth() {
   });
 
   authService.onAuthStateChange((state) => {
-    const resolvedState = resolveAuthCallbackState(callbackAuthState, state);
-    applyAuthState(resolvedState, {
-      persistMessage:
-        resolvedState.status === "authenticated" ? "Profile updated locally" : null,
-    });
+    authLifecycleCoordinator.observeAuthState(state);
   });
 }
 
