@@ -349,6 +349,43 @@ Use two tabs with two throwaway profiles for this local-safe check:
    They must be unchanged, and local apply plus all write gates must remain
    disabled.
 
+### Auth Subscription Ownership And Teardown
+
+`src/authSubscriptionCoordinator.js` owns the browser Supabase
+`onAuthStateChange` subscription. Only one subscription may be active for the
+current browser-client generation. Repeated initialization with the same
+client is deduplicated. A replacement client invalidates the old callback and
+unsubscribes it before the new subscription attaches.
+
+The page calls `detach()` on `pagehide`. Ownership is invalidated before the
+unsubscribe method runs, so even a callback emitted during teardown is stale.
+If the browser restores the page from its back-forward cache, `pageshow`
+attaches one fresh subscription for the existing ready client. Callbacks from
+disposed or replaced subscriptions cannot reach `authLifecycleCoordinator`,
+profile previews, session-health state, recovery work, or expiry scheduling.
+The ownership model retains no client object, auth payload, identity, or token.
+It cannot call `getSession`, launch OAuth, query `fast_sessions`, apply data, or
+enable writes.
+
+1. Initialize Supabase auth twice with the same browser client and confirm only
+   one `onAuthStateChange` subscription is created.
+2. Replace client A with client B. Confirm A is invalidated and unsubscribed
+   before B subscribes.
+3. Invoke A's saved callback after replacement. Confirm it is ignored and B's
+   lifecycle state and profile-scoped preview remain unchanged.
+4. Trigger `pagehide` and confirm the active subscription is detached. Invoke
+   its saved callback during and after unsubscribe and confirm both are stale.
+5. Restore the page with a persisted `pageshow` event. Confirm exactly one new
+   subscription attaches and duplicate restore signals are deduplicated.
+6. Send a same-user `TOKEN_REFRESHED` event through the active subscription and
+   confirm the existing lifecycle coordinator keeps one profile generation and
+   expiry schedule.
+7. Send a remote `SIGNED_OUT` event and confirm profile previews reset while
+   Guest mode and Local data remain available.
+8. Inspect subscription state and compare local fasting history/sync metadata.
+   No client detail, user id, or provider token may appear, Local data must be
+   unchanged, and every apply/write gate must remain disabled.
+
 ### Two-Profile RLS Verification
 
 Use two throwaway profiles with clearly different test rows. Never use personal

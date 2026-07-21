@@ -30,6 +30,7 @@ import { recentSessionsForDays } from "./analytics.js";
 import { authReadiness } from "./authReadiness.js";
 import { createAuthProfileCoordinator } from "./authProfileCoordinator.js";
 import { createAuthLifecycleCoordinator } from "./authLifecycleCoordinator.js";
+import { createAuthSubscriptionCoordinator } from "./authSubscriptionCoordinator.js";
 import {
   AUTH_SESSION_CHECK_SOURCE,
   createAuthSessionHealthController,
@@ -263,6 +264,21 @@ const authLifecycleCoordinator = createAuthLifecycleCoordinator({
     });
   },
 });
+
+const authSubscriptionCoordinator = createAuthSubscriptionCoordinator({
+  onAuthState(state) {
+    return authLifecycleCoordinator.observeAuthState(state);
+  },
+});
+
+function attachAuthSubscription() {
+  return authSubscriptionCoordinator.attach({
+    clientGeneration: supabaseClient.client,
+    subscribe(callback) {
+      return authService.onAuthStateChange(callback);
+    },
+  });
+}
 
 function persistData(message = "Saved locally") {
   appData.sessions = sessions;
@@ -1366,10 +1382,18 @@ async function initializeSupabaseAuth() {
     source: AUTH_SESSION_CHECK_SOURCE.INITIAL,
   });
 
-  authService.onAuthStateChange((state) => {
-    authLifecycleCoordinator.observeAuthState(state);
-  });
+  attachAuthSubscription();
 }
+
+globalThis.addEventListener("pagehide", () => {
+  authSubscriptionCoordinator.detach({ reason: "pagehide" });
+});
+
+globalThis.addEventListener("pageshow", (event) => {
+  if (event.persisted && supabaseClient.status === "ready") {
+    attachAuthSubscription();
+  }
+});
 
 void initializeSupabaseAuth();
 setInterval(() => {

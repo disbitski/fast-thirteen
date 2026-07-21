@@ -246,6 +246,17 @@ preview scope before stale work can complete. Coordinator status is token-free,
 does not expose a user id, and cannot launch OAuth, query fasting rows, mutate
 Local data, update sync metadata, or enable writes.
 
+## Auth Subscription Ownership
+
+`src/authSubscriptionCoordinator.js` owns exactly one Supabase auth lifecycle
+subscription for the current browser-client generation. Duplicate setup is a
+no-op. Client replacement and `pagehide` invalidate callbacks before calling
+unsubscribe, while a persisted `pageshow` may attach one fresh subscription.
+Disposed callbacks cannot enter profile or cloud-preview state. The coordinator
+stores no client, identity, auth payload, or token in its status model and does
+not perform session reads, OAuth launches, fasting-row reads, local applies, or
+cloud writes.
+
 If Supabase local development is used later, store the Google secret outside
 Git and reference it from local Supabase config, for example:
 
