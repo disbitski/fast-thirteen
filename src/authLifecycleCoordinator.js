@@ -40,6 +40,7 @@ function tokenFreeUser(user) {
   const provider = optionalString(user?.app_metadata?.provider);
   const fullName = optionalString(user?.user_metadata?.full_name);
   const name = optionalString(user?.user_metadata?.name);
+  const updatedAt = optionalString(user?.updated_at);
   const userMetadata = {
     ...(fullName ? { full_name: fullName } : {}),
     ...(name ? { name } : {}),
@@ -48,6 +49,7 @@ function tokenFreeUser(user) {
     ...(provider ? { app_metadata: { provider } } : {}),
     ...(email ? { email } : {}),
     id,
+    ...(updatedAt ? { updated_at: updatedAt } : {}),
     ...(fullName || name ? { user_metadata: userMetadata } : {}),
   };
 }

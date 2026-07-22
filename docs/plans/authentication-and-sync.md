@@ -52,6 +52,11 @@ must work offline and sync when a signed-in device reconnects.
 - Link multiple identities to one profile only through an explicit flow.
 - Provide clear error and cancellation states.
 
+The current local-safe profile provisioning scaffold maps token-free Google or
+Apple identity metadata to the `profiles` schema and previews deterministic
+create, update, or no-op decisions after a read-only lookup. Profile reads are
+not wired to the browser client yet, and profile writes remain disabled.
+
 ## Phase 4: Guest Data Migration
 
 When a guest signs in for the first time:

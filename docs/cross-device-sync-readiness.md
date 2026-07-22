@@ -386,6 +386,48 @@ enable writes.
    No client detail, user id, or provider token may appear, Local data must be
    unchanged, and every apply/write gate must remain disabled.
 
+### Authenticated Profile Provisioning Preview
+
+`src/profileProvisioning.js` models the Phase 3 `profiles` row step without
+making a Supabase request or write by itself. It maps only the authenticated
+user id, display name, email, provider, and validated auth `updated_at` value.
+Access, refresh, and provider tokens are never accepted into the candidate row
+or retained in planner/controller state.
+
+After an explicitly supplied read-only repository returns the current profile
+row, the planner makes one deterministic decision:
+
+- A missing row produces one create preview.
+- Matching identity fields produce a no-op, regardless of timestamp drift.
+- Changed identity fields produce one update preview only when the auth
+  `updated_at` value is newer than the remote row.
+- An equal or newer remote timestamp wins and produces a no-op.
+- Invalid ids, providers, timestamps, missing reads, or profile-owner mismatch
+  block the preview.
+
+Every plan has `canExecute`, `writesEnabled`, and `profileRowWritten` set to
+false. The preview controller can call only its injected `readProfile` method.
+It deduplicates repeated reads for the same profile revision and invalidates an
+in-flight result on sign-out, expiry, refresh failure, browser-client
+replacement, or user change. A late profile A response cannot become profile
+B's preview.
+
+Use mocked repositories until a dedicated read-only Supabase profile adapter
+is added:
+
+1. Map a token-free authenticated test state and confirm the candidate contains
+   only the five allowed profile fields.
+2. Supply `null` as the completed read result and confirm one create preview.
+3. Supply a matching row and confirm no write is planned.
+4. Supply older changed remote metadata and confirm one update preview.
+5. Supply equal/newer changed remote metadata and confirm the remote row wins.
+6. Start a profile A read, invalidate the lifecycle, and start profile B.
+   Confirm A's late result is ignored and no A row or count remains.
+7. Repeat invalidation for sign-out, expiry, refresh failure, and client
+   replacement.
+8. Compare Local fasting history and sync metadata before and after each case.
+   They must remain unchanged, and all profile/session write gates stay off.
+
 ### Two-Profile RLS Verification
 
 Use two throwaway profiles with clearly different test rows. Never use personal
