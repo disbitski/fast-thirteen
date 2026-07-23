@@ -386,7 +386,7 @@ export function createProfileProvisioningPreviewController({
     return publish(controllerState({ message, reason, status: "invalidated" }));
   }
 
-  async function refresh({ authState, profileScope, readiness } = {}) {
+  async function refresh({ authState, force = false, profileScope, readiness } = {}) {
     const candidate = authenticatedProfileToRow(authState);
     const blockers = scopedProfileBlockers(candidate, profileScope);
     if (!readiness?.canRead || blockers.length > 0) {
@@ -402,7 +402,7 @@ export function createProfileProvisioningPreviewController({
     }
 
     const key = previewKey(profileScope, candidate.row);
-    if (activeKey === key && [
+    if (!force && activeKey === key && [
       PROFILE_PROVISIONING_STATUS.LOADING,
       PROFILE_PROVISIONING_STATUS.PREVIEW,
       PROFILE_PROVISIONING_STATUS.CURRENT,
@@ -426,7 +426,6 @@ export function createProfileProvisioningPreviewController({
       if (activeRequestId !== requestId) {
         return { accepted: true, deduplicated: false, ignored: true, stale: true, state };
       }
-      activeKey = null;
       const blocked = publish(controllerState({
         identityKey: profileScope.identityKey,
         message: error?.message ?? "The profiles row could not be read.",

@@ -31,6 +31,8 @@ import { authReadiness } from "./authReadiness.js";
 import { createAuthProfileCoordinator } from "./authProfileCoordinator.js";
 import { createAuthLifecycleCoordinator } from "./authLifecycleCoordinator.js";
 import { createAuthSubscriptionCoordinator } from "./authSubscriptionCoordinator.js";
+import { createProfileProvisioningPreviewController } from "./profileProvisioning.js";
+import { createProfileProvisioningPreviewModel } from "./profileProvisioningPreview.js";
 import {
   AUTH_SESSION_CHECK_SOURCE,
   createAuthSessionHealthController,
@@ -43,6 +45,10 @@ import { createGuestMigrationPlan } from "./migrationPlan.js";
 import { createMigrationPreviewModel } from "./migrationPreview.js";
 import { loadSupabaseConfig } from "./supabaseConfig.js";
 import { createSupabaseSdkBootstrap } from "./supabaseSdkBootstrap.js";
+import {
+  createSupabaseProfileReadRepository,
+  profileReadReadiness,
+} from "./supabaseProfileRepository.js";
 import {
   supabaseMigrationRepositoryReadiness,
   supabasePushRepositoryReadiness,
@@ -125,6 +131,12 @@ const elements = {
   profileMenuDetail: document.querySelector("#profile-menu-detail"),
   profileMenuTitle: document.querySelector("#profile-menu-title"),
   profileMode: document.querySelector("#profile-mode"),
+  profileProvisioning: document.querySelector("#profile-provisioning"),
+  profileProvisioningMessage: document.querySelector("#profile-provisioning-message"),
+  profileProvisioningSafety: document.querySelector("#profile-provisioning-safety"),
+  profileProvisioningStages: document.querySelector("#profile-provisioning-stages"),
+  profileProvisioningStatus: document.querySelector("#profile-provisioning-status"),
+  profileProvisioningTitle: document.querySelector("#profile-provisioning-title"),
   progressRing: document.querySelector("#progress-ring"),
   orchestrationPreview: document.querySelector("#orchestration-preview"),
   orchestrationPreviewAction: document.querySelector("#orchestration-preview-action"),
@@ -205,6 +217,20 @@ const syncPullController = createCloudPullRequestController({
   },
 });
 
+const profileProvisioningController = createProfileProvisioningPreviewController({
+  readProfile({ userId }) {
+    const readiness = currentProfileReadiness();
+    const repository = createSupabaseProfileReadRepository({
+      client: supabaseClient.client,
+      readiness,
+    });
+    return repository.readProfile({ userId });
+  },
+  onStateChange() {
+    renderProfileSync();
+  },
+});
+
 const authSessionRecoveryCoordinator = createAuthSessionRecoveryCoordinator({
   checkSession({ source }) {
     return runLocalSessionCheck({ source });
@@ -229,6 +255,10 @@ const authProfileCoordinator = createAuthProfileCoordinator({
     });
     authSessionRecoveryCoordinator.invalidate({ reason: transition.reason });
     authSessionExpiryController.invalidate({ reason: transition.reason });
+    profileProvisioningController.invalidate({
+      message: transition.message,
+      reason: transition.reason,
+    });
   },
 });
 
@@ -428,6 +458,16 @@ function profileMenuDetail() {
   }
 
   return "Local data is active.";
+}
+
+function currentProfileReadiness() {
+  return profileReadReadiness({
+    authState,
+    clientStatus: supabaseClient.status,
+    config: supabaseConfig,
+    profileScope: authProfileCoordinator.current(),
+    readSupport: true,
+  });
 }
 
 function sameAuthProfile(left, right) {
@@ -915,6 +955,38 @@ function renderOAuthReadiness(readiness) {
   }
 }
 
+function renderProfileProvisioning(model) {
+  elements.profileProvisioning.dataset.profileStatus = model.status;
+  elements.profileProvisioningTitle.textContent = model.title;
+  elements.profileProvisioningStatus.textContent = model.statusLabel;
+  elements.profileProvisioningStatus.dataset.tone = model.status === "blocked" ? "warn" :
+    ["current", "preview", "loading"].includes(model.status) ? "good" : "muted";
+  elements.profileProvisioningMessage.textContent = model.message;
+  elements.profileProvisioningStages.replaceChildren(
+    ...model.stages.map((stage) => {
+      const item = document.createElement("div");
+      const term = document.createElement("dt");
+      const description = document.createElement("dd");
+      item.title = stage.message;
+      term.textContent = stage.name;
+      description.textContent = stage.label;
+      description.dataset.tone = stage.tone;
+      item.append(term, description);
+      return item;
+    }),
+  );
+  elements.profileProvisioningSafety.textContent = model.safety;
+}
+
+function refreshProfileProvisioning(readiness) {
+  if (!readiness.canRead) return;
+  void profileProvisioningController.refresh({
+    authState,
+    profileScope: authProfileCoordinator.current(),
+    readiness,
+  });
+}
+
 function validationTone(status) {
   if (status === "passed") return "good";
   if (status === "blocked") return "warn";
@@ -1000,6 +1072,11 @@ function renderProfileSync() {
   });
   const applyReadiness = syncApplyReadiness();
   const profileScope = authProfileCoordinator.current();
+  const profileProvisioningReadiness = currentProfileReadiness();
+  const profileProvisioningState = profileProvisioningController.current();
+  const scopedProfileProvisioningState = profileProvisioningState.identityKey === profileScope.identityKey
+    ? profileProvisioningState
+    : null;
   const cloudReadKey = syncPullKey(cloudReadReadiness);
   const pushReadiness = syncPushReadiness({
     authState,
@@ -1069,6 +1146,10 @@ function renderProfileSync() {
   elements.authHelp.textContent = authHelpText(readiness, oauthLaunchState);
   renderOAuthReadiness(readiness);
   renderSessionHealth();
+  renderProfileProvisioning(createProfileProvisioningPreviewModel({
+    readiness: profileProvisioningReadiness,
+    requestState: scopedProfileProvisioningState,
+  }));
   renderMigrationPreview(createMigrationPreviewModel(migrationPlan, { migrationReadiness }));
   const displayResult = pullResult
     ?? (scopedPullState.status === "blocked"
@@ -1102,6 +1183,7 @@ function renderProfileSync() {
     orchestrationModel,
     createSyncOrchestrationStatusModel(orchestrationModel),
   );
+  refreshProfileProvisioning(profileProvisioningReadiness);
   refreshCloudPullPreview(cloudReadReadiness, cloudReadKey);
 }
 
@@ -1360,11 +1442,15 @@ render();
 loadSharedData();
 
 async function initializeSupabaseAuth() {
+  const previousClient = supabaseClient.client;
   const bootstrapState = await supabaseSdkBootstrap.load({
     config: supabaseConfig,
     source: globalThis,
   });
   supabaseClient = bootstrapState;
+  if (previousClient && previousClient !== bootstrapState.client) {
+    profileProvisioningController.invalidate({ reason: "client-replaced" });
+  }
   authService = createAuthService({
     config: supabaseConfig,
     clientStatus: supabaseClient.status,

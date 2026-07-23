@@ -186,3 +186,27 @@ test("tracker exposes local-safe session health and recovery controls", () => {
   assert.match(app, /addEventListener\("pagehide"/);
   assert.match(app, /addEventListener\("pageshow"/);
 });
+
+test("tracker renders the read-only authenticated profile provisioning preview", () => {
+  const index = readFileSync("index.html", "utf8");
+  const app = readFileSync("src/app.js", "utf8");
+
+  for (const id of [
+    "profile-provisioning",
+    "profile-provisioning-title",
+    "profile-provisioning-status",
+    "profile-provisioning-message",
+    "profile-provisioning-stages",
+    "profile-provisioning-safety",
+  ]) {
+    assert.match(index, new RegExp(`id="${id}"`));
+  }
+
+  assert.match(app, /createProfileProvisioningPreviewController/);
+  assert.match(app, /createSupabaseProfileReadRepository/);
+  assert.match(app, /profileReadReadiness/);
+  assert.match(app, /createProfileProvisioningPreviewModel/);
+  assert.match(app, /profileProvisioningController\.invalidate/);
+  assert.match(app, /renderProfileProvisioning/);
+  assert.match(app, /refreshProfileProvisioning/);
+});

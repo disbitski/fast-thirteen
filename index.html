@@ -210,6 +210,34 @@
                   Visible resume and reconnect signals can safely recheck auth only.
                 </small>
               </section>
+              <section
+                class="profile-provisioning"
+                id="profile-provisioning"
+                data-profile-status="disabled"
+                aria-label="Cloud profile provisioning preview"
+              >
+                <div class="profile-provisioning-heading">
+                  <span>
+                    <small>Cloud profile preview</small>
+                    <strong id="profile-provisioning-title">Cloud profile preview off</strong>
+                  </span>
+                  <strong
+                    class="profile-provisioning-status"
+                    id="profile-provisioning-status"
+                    data-tone="muted"
+                    role="status"
+                  >
+                    Disabled
+                  </strong>
+                </div>
+                <p id="profile-provisioning-message">
+                  Sign in with configured Supabase auth to preview the private profile row.
+                </p>
+                <dl class="profile-provisioning-stages" id="profile-provisioning-stages"></dl>
+                <small class="profile-provisioning-safety" id="profile-provisioning-safety">
+                  Read only · Local data unchanged · Sync status unchanged · Writes disabled
+                </small>
+              </section>
               <button class="secondary-button" id="google-sign-in" type="button" hidden>
                 Continue with Google
               </button>

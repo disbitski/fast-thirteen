@@ -412,20 +412,34 @@ in-flight result on sign-out, expiry, refresh failure, browser-client
 replacement, or user change. A late profile A response cannot become profile
 B's preview.
 
-Use mocked repositories until a dedicated read-only Supabase profile adapter
-is added:
+`src/supabaseProfileRepository.js` now supplies the dedicated browser adapter.
+It exposes only `readProfile`, selects
+`id,display_name,email,provider,updated_at`, filters by the current
+authenticated id, and calls `maybeSingle()`. RLS remains the access boundary.
+A missing row returns `null` so the planner can show a create preview. The
+adapter has no insert, update, upsert, or delete method.
+
+The settings card displays config, client, auth, lifecycle scope, and read
+support separately. It shows loading, create, update, current, disabled, and
+blocked states without rendering a user id or token. Use this validation flow:
 
 1. Map a token-free authenticated test state and confirm the candidate contains
    only the five allowed profile fields.
-2. Supply `null` as the completed read result and confirm one create preview.
-3. Supply a matching row and confirm no write is planned.
-4. Supply older changed remote metadata and confirm one update preview.
-5. Supply equal/newer changed remote metadata and confirm the remote row wins.
-6. Start a profile A read, invalidate the lifecycle, and start profile B.
+2. Confirm all five card stages report Ready, Signed in, Isolated, or Read only
+   before the repository query runs.
+3. Sign in with a throwaway account that has no `profiles` row. Confirm the card
+   shows one create preview and no write occurs.
+4. Add a matching throwaway row through the Supabase dashboard. Refresh auth
+   state and confirm the card reports no write needed.
+5. Supply older changed remote metadata and confirm one update preview.
+6. Supply equal/newer changed remote metadata and confirm the remote row wins.
+7. Deny the profile select through a throwaway RLS test and confirm the card is
+   blocked while Local data remains usable.
+8. Start a profile A read, invalidate the lifecycle, and start profile B.
    Confirm A's late result is ignored and no A row or count remains.
-7. Repeat invalidation for sign-out, expiry, refresh failure, and client
+9. Repeat invalidation for sign-out, expiry, refresh failure, and client
    replacement.
-8. Compare Local fasting history and sync metadata before and after each case.
+10. Compare Local fasting history and sync metadata before and after each case.
    They must remain unchanged, and all profile/session write gates stay off.
 
 ### Two-Profile RLS Verification
