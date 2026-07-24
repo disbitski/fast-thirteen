@@ -56,7 +56,10 @@ The current local-safe profile provisioning scaffold maps token-free Google or
 Apple identity metadata to the `profiles` schema and previews deterministic
 create, update, or no-op decisions after a read-only lookup. A dedicated
 browser adapter can now select the current RLS-owned `profiles` row and render
-that preview in settings. Profile writes remain disabled.
+that preview in settings. A gated manual refresh/retry control and token-free
+validation report cover auth/session readiness, RLS reads, create/update/no-op
+planning, and unchanged Local data. Profile and fasting-session writes remain
+disabled.
 
 ## Phase 4: Guest Data Migration
 

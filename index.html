@@ -234,6 +234,49 @@
                   Sign in with configured Supabase auth to preview the private profile row.
                 </p>
                 <dl class="profile-provisioning-stages" id="profile-provisioning-stages"></dl>
+                <div class="profile-provisioning-refresh-control">
+                  <button
+                    class="secondary-button profile-provisioning-refresh"
+                    id="profile-provisioning-refresh"
+                    type="button"
+                    aria-describedby="profile-provisioning-refresh-detail"
+                    disabled
+                  >
+                    Refresh unavailable
+                  </button>
+                  <small id="profile-provisioning-refresh-detail">
+                    Cloud profile reads are disabled.
+                  </small>
+                </div>
+                <details
+                  class="oauth-validation profile-validation"
+                  id="profile-validation"
+                  data-validation-status="local-only"
+                >
+                  <summary>
+                    <span>
+                      <small>Token-free profile check</small>
+                      <strong id="profile-validation-title">Local-safe profile validation</strong>
+                    </span>
+                    <span class="oauth-validation-status" id="profile-validation-status">
+                      local only
+                    </span>
+                  </summary>
+                  <p id="profile-validation-message">
+                    Guest mode and Local data remain available while cloud validation is disabled.
+                  </p>
+                  <dl
+                    class="oauth-validation-stats profile-validation-stats"
+                    id="profile-validation-stats"
+                  ></dl>
+                  <ol
+                    class="oauth-validation-stages profile-validation-stages"
+                    id="profile-validation-stages"
+                  ></ol>
+                  <small class="oauth-validation-safety" id="profile-validation-safety">
+                    Profile-scoped read · Local data unchanged · Sync status unchanged · Tokens omitted · All writes disabled
+                  </small>
+                </details>
                 <small class="profile-provisioning-safety" id="profile-provisioning-safety">
                   Read only · Local data unchanged · Sync status unchanged · Writes disabled
                 </small>

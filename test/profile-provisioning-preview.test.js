@@ -1,6 +1,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { createProfileProvisioningPreviewModel } from "../src/profileProvisioningPreview.js";
+import {
+  createProfileProvisioningPreviewModel,
+  createProfileProvisioningRefreshControlModel,
+} from "../src/profileProvisioningPreview.js";
 
 const stages = {
   auth: { label: "Signed in", message: "Auth ready.", status: "ready" },
@@ -126,4 +129,34 @@ test("preview model omits provider tokens", () => {
     /must-not-escape|access_token|provider_token/,
   );
   assert.equal(model.providerTokensStored, false);
+});
+
+test("refresh control maps disabled loading ready and retry states", () => {
+  const disabled = createProfileProvisioningRefreshControlModel({
+    readiness: { canRead: false, message: "Profile reads disabled." },
+  });
+  const loading = createProfileProvisioningRefreshControlModel({
+    readiness: ready,
+    requestState: state("loading"),
+  });
+  const initial = createProfileProvisioningRefreshControlModel({ readiness: ready });
+  const completed = createProfileProvisioningRefreshControlModel({
+    readiness: ready,
+    requestState: state("current"),
+  });
+  const retry = createProfileProvisioningRefreshControlModel({
+    readiness: ready,
+    requestState: state("blocked"),
+  });
+
+  assert.deepEqual(
+    [disabled.status, loading.status, initial.status, completed.status, retry.status],
+    ["disabled", "loading", "ready", "ready", "blocked"],
+  );
+  assert.equal(disabled.disabled, true);
+  assert.equal(loading.disabled, true);
+  assert.equal(initial.label, "Check cloud profile");
+  assert.equal(completed.label, "Refresh profile preview");
+  assert.equal(retry.disabled, false);
+  assert.equal(retry.label, "Retry profile read");
 });

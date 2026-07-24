@@ -32,7 +32,11 @@ import { createAuthProfileCoordinator } from "./authProfileCoordinator.js";
 import { createAuthLifecycleCoordinator } from "./authLifecycleCoordinator.js";
 import { createAuthSubscriptionCoordinator } from "./authSubscriptionCoordinator.js";
 import { createProfileProvisioningPreviewController } from "./profileProvisioning.js";
-import { createProfileProvisioningPreviewModel } from "./profileProvisioningPreview.js";
+import {
+  createProfileProvisioningPreviewModel,
+  createProfileProvisioningRefreshControlModel,
+} from "./profileProvisioningPreview.js";
+import { createProfileValidationReport } from "./profileValidationReport.js";
 import {
   AUTH_SESSION_CHECK_SOURCE,
   createAuthSessionHealthController,
@@ -133,10 +137,19 @@ const elements = {
   profileMode: document.querySelector("#profile-mode"),
   profileProvisioning: document.querySelector("#profile-provisioning"),
   profileProvisioningMessage: document.querySelector("#profile-provisioning-message"),
+  profileProvisioningRefresh: document.querySelector("#profile-provisioning-refresh"),
+  profileProvisioningRefreshDetail: document.querySelector("#profile-provisioning-refresh-detail"),
   profileProvisioningSafety: document.querySelector("#profile-provisioning-safety"),
   profileProvisioningStages: document.querySelector("#profile-provisioning-stages"),
   profileProvisioningStatus: document.querySelector("#profile-provisioning-status"),
   profileProvisioningTitle: document.querySelector("#profile-provisioning-title"),
+  profileValidation: document.querySelector("#profile-validation"),
+  profileValidationMessage: document.querySelector("#profile-validation-message"),
+  profileValidationSafety: document.querySelector("#profile-validation-safety"),
+  profileValidationStages: document.querySelector("#profile-validation-stages"),
+  profileValidationStats: document.querySelector("#profile-validation-stats"),
+  profileValidationStatus: document.querySelector("#profile-validation-status"),
+  profileValidationTitle: document.querySelector("#profile-validation-title"),
   progressRing: document.querySelector("#progress-ring"),
   orchestrationPreview: document.querySelector("#orchestration-preview"),
   orchestrationPreviewAction: document.querySelector("#orchestration-preview-action"),
@@ -978,10 +991,69 @@ function renderProfileProvisioning(model) {
   elements.profileProvisioningSafety.textContent = model.safety;
 }
 
-function refreshProfileProvisioning(readiness) {
+function renderProfileProvisioningRefresh(model) {
+  elements.profileProvisioningRefresh.dataset.refreshStatus = model.status;
+  elements.profileProvisioningRefresh.disabled = model.disabled;
+  elements.profileProvisioningRefresh.textContent = model.label;
+  elements.profileProvisioningRefreshDetail.textContent = model.message;
+}
+
+function renderProfileValidationReport(model) {
+  elements.profileValidation.dataset.validationStatus = model.status;
+  elements.profileValidationTitle.textContent = model.title;
+  elements.profileValidationStatus.textContent = model.status.replaceAll("-", " ");
+  elements.profileValidationStatus.dataset.tone = model.status === "validated"
+    ? "good"
+    : model.status === "blocked"
+      ? "warn"
+      : "muted";
+  elements.profileValidationMessage.textContent = model.message;
+  elements.profileValidationStats.replaceChildren(
+    ...[
+      ["Decision", model.action, model.action === "Not run" ? "muted" : "good"],
+      ["Create", model.counts.create, "good"],
+      ["Update", model.counts.update, "good"],
+      ["No-op", model.counts.noop, "good"],
+      ["Invalid", model.counts.invalid, model.counts.invalid > 0 ? "warn" : "good"],
+    ].map(([label, value, tone]) => {
+      const card = document.createElement("div");
+      const term = document.createElement("dt");
+      const description = document.createElement("dd");
+      term.textContent = label;
+      description.textContent = value;
+      description.dataset.tone = tone;
+      card.append(term, description);
+      return card;
+    }),
+  );
+  elements.profileValidationStages.replaceChildren(
+    ...model.stages.map((stage, index) => {
+      const item = document.createElement("li");
+      const heading = document.createElement("div");
+      const number = document.createElement("span");
+      const label = document.createElement("strong");
+      const status = document.createElement("span");
+      const message = document.createElement("small");
+      item.dataset.stage = stage.key;
+      item.dataset.stageStatus = stage.status;
+      number.textContent = String(index + 1).padStart(2, "0");
+      label.textContent = stage.label;
+      status.textContent = stage.status.replaceAll("-", " ");
+      status.dataset.tone = validationTone(stage.status);
+      message.textContent = stage.message;
+      heading.append(number, label, status);
+      item.append(heading, message);
+      return item;
+    }),
+  );
+  elements.profileValidationSafety.textContent = model.safety;
+}
+
+function refreshProfileProvisioning(readiness, { force = false } = {}) {
   if (!readiness.canRead) return;
   void profileProvisioningController.refresh({
     authState,
+    force,
     profileScope: authProfileCoordinator.current(),
     readiness,
   });
@@ -1150,6 +1222,18 @@ function renderProfileSync() {
     readiness: profileProvisioningReadiness,
     requestState: scopedProfileProvisioningState,
   }));
+  renderProfileProvisioningRefresh(createProfileProvisioningRefreshControlModel({
+    readiness: profileProvisioningReadiness,
+    requestState: scopedProfileProvisioningState,
+  }));
+  renderProfileValidationReport(createProfileValidationReport({
+    authState,
+    localData: appData,
+    profileScope,
+    readiness: profileProvisioningReadiness,
+    requestState: scopedProfileProvisioningState,
+    sessionHealth: authSessionHealthController.current(),
+  }));
   renderMigrationPreview(createMigrationPreviewModel(migrationPlan, { migrationReadiness }));
   const displayResult = pullResult
     ?? (scopedPullState.status === "blocked"
@@ -1306,6 +1390,10 @@ elements.syncPreviewRefresh.addEventListener("click", () => {
     config: supabaseConfig,
   });
   refreshCloudPullPreview(readiness, syncPullKey(readiness), { force: true });
+});
+
+elements.profileProvisioningRefresh.addEventListener("click", () => {
+  refreshProfileProvisioning(currentProfileReadiness(), { force: true });
 });
 
 async function runLocalSessionCheck({

@@ -407,10 +407,12 @@ row, the planner makes one deterministic decision:
 
 Every plan has `canExecute`, `writesEnabled`, and `profileRowWritten` set to
 false. The preview controller can call only its injected `readProfile` method.
-It deduplicates repeated reads for the same profile revision and invalidates an
-in-flight result on sign-out, expiry, refresh failure, browser-client
-replacement, or user change. A late profile A response cannot become profile
-B's preview.
+It deduplicates repeated reads for the same profile revision, including rapid
+manual refresh clicks while a request is in flight. An explicit retry can
+re-read a completed or blocked revision, but it cannot start a second
+concurrent read. The controller invalidates an in-flight result on sign-out,
+expiry, refresh failure, browser-client replacement, or user change. A late
+profile A response cannot become profile B's preview.
 
 `src/supabaseProfileRepository.js` now supplies the dedicated browser adapter.
 It exposes only `readProfile`, selects
@@ -421,7 +423,17 @@ adapter has no insert, update, upsert, or delete method.
 
 The settings card displays config, client, auth, lifecycle scope, and read
 support separately. It shows loading, create, update, current, disabled, and
-blocked states without rendering a user id or token. Use this validation flow:
+blocked states without rendering a user id or token. Its manual control is
+disabled until `profileReadReadiness.canRead`, changes to a retry after an RLS
+or network blocker, and always uses the same profile-scoped controller.
+
+`src/profileValidationReport.js` combines token-free authentication and session
+health, profile read readiness, RLS/read outcome, provisioning decision, Local
+data safety, and disabled profile/session write gates into one deterministic
+report. It accepts only the current lifecycle's request state; stale rows,
+counts, and decisions are reset rather than shown for another lifecycle.
+
+Use this validation flow:
 
 1. Map a token-free authenticated test state and confirm the candidate contains
    only the five allowed profile fields.
@@ -429,17 +441,21 @@ blocked states without rendering a user id or token. Use this validation flow:
    before the repository query runs.
 3. Sign in with a throwaway account that has no `profiles` row. Confirm the card
    shows one create preview and no write occurs.
-4. Add a matching throwaway row through the Supabase dashboard. Refresh auth
-   state and confirm the card reports no write needed.
+4. Add a matching throwaway row through the Supabase dashboard. Click Refresh
+   profile preview and confirm the card reports no write needed.
 5. Supply older changed remote metadata and confirm one update preview.
 6. Supply equal/newer changed remote metadata and confirm the remote row wins.
 7. Deny the profile select through a throwaway RLS test and confirm the card is
-   blocked while Local data remains usable.
-8. Start a profile A read, invalidate the lifecycle, and start profile B.
+   blocked, the report names the RLS/read stage, and Local data remains usable.
+8. Restore the policy and click Retry profile read. Confirm the report passes
+   without any profile or fasting-session write.
+9. Rapidly click or programmatically request refresh twice while one read is in
+   flight. Confirm only one repository read runs.
+10. Start a profile A read, invalidate the lifecycle, and start profile B.
    Confirm A's late result is ignored and no A row or count remains.
-9. Repeat invalidation for sign-out, expiry, refresh failure, and client
+11. Repeat invalidation for sign-out, expiry, refresh failure, and client
    replacement.
-10. Compare Local fasting history and sync metadata before and after each case.
+12. Compare Local fasting history and sync metadata before and after each case.
    They must remain unchanged, and all profile/session write gates stay off.
 
 ### Two-Profile RLS Verification

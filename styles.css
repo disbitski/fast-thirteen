@@ -975,6 +975,48 @@ h3 {
   line-height: 1.45;
 }
 
+.profile-provisioning-refresh-control {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.profile-provisioning-refresh-control small {
+  color: var(--muted);
+  font-size: 0.66rem;
+  line-height: 1.4;
+}
+
+.profile-provisioning-refresh {
+  flex: 0 0 auto;
+  padding: 7px 10px;
+  font-size: 0.68rem;
+}
+
+.profile-provisioning-refresh[data-refresh-status="loading"] {
+  color: var(--green);
+  border-color: var(--green);
+}
+
+.profile-provisioning-refresh[data-refresh-status="blocked"] {
+  color: var(--active);
+  border-color: var(--active);
+}
+
+.profile-validation {
+  padding: 12px;
+  border-radius: 14px;
+  background: var(--card);
+}
+
+.profile-validation[data-validation-status="validated"] {
+  border-color: var(--green);
+}
+
+.profile-validation-stats dd[data-tone="muted"] {
+  color: var(--muted);
+}
+
 .session-health[data-session-health="healthy"] {
   border-color: var(--green);
 }
@@ -2091,6 +2133,11 @@ h3 {
     grid-column: 1 / -1;
   }
 
+  .profile-provisioning-refresh-control {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
   .oauth-readiness-step:last-child {
     grid-column: 1 / -1;
   }
@@ -2179,4 +2226,21 @@ h3 {
     grid-template-columns: 1fr;
   }
 
+}
+
+.oauth-validation.profile-validation .profile-validation-stats,
+.oauth-validation.profile-validation .profile-validation-stages {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.oauth-validation.profile-validation .profile-validation-stages li > div {
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 480px) {
+  .oauth-validation.profile-validation .profile-validation-stats,
+  .oauth-validation.profile-validation .profile-validation-stages {
+    grid-template-columns: 1fr;
+  }
 }

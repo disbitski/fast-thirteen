@@ -69,3 +69,45 @@ export function createProfileProvisioningPreviewModel({
     writesEnabled: false,
   });
 }
+
+export function createProfileProvisioningRefreshControlModel({
+  readiness = {},
+  requestState = null,
+} = {}) {
+  if (!readiness.canRead) {
+    return Object.freeze({
+      disabled: true,
+      label: "Refresh unavailable",
+      message: readiness.message ?? "Cloud profile reads are disabled.",
+      status: "disabled",
+    });
+  }
+
+  if (requestState?.status === "loading") {
+    return Object.freeze({
+      disabled: true,
+      label: "Checking profile",
+      message: "One read-only profile request is in progress. Duplicate requests are ignored.",
+      status: "loading",
+    });
+  }
+
+  if (requestState?.status === "blocked") {
+    return Object.freeze({
+      disabled: false,
+      label: "Retry profile read",
+      message: "Retry re-reads only the current RLS-owned profile row; Local data stays unchanged.",
+      status: "blocked",
+    });
+  }
+
+  const hasResult = ["current", "preview"].includes(requestState?.status);
+  return Object.freeze({
+    disabled: false,
+    label: hasResult ? "Refresh profile preview" : "Check cloud profile",
+    message: hasResult
+      ? "Refresh the token-free create, update, or no-op decision without writing it."
+      : "Read the current RLS-owned profile row without changing Local data.",
+    status: "ready",
+  });
+}

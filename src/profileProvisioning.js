@@ -402,12 +402,14 @@ export function createProfileProvisioningPreviewController({
     }
 
     const key = previewKey(profileScope, candidate.row);
-    if (!force && activeKey === key && [
-      PROFILE_PROVISIONING_STATUS.LOADING,
+    const requestInFlight = activeKey === key
+      && state.status === PROFILE_PROVISIONING_STATUS.LOADING;
+    const completedRevision = activeKey === key && [
       PROFILE_PROVISIONING_STATUS.PREVIEW,
       PROFILE_PROVISIONING_STATUS.CURRENT,
       PROFILE_PROVISIONING_STATUS.BLOCKED,
-    ].includes(state.status)) {
+    ].includes(state.status);
+    if (requestInFlight || (!force && completedRevision)) {
       return { accepted: false, deduplicated: true, ignored: false, state };
     }
 

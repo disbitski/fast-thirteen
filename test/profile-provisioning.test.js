@@ -333,3 +333,56 @@ test("disabled and failed profile reads remain local-safe", async () => {
   assert.equal(failed.state.localSyncStatusChanged, false);
   assert.equal(failed.state.writesEnabled, false);
 });
+
+test("forced retry re-reads after an RLS blocker and can recover safely", async () => {
+  let reads = 0;
+  const controller = createProfileProvisioningPreviewController({
+    async readProfile() {
+      reads += 1;
+      if (reads === 1) throw new Error("RLS denied profile read");
+      return null;
+    },
+  });
+  const input = {
+    authState: authenticated(),
+    profileScope: scope(),
+    readiness: { canRead: true },
+  };
+
+  const blocked = await controller.refresh(input);
+  const recovered = await controller.refresh({ ...input, force: true });
+
+  assert.equal(blocked.state.status, PROFILE_PROVISIONING_STATUS.BLOCKED);
+  assert.equal(recovered.accepted, true);
+  assert.equal(recovered.state.status, PROFILE_PROVISIONING_STATUS.PREVIEW);
+  assert.equal(recovered.state.plan.action, PROFILE_PROVISIONING_ACTION.CREATE);
+  assert.equal(reads, 2);
+  assert.equal(recovered.state.localDataUnchanged, true);
+});
+
+test("forced refresh still deduplicates an in-flight profile read", async () => {
+  const pending = deferred();
+  let reads = 0;
+  const controller = createProfileProvisioningPreviewController({
+    async readProfile() {
+      reads += 1;
+      return pending.promise;
+    },
+  });
+  const input = {
+    authState: authenticated(),
+    force: true,
+    profileScope: scope(),
+    readiness: { canRead: true },
+  };
+
+  const first = controller.refresh(input);
+  const duplicate = await controller.refresh(input);
+  pending.resolve(null);
+  const completed = await first;
+
+  assert.equal(duplicate.deduplicated, true);
+  assert.equal(duplicate.accepted, false);
+  assert.equal(reads, 1);
+  assert.equal(completed.state.plan.action, PROFILE_PROVISIONING_ACTION.CREATE);
+});
