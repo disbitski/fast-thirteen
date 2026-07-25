@@ -981,6 +981,38 @@ h3 {
   gap: 10px;
 }
 
+.profile-execution-control {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+
+.profile-execution-control small {
+  color: var(--muted);
+  font-size: 0.66rem;
+  line-height: 1.4;
+}
+
+.profile-execution-confirm {
+  flex: 0 0 auto;
+  padding: 7px 10px;
+  font-size: 0.68rem;
+}
+
+.profile-execution-confirm[data-execution-status="ready"] {
+  color: var(--green);
+  border-color: var(--green);
+}
+
+.profile-execution-confirm[data-execution-status="blocked"],
+.profile-execution-confirm[data-execution-status="confirmation-blocked"] {
+  color: var(--active);
+  border-color: var(--active);
+}
+
 .profile-provisioning-refresh-control small {
   color: var(--muted);
   font-size: 0.66rem;
@@ -2134,6 +2166,11 @@ h3 {
   }
 
   .profile-provisioning-refresh-control {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .profile-execution-control {
     align-items: flex-start;
     flex-direction: column;
   }

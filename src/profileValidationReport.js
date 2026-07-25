@@ -157,6 +157,48 @@ function decisionStage(requestState) {
   );
 }
 
+function executionStage(executionReadiness, requestState) {
+  if (!requestState?.plan) {
+    return stage(
+      "profileExecution",
+      "Write / confirm",
+      "Mock execution waits for a successful profile read and provisioning decision.",
+      "not-run",
+    );
+  }
+  if (executionReadiness?.canSkip) {
+    return stage(
+      "profileExecution",
+      "Write / confirm",
+      "No-op plan: no profile write or read-back confirmation is needed.",
+      "passed",
+    );
+  }
+  if (executionReadiness?.canExecute) {
+    return stage(
+      "profileExecution",
+      "Write / confirm",
+      "Explicit mocked write and read-back confirmation support is ready.",
+      "passed",
+    );
+  }
+  if (executionReadiness?.status === "blocked") {
+    return stage(
+      "profileExecution",
+      "Write / confirm",
+      executionReadiness.message,
+      "blocked",
+    );
+  }
+  return stage(
+    "profileExecution",
+    "Write / confirm",
+    executionReadiness?.message
+      ?? "Profile write and read-back confirmation support remain disabled.",
+    "disabled",
+  );
+}
+
 function actionLabel(plan) {
   if (plan?.action === "create") return "Create";
   if (plan?.action === "update") return "Update";
@@ -166,6 +208,7 @@ function actionLabel(plan) {
 
 export function createProfileValidationReport({
   authState = null,
+  executionReadiness = null,
   localData = null,
   profileScope = null,
   readiness = null,
@@ -186,6 +229,7 @@ export function createProfileValidationReport({
     readinessStage(readiness),
     repositoryStage({ authenticated, readiness, requestState: scopedRequest }),
     decisionStage(scopedRequest),
+    executionStage(executionReadiness, scopedRequest),
     stage(
       "localSafety",
       "Local safety",
@@ -241,6 +285,7 @@ export function createProfileValidationReport({
     dataMutated: false,
     gates: Object.freeze({
       localApplyEnabled: false,
+      mockProfileExecutionReady: executionReadiness?.canExecute === true,
       profileWritesEnabled: false,
       sessionWritesEnabled: false,
     }),
@@ -253,7 +298,7 @@ export function createProfileValidationReport({
     profileRowWritten: false,
     providerTokensExposed: false,
     providerTokensStored: false,
-    safety: "Profile-scoped read · Local data unchanged · Sync status unchanged · Tokens omitted · All writes disabled",
+    safety: "Profile-scoped read · Mock execution gated · Local data unchanged · Tokens omitted · Live writes disabled",
     stages,
     status,
     title,

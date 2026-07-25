@@ -273,8 +273,22 @@
                     class="oauth-validation-stages profile-validation-stages"
                     id="profile-validation-stages"
                   ></ol>
+                  <div class="profile-execution-control">
+                    <button
+                      class="secondary-button profile-execution-confirm"
+                      id="profile-execution-confirm"
+                      type="button"
+                      aria-describedby="profile-execution-confirm-detail"
+                      disabled
+                    >
+                      Profile writes disabled
+                    </button>
+                    <small id="profile-execution-confirm-detail">
+                      Explicit mocked write and read-back confirmation support is required.
+                    </small>
+                  </div>
                   <small class="oauth-validation-safety" id="profile-validation-safety">
-                    Profile-scoped read · Local data unchanged · Sync status unchanged · Tokens omitted · All writes disabled
+                    Profile-scoped read · Mock execution gated · Local data unchanged · Tokens omitted · Live writes disabled
                   </small>
                 </details>
                 <small class="profile-provisioning-safety" id="profile-provisioning-safety">

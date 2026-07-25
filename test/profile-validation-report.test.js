@@ -175,3 +175,42 @@ test("refresh failure blocks profile validation and omits all token fields", () 
     /must-not-escape|access_token|provider_token/,
   );
 });
+
+test("validation report separates mock execution readiness from live write gates", () => {
+  const request = requestState("create");
+  const disabled = createProfileValidationReport({
+    authState,
+    executionReadiness: {
+      canExecute: false,
+      message: "Profile write execution is disabled.",
+      status: "disabled",
+    },
+    profileScope,
+    readiness,
+    requestState: request,
+  });
+  const mockReady = createProfileValidationReport({
+    authState,
+    executionReadiness: {
+      canExecute: true,
+      message: "Mock execution ready.",
+      status: "ready",
+    },
+    profileScope,
+    readiness,
+    requestState: request,
+  });
+
+  assert.equal(
+    disabled.stages.find((item) => item.key === "profileExecution").status,
+    "disabled",
+  );
+  assert.equal(
+    mockReady.stages.find((item) => item.key === "profileExecution").status,
+    "passed",
+  );
+  assert.equal(disabled.gates.mockProfileExecutionReady, false);
+  assert.equal(mockReady.gates.mockProfileExecutionReady, true);
+  assert.equal(mockReady.gates.profileWritesEnabled, false);
+  assert.equal(mockReady.gates.sessionWritesEnabled, false);
+});

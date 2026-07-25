@@ -433,6 +433,29 @@ data safety, and disabled profile/session write gates into one deterministic
 report. It accepts only the current lifecycle's request state; stale rows,
 counts, and decisions are reset rather than shown for another lifecycle.
 
+`src/profileExecutor.js` adds the next mock-only boundary. Its readiness model
+requires the current authenticated lifecycle, the matching precomputed plan,
+explicit mocked profile-write support, and separate read-back confirmation
+support. The browser Supabase profile repository is not passed to this executor
+and remains read-only.
+
+For create and update plans, the executor contract is strictly:
+
+1. Call the injected mock `createProfile` or `updateProfile` method once.
+2. Read the row back through the injected mock `readProfile` method.
+3. Compare all five allowed profile fields with the precomputed candidate.
+4. Require the injected mock `confirmProfile` result to agree with the
+   deterministic comparison.
+5. Report success without changing Local fasting history or sync metadata.
+
+A deterministic no-op skips every repository method. Missing gates, invalid or
+stale plans, lifecycle mismatch, repository failures, read-back differences,
+and failed confirmation all block success. Concurrent execution of the same
+plan is deduplicated, and lifecycle invalidation makes late completions stale.
+Execution status contains no user id, profile row, or provider token. The
+settings action remains disabled because production write and confirmation
+support are both false.
+
 Use this validation flow:
 
 1. Map a token-free authenticated test state and confirm the candidate contains
@@ -457,6 +480,17 @@ Use this validation flow:
    replacement.
 12. Compare Local fasting history and sync metadata before and after each case.
    They must remain unchanged, and all profile/session write gates stay off.
+13. Run create and update plans against an injected mock repository. Confirm
+    calls occur in write, read, confirm order and exactly once.
+14. Run a no-op plan and confirm no repository method is inspected or called.
+15. Return a changed read-back row or a failed mock confirmation. Confirm the
+    execution is confirmation-blocked and Local data remains unchanged.
+16. Start the same mock execution twice concurrently. Confirm one execution is
+    accepted and the duplicate is ignored.
+17. Invalidate profile A while its mock execution is pending, then begin profile
+    B. Confirm A's late completion cannot appear in B's execution state.
+18. Inspect the in-app Write / confirm stage and disabled action. No browser
+    configuration may enable them in this milestone.
 
 ### Two-Profile RLS Verification
 

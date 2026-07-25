@@ -207,6 +207,8 @@ test("tracker renders the read-only authenticated profile provisioning preview",
     "profile-validation-stats",
     "profile-validation-stages",
     "profile-validation-safety",
+    "profile-execution-confirm",
+    "profile-execution-confirm-detail",
   ]) {
     assert.match(index, new RegExp(`id="${id}"`));
   }
@@ -217,10 +219,13 @@ test("tracker renders the read-only authenticated profile provisioning preview",
   assert.match(app, /createProfileProvisioningPreviewModel/);
   assert.match(app, /createProfileProvisioningRefreshControlModel/);
   assert.match(app, /createProfileValidationReport/);
+  assert.match(app, /createProfileExecutionReadiness/);
+  assert.match(app, /createProfileExecutionControlModel/);
   assert.match(app, /profileProvisioningController\.invalidate/);
   assert.match(app, /renderProfileProvisioning/);
   assert.match(app, /renderProfileProvisioningRefresh/);
   assert.match(app, /renderProfileValidationReport/);
+  assert.match(app, /renderProfileExecutionControl/);
   assert.match(app, /refreshProfileProvisioning/);
   assert.match(app, /profileProvisioningRefresh\.addEventListener/);
 });

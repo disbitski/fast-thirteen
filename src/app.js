@@ -38,6 +38,10 @@ import {
 } from "./profileProvisioningPreview.js";
 import { createProfileValidationReport } from "./profileValidationReport.js";
 import {
+  createProfileExecutionControlModel,
+  createProfileExecutionReadiness,
+} from "./profileExecutor.js";
+import {
   AUTH_SESSION_CHECK_SOURCE,
   createAuthSessionHealthController,
 } from "./authSessionHealth.js";
@@ -150,6 +154,8 @@ const elements = {
   profileValidationStats: document.querySelector("#profile-validation-stats"),
   profileValidationStatus: document.querySelector("#profile-validation-status"),
   profileValidationTitle: document.querySelector("#profile-validation-title"),
+  profileExecutionConfirm: document.querySelector("#profile-execution-confirm"),
+  profileExecutionConfirmDetail: document.querySelector("#profile-execution-confirm-detail"),
   progressRing: document.querySelector("#progress-ring"),
   orchestrationPreview: document.querySelector("#orchestration-preview"),
   orchestrationPreviewAction: document.querySelector("#orchestration-preview-action"),
@@ -1049,6 +1055,13 @@ function renderProfileValidationReport(model) {
   elements.profileValidationSafety.textContent = model.safety;
 }
 
+function renderProfileExecutionControl(model) {
+  elements.profileExecutionConfirm.dataset.executionStatus = model.status;
+  elements.profileExecutionConfirm.disabled = model.disabled;
+  elements.profileExecutionConfirm.textContent = model.label;
+  elements.profileExecutionConfirmDetail.textContent = model.message;
+}
+
 function refreshProfileProvisioning(readiness, { force = false } = {}) {
   if (!readiness.canRead) return;
   void profileProvisioningController.refresh({
@@ -1149,6 +1162,13 @@ function renderProfileSync() {
   const scopedProfileProvisioningState = profileProvisioningState.identityKey === profileScope.identityKey
     ? profileProvisioningState
     : null;
+  const profileExecutionReadiness = createProfileExecutionReadiness({
+    authState,
+    confirmationSupport: false,
+    plan: scopedProfileProvisioningState?.plan,
+    profileScope,
+    writeSupport: false,
+  });
   const cloudReadKey = syncPullKey(cloudReadReadiness);
   const pushReadiness = syncPushReadiness({
     authState,
@@ -1228,11 +1248,15 @@ function renderProfileSync() {
   }));
   renderProfileValidationReport(createProfileValidationReport({
     authState,
+    executionReadiness: profileExecutionReadiness,
     localData: appData,
     profileScope,
     readiness: profileProvisioningReadiness,
     requestState: scopedProfileProvisioningState,
     sessionHealth: authSessionHealthController.current(),
+  }));
+  renderProfileExecutionControl(createProfileExecutionControlModel({
+    readiness: profileExecutionReadiness,
   }));
   renderMigrationPreview(createMigrationPreviewModel(migrationPlan, { migrationReadiness }));
   const displayResult = pullResult
