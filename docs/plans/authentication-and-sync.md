@@ -61,8 +61,11 @@ validation report cover auth/session readiness, RLS reads, create/update/no-op
 planning, and unchanged Local data. A mock-only execution scaffold now models
 create/update, deterministic no-op avoidance, read-back comparison, and explicit
 confirmation without wiring the browser Supabase client to write methods. The
-production profile action, profile writes, and fasting-session writes remain
-disabled.
+separate Supabase profile write adapter shape now maps validated profile rows,
+models owner-scoped create/update/read-back operations, and remains default-off
+behind public config plus code-level execution and confirmation gates. It is
+used only with fake clients in tests; the production profile action, profile
+writes, and fasting-session writes remain disabled.
 
 ## Phase 4: Guest Data Migration
 

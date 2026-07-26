@@ -68,6 +68,12 @@ export function normalizeSupabaseConfig(value = {}) {
   const migrationFinalizationEnabled = cleanBoolean(
     value.migrationFinalizationEnabled ?? value.SUPABASE_MIGRATION_FINALIZATION_ENABLED,
   );
+  const profileWritesEnabled = cleanBoolean(
+    value.profileWritesEnabled ?? value.SUPABASE_PROFILE_WRITES_ENABLED,
+  );
+  const profileConfirmationsEnabled = cleanBoolean(
+    value.profileConfirmationsEnabled ?? value.SUPABASE_PROFILE_CONFIRMATIONS_ENABLED,
+  );
   const googleProviderEnabled = cleanBoolean(
     value.googleProviderEnabled ?? value.SUPABASE_GOOGLE_PROVIDER_ENABLED,
   );
@@ -83,6 +89,8 @@ export function normalizeSupabaseConfig(value = {}) {
     migrationConfirmationsEnabled,
     migrationFinalizationEnabled,
     migrationWritesEnabled,
+    profileConfirmationsEnabled,
+    profileWritesEnabled,
     isConfigured: Boolean(supabaseUrl && supabaseAnonKey),
   };
 }

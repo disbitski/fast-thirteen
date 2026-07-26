@@ -6,4 +6,6 @@ window.__FAST_THIRTEEN_CONFIG__ = Object.freeze({
   migrationWritesEnabled: false,
   migrationConfirmationsEnabled: false,
   migrationFinalizationEnabled: false,
+  profileWritesEnabled: false,
+  profileConfirmationsEnabled: false,
 });

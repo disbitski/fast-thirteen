@@ -15,6 +15,8 @@ test("missing Supabase browser config disables auth", () => {
     migrationConfirmationsEnabled: false,
     migrationFinalizationEnabled: false,
     migrationWritesEnabled: false,
+    profileConfirmationsEnabled: false,
+    profileWritesEnabled: false,
     isConfigured: false,
   });
 });
@@ -34,6 +36,8 @@ test("loads only browser-publishable Supabase config values", () => {
       migrationConfirmationsEnabled: "true",
       migrationFinalizationEnabled: "true",
       migrationWritesEnabled: "true",
+      profileConfirmationsEnabled: "true",
+      profileWritesEnabled: "true",
       serviceRoleKey: "must-not-leak",
       appleClientSecret: "must-not-leak",
     },
@@ -50,6 +54,8 @@ test("loads only browser-publishable Supabase config values", () => {
     migrationConfirmationsEnabled: true,
     migrationFinalizationEnabled: true,
     migrationWritesEnabled: true,
+    profileConfirmationsEnabled: true,
+    profileWritesEnabled: true,
     isConfigured: true,
   });
   assert.equal("serviceRoleKey" in config, false);
@@ -70,6 +76,8 @@ test("rejects secret-looking Supabase keys in browser config", () => {
       migrationConfirmationsEnabled: false,
       migrationFinalizationEnabled: false,
       migrationWritesEnabled: false,
+      profileConfirmationsEnabled: false,
+      profileWritesEnabled: false,
       isConfigured: false,
     },
   );

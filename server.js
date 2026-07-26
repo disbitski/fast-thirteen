@@ -36,6 +36,8 @@ function browserConfig() {
     migrationWritesEnabled: process.env.SUPABASE_MIGRATION_WRITES_ENABLED === "true",
     migrationConfirmationsEnabled: process.env.SUPABASE_MIGRATION_CONFIRMATIONS_ENABLED === "true",
     migrationFinalizationEnabled: process.env.SUPABASE_MIGRATION_FINALIZATION_ENABLED === "true",
+    profileWritesEnabled: process.env.SUPABASE_PROFILE_WRITES_ENABLED === "true",
+    profileConfirmationsEnabled: process.env.SUPABASE_PROFILE_CONFIRMATIONS_ENABLED === "true",
   };
 }
 

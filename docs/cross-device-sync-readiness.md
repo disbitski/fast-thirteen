@@ -456,6 +456,25 @@ Execution status contains no user id, profile row, or provider token. The
 settings action remains disabled because production write and confirmation
 support are both false.
 
+`src/supabaseProfileWriteRepository.js` now defines the separate, default-off
+Supabase adapter shape that can satisfy that executor contract in tests. It
+maps only the five validated profile fields to a `profiles` insert or an
+owner-scoped update, then exposes `createProfile`, `updateProfile`,
+`readProfile`, and `confirmProfile`. The original
+`createSupabaseProfileReadRepository` remains read-only and is still the only
+profile repository wired into the browser app.
+
+The write adapter requires all of these gates before touching its injected
+client: publishable config, a browser client, a valid authenticated profile,
+the matching lifecycle, `SUPABASE_PROFILE_WRITES_ENABLED=true`, a code-level
+write switch, `SUPABASE_PROFILE_CONFIRMATIONS_ENABLED=true`, and a separate
+code-level confirmation switch. Both public flags and both code switches are
+false in the shipped app. Even a fully prepared adapter reports
+`productionWiringEnabled: false`; only tests inject one into the mock executor.
+Create inserts one validated row, update filters by the current owner id, and
+read-back confirmation rejects another owner's row or any mismatch with the
+precomputed plan. No-op plans continue to skip the repository entirely.
+
 Use this validation flow:
 
 1. Map a token-free authenticated test state and confirm the candidate contains
@@ -491,6 +510,14 @@ Use this validation flow:
     B. Confirm A's late completion cannot appear in B's execution state.
 18. Inspect the in-app Write / confirm stage and disabled action. No browser
     configuration may enable them in this milestone.
+19. Construct the Supabase profile write adapter with its default flags and
+    confirm create/update fail before `client.from` is called.
+20. Enable both public flags and both code-level switches only with a fake
+    client. Confirm create/update execute in write, read, confirm order.
+21. Change the fake read-back row or lifecycle owner and confirm execution is
+    blocked without changing Local fasting history or sync metadata.
+22. Confirm the production app imports only the read-only profile repository
+    and the Write / confirm action remains disabled.
 
 ### Two-Profile RLS Verification
 
