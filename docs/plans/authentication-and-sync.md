@@ -65,7 +65,12 @@ separate Supabase profile write adapter shape now maps validated profile rows,
 models owner-scoped create/update/read-back operations, and remains default-off
 behind public config plus code-level execution and confirmation gates. It is
 used only with fake clients in tests; the production profile action, profile
-writes, and fasting-session writes remain disabled.
+writes, and fasting-session writes remain disabled. A token-free profile
+execution orchestration model now renders lifecycle, plan, adapter,
+confirmation, Local data safety, and production-wiring readiness in the
+existing validation area. Public flags alone cannot enable execution: both
+code-level switches remain false and the browser app never constructs the
+write repository.
 
 ## Phase 4: Guest Data Migration
 

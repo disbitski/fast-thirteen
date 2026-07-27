@@ -208,6 +208,7 @@ function actionLabel(plan) {
 
 export function createProfileValidationReport({
   authState = null,
+  executionOrchestration = null,
   executionReadiness = null,
   localData = null,
   profileScope = null,
@@ -223,11 +224,7 @@ export function createProfileValidationReport({
   );
   const scopedRequest = identityMatched ? requestState : null;
   const plan = scopedRequest?.plan ?? null;
-  const stages = Object.freeze([
-    authStage(authState),
-    sessionStage(sessionHealth, authenticated),
-    readinessStage(readiness),
-    repositoryStage({ authenticated, readiness, requestState: scopedRequest }),
+  const executionStages = executionOrchestration?.stages ?? [
     decisionStage(scopedRequest),
     executionStage(executionReadiness, scopedRequest),
     stage(
@@ -242,6 +239,13 @@ export function createProfileValidationReport({
       "Disabled. Neither profiles nor fast_sessions can be inserted, updated, or deleted.",
       "disabled",
     ),
+  ];
+  const stages = Object.freeze([
+    authStage(authState),
+    sessionStage(sessionHealth, authenticated),
+    readinessStage(readiness),
+    repositoryStage({ authenticated, readiness, requestState: scopedRequest }),
+    ...executionStages,
   ]);
   const blockers = Object.freeze(stages
     .filter((item) => item.status === "blocked")
@@ -286,7 +290,11 @@ export function createProfileValidationReport({
     gates: Object.freeze({
       localApplyEnabled: false,
       mockProfileExecutionReady: executionReadiness?.canExecute === true,
+      profileConfirmationReady: executionOrchestration?.gates?.confirmationReady === true,
+      profileExecutionReady: executionOrchestration?.gates?.executionReady === true,
+      profileWriteAdapterReady: executionOrchestration?.gates?.writeAdapterReady === true,
       profileWritesEnabled: false,
+      productionWiringEnabled: false,
       sessionWritesEnabled: false,
     }),
     identityMatched,
@@ -298,7 +306,8 @@ export function createProfileValidationReport({
     profileRowWritten: false,
     providerTokensExposed: false,
     providerTokensStored: false,
-    safety: "Profile-scoped read · Mock execution gated · Local data unchanged · Tokens omitted · Live writes disabled",
+    safety: executionOrchestration?.safety
+      ?? "Profile-scoped read · Mock execution gated · Local data unchanged · Tokens omitted · Live writes disabled",
     stages,
     status,
     title,

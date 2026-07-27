@@ -475,6 +475,25 @@ Create inserts one validated row, update filters by the current owner id, and
 read-back confirmation rejects another owner's row or any mismatch with the
 precomputed plan. No-op plans continue to skip the repository entirely.
 
+`src/profileExecutionOrchestration.js` now combines the current auth lifecycle,
+the scoped read-only provisioning state, the default-off adapter readiness,
+executor readiness, and confirmation requirements into one token-free model.
+The model discards a provisioning state whose `identityKey` does not match the
+current lifecycle before it can expose a plan, action, or count. Sign-out,
+expiry, refresh failure, client replacement, and user change already invalidate
+the source controller; this second scope check keeps late state local-safe at
+render time as well.
+
+The existing profile validation area now shows six execution-readiness stages:
+lifecycle isolation, provisioning plan, write adapter, read-back confirmation,
+Local data safety, and production wiring. The adapter also reports separate
+public-config and code-level gate booleans, so the UI distinguishes a missing
+flag from deliberately hard-off execution. The app passes
+`executeWrites: false` and `executeConfirmations: false`, never calls
+`createSupabaseProfileWriteRepository`, and renders the orchestration action as
+disabled even if both public profile flags are true. A no-op plan reports that
+no repository is needed; it never turns the action into an executable control.
+
 Use this validation flow:
 
 1. Map a token-free authenticated test state and confirm the candidate contains
@@ -518,6 +537,15 @@ Use this validation flow:
     blocked without changing Local fasting history or sync metadata.
 22. Confirm the production app imports only the read-only profile repository
     and the Write / confirm action remains disabled.
+23. Enable both browser-publishable profile flags while leaving the two
+    code-level switches false. Confirm the validation stages name both hard-off
+    execution gates and the action remains disabled.
+24. Feed a previous lifecycle's provisioning state into the orchestration
+    model. Confirm its plan, counts, and action are reset before rendering.
+25. Compare create, update, and no-op status output. Create/update remain
+    preview-only; no-op skips both write and confirmation stages.
+26. Inspect all themes at desktop and mobile widths. Confirm the ten-stage
+    profile validation report wraps without horizontal overflow.
 
 ### Two-Profile RLS Verification
 

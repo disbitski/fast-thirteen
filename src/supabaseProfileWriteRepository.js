@@ -36,6 +36,7 @@ function safetyState() {
 function readinessResult({
   canConfirm = false,
   canWrite = false,
+  gates = {},
   message,
   reason = null,
   status = "disabled",
@@ -43,6 +44,15 @@ function readinessResult({
   return Object.freeze({
     canConfirm,
     canWrite,
+    gates: Object.freeze({
+      clientReady: gates.clientReady === true,
+      confirmationConfigured: gates.confirmationConfigured === true,
+      confirmationExecutionEnabled: gates.confirmationExecutionEnabled === true,
+      lifecycleReady: gates.lifecycleReady === true,
+      publishableConfigReady: gates.publishableConfigReady === true,
+      writeConfigured: gates.writeConfigured === true,
+      writeExecutionEnabled: gates.writeExecutionEnabled === true,
+    }),
     message,
     reason,
     status,
@@ -81,14 +91,25 @@ export function supabaseProfileWriteRepositoryReadiness({
   executeWrites = false,
   profileScope,
 } = {}) {
+  const baseGates = {
+    clientReady: Boolean(client && typeof client.from === "function"),
+    confirmationConfigured: config.profileConfirmationsEnabled === true,
+    confirmationExecutionEnabled: executeConfirmations === true,
+    lifecycleReady: false,
+    publishableConfigReady: config?.isConfigured === true,
+    writeConfigured: config.profileWritesEnabled === true,
+    writeExecutionEnabled: executeWrites === true,
+  };
   if (!config?.isConfigured) {
     return readinessResult({
+      gates: baseGates,
       message: "Supabase publishable config is missing; profile writes are disabled.",
       reason: "publishable-config-missing",
     });
   }
   if (!client || typeof client.from !== "function") {
     return readinessResult({
+      gates: baseGates,
       message: "Supabase browser client is not ready; profile writes are disabled.",
       reason: "client-missing",
     });
@@ -97,31 +118,37 @@ export function supabaseProfileWriteRepositoryReadiness({
   const blocker = lifecycleBlocker(authState, profileScope);
   if (blocker) {
     return readinessResult({
+      gates: baseGates,
       message: blocker.message,
       reason: blocker.reason,
       status: "blocked",
     });
   }
+  const gates = { ...baseGates, lifecycleReady: true };
   if (config.profileWritesEnabled !== true) {
     return readinessResult({
+      gates,
       message: "Publishable Supabase config is present, but profile write support is disabled.",
       reason: "profile-write-support-disabled",
     });
   }
   if (executeWrites !== true) {
     return readinessResult({
+      gates,
       message: "Profile write support is configured, but execution is disabled in this build.",
       reason: "profile-write-executor-disabled",
     });
   }
   if (config.profileConfirmationsEnabled !== true) {
     return readinessResult({
+      gates,
       message: "Profile writes require explicit read-back confirmation support.",
       reason: "profile-confirmation-support-disabled",
     });
   }
   if (executeConfirmations !== true) {
     return readinessResult({
+      gates,
       message: "Profile confirmation support is configured, but confirmation is disabled in this build.",
       reason: "profile-confirmation-executor-disabled",
     });
@@ -130,6 +157,7 @@ export function supabaseProfileWriteRepositoryReadiness({
   return readinessResult({
     canConfirm: true,
     canWrite: true,
+    gates,
     message: "Profile write and read-back confirmation support are explicitly enabled for test injection.",
     status: "ready",
   });

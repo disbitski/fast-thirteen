@@ -37,10 +37,8 @@ import {
   createProfileProvisioningRefreshControlModel,
 } from "./profileProvisioningPreview.js";
 import { createProfileValidationReport } from "./profileValidationReport.js";
-import {
-  createProfileExecutionControlModel,
-  createProfileExecutionReadiness,
-} from "./profileExecutor.js";
+import { createProfileExecutionReadiness } from "./profileExecutor.js";
+import { createProfileExecutionOrchestrationModel } from "./profileExecutionOrchestration.js";
 import {
   AUTH_SESSION_CHECK_SOURCE,
   createAuthSessionHealthController,
@@ -57,6 +55,7 @@ import {
   createSupabaseProfileReadRepository,
   profileReadReadiness,
 } from "./supabaseProfileRepository.js";
+import { supabaseProfileWriteRepositoryReadiness } from "./supabaseProfileWriteRepository.js";
 import {
   supabaseMigrationRepositoryReadiness,
   supabasePushRepositoryReadiness,
@@ -1162,12 +1161,28 @@ function renderProfileSync() {
   const scopedProfileProvisioningState = profileProvisioningState.identityKey === profileScope.identityKey
     ? profileProvisioningState
     : null;
+  const profileWriteRepositoryReadiness = supabaseProfileWriteRepositoryReadiness({
+    authState,
+    client: supabaseClient.client,
+    config: supabaseConfig,
+    executeConfirmations: false,
+    executeWrites: false,
+    profileScope,
+  });
   const profileExecutionReadiness = createProfileExecutionReadiness({
     authState,
-    confirmationSupport: false,
+    confirmationSupport: profileWriteRepositoryReadiness.canConfirm,
     plan: scopedProfileProvisioningState?.plan,
     profileScope,
-    writeSupport: false,
+    writeSupport: profileWriteRepositoryReadiness.canWrite,
+  });
+  const profileExecutionOrchestration = createProfileExecutionOrchestrationModel({
+    authState,
+    executionReadiness: profileExecutionReadiness,
+    localData: appData,
+    profileScope,
+    provisioningState: profileProvisioningState,
+    repositoryReadiness: profileWriteRepositoryReadiness,
   });
   const cloudReadKey = syncPullKey(cloudReadReadiness);
   const pushReadiness = syncPushReadiness({
@@ -1248,6 +1263,7 @@ function renderProfileSync() {
   }));
   renderProfileValidationReport(createProfileValidationReport({
     authState,
+    executionOrchestration: profileExecutionOrchestration,
     executionReadiness: profileExecutionReadiness,
     localData: appData,
     profileScope,
@@ -1255,9 +1271,7 @@ function renderProfileSync() {
     requestState: scopedProfileProvisioningState,
     sessionHealth: authSessionHealthController.current(),
   }));
-  renderProfileExecutionControl(createProfileExecutionControlModel({
-    readiness: profileExecutionReadiness,
-  }));
+  renderProfileExecutionControl(profileExecutionOrchestration.action);
   renderMigrationPreview(createMigrationPreviewModel(migrationPlan, { migrationReadiness }));
   const displayResult = pullResult
     ?? (scopedPullState.status === "blocked"
