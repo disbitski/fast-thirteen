@@ -248,7 +248,7 @@ export function createProfileValidationReport({
     ...executionStages,
   ]);
   const blockers = Object.freeze(stages
-    .filter((item) => item.status === "blocked")
+    .filter((item) => ["blocked", "confirmation-blocked", "failed"].includes(item.status))
     .map((item) => Object.freeze({
       code: `${item.key}-blocked`,
       message: item.message,
@@ -290,6 +290,7 @@ export function createProfileValidationReport({
     gates: Object.freeze({
       localApplyEnabled: false,
       mockProfileExecutionReady: executionReadiness?.canExecute === true,
+      mockProfileResultVisible: executionOrchestration?.gates?.mockResultVisible === true,
       profileConfirmationReady: executionOrchestration?.gates?.confirmationReady === true,
       profileExecutionReady: executionOrchestration?.gates?.executionReady === true,
       profileWriteAdapterReady: executionOrchestration?.gates?.writeAdapterReady === true,

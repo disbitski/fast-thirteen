@@ -4,6 +4,7 @@ import { createProfileExecutionOrchestrationModel } from "../src/profileExecutio
 import {
   createProfileExecutionReadiness,
 } from "../src/profileExecutor.js";
+import { createProfileExecutionResultStatusModel } from "../src/profileExecutionResult.js";
 import { createProfileProvisioningPlan } from "../src/profileProvisioning.js";
 import { supabaseProfileWriteRepositoryReadiness } from "../src/supabaseProfileWriteRepository.js";
 
@@ -77,6 +78,7 @@ function buildModel(action, {
   },
   executeConfirmations = false,
   executeWrites = false,
+  executionState = null,
   localData = { sessions: [{ id: "local-fast" }], sync: { status: "local" } },
   profileScope = scope(),
   stateOverrides = {},
@@ -98,9 +100,15 @@ function buildModel(action, {
     profileScope,
     writeSupport: repositoryReadiness.canWrite,
   });
+  const executionResult = createProfileExecutionResultStatusModel({
+    controllerState: executionState,
+    plan,
+    profileScope,
+  });
   return createProfileExecutionOrchestrationModel({
     authState,
     executionReadiness,
+    executionResult,
     localData,
     profileScope,
     provisioningState: provisioningState(plan, stateOverrides),
@@ -125,6 +133,7 @@ test("missing config stays local-only and leaves Local data unchanged", () => {
   assert.equal(model.localSessionCount, 1);
   assert.equal(model.gates.productionWiringEnabled, false);
   assert.equal(model.stages.find((item) => item.key === "profileWriteAdapter").status, "not-run");
+  assert.equal(model.stages.find((item) => item.key === "profileExecutionResult").status, "disabled");
   assert.deepEqual(localData, snapshot);
 });
 
@@ -196,6 +205,15 @@ test("stale profile state is reset before plans or counts can appear", () => {
 
 test("authenticated lifecycle mismatch blocks readiness without exposing identity", () => {
   const model = buildModel("create", {
+    executionState: {
+      execution: {
+        action: "create",
+        confirmed: true,
+        status: "executed",
+      },
+      scopeGeneration: 5,
+      status: "executed",
+    },
     profileScope: scope({ userId: OTHER_USER_ID }),
   });
 
@@ -203,6 +221,8 @@ test("authenticated lifecycle mismatch blocks readiness without exposing identit
   assert.equal(model.identityMatched, false);
   assert.equal(model.blockers[0].stage, "profileLifecycle");
   assert.equal(model.gates.productionWiringEnabled, false);
+  assert.equal(model.result, null);
+  assert.equal(model.action.label, "Refresh current profile");
   assert.doesNotMatch(JSON.stringify(model), new RegExp(`${USER_ID}|${OTHER_USER_ID}`));
 });
 
@@ -219,4 +239,44 @@ test("orchestration output omits provider tokens and sync mutations", () => {
     JSON.stringify(model),
     /must-not-escape|access_token|provider_token/,
   );
+});
+
+test("sanitized mock results drive status copy while every action stays disabled", () => {
+  const confirmed = buildModel("create", {
+    executionState: {
+      execution: {
+        action: "create",
+        confirmed: true,
+        executed: true,
+        profileRowWritten: true,
+        status: "executed",
+      },
+      scopeGeneration: 5,
+      status: "executed",
+    },
+  });
+  const blocked = buildModel("update", {
+    executionState: {
+      execution: {
+        action: "update",
+        confirmed: false,
+        profileRowWritten: true,
+        status: "confirmation-blocked",
+      },
+      scopeGeneration: 5,
+      status: "confirmation-blocked",
+    },
+  });
+
+  assert.equal(confirmed.status, "confirmed");
+  assert.equal(confirmed.action.disabled, true);
+  assert.equal(confirmed.action.label, "Mock confirmation passed");
+  assert.equal(
+    confirmed.stages.find((item) => item.key === "profileExecutionResult").status,
+    "confirmed",
+  );
+  assert.equal(blocked.status, "blocked");
+  assert.equal(blocked.action.disabled, true);
+  assert.equal(blocked.action.label, "Refresh before retry");
+  assert.equal(blocked.blockers[0].stage, "profileExecutionResult");
 });

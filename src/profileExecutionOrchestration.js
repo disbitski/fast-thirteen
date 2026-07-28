@@ -203,30 +203,85 @@ function confirmationStage(plan, repositoryReadiness, executionReadiness) {
   );
 }
 
-function orchestrationStatus({ blockers, loading, plan, testReady }) {
-  if (loading) return "loading";
+function executionResultStage(result) {
+  return stage(
+    "profileExecutionResult",
+    "Mock execution result",
+    result?.message
+      ?? "No mock execution result is active; production profile writes remain disabled.",
+    result?.status ?? "disabled",
+  );
+}
+
+function orchestrationStatus({ blockers, executionResult, loading, plan, testReady }) {
   if (blockers.length > 0) return "blocked";
+  if (executionResult?.status === "confirmed") return "confirmed";
+  if (executionResult?.status === "no-op") return "no-op";
+  if (["loading", "executed-awaiting-confirmation"].includes(executionResult?.status)) {
+    return "loading";
+  }
+  if (loading) return "loading";
   if (plan?.action === "none") return "no-op";
   if (testReady) return "test-ready";
   if (plan) return "preview";
   return "local-only";
 }
 
-function actionModel(status, plan, lifecycle) {
+function actionModel(status, plan, lifecycle, executionResult) {
+  if (lifecycle.staleStateReset || (lifecycle.authenticated && !lifecycle.scopeMatches)) {
+    return Object.freeze({
+      disabled: true,
+      label: "Refresh current profile",
+      message: "Previous profile-scoped readiness was reset before it could appear here.",
+      status: "disabled",
+    });
+  }
+  if (executionResult?.status === "confirmed") {
+    return Object.freeze({
+      disabled: true,
+      label: "Mock confirmation passed",
+      message: "The sanitized mock result is confirmed; production profile writes remain disabled.",
+      status,
+    });
+  }
+  if (executionResult?.status === "loading") {
+    return Object.freeze({
+      disabled: true,
+      label: "Mock execution in progress",
+      message: executionResult.message,
+      status,
+    });
+  }
+  if (executionResult?.status === "executed-awaiting-confirmation") {
+    return Object.freeze({
+      disabled: true,
+      label: "Awaiting mock confirmation",
+      message: executionResult.message,
+      status,
+    });
+  }
+  if (["confirmation-blocked", "failed"].includes(executionResult?.status)) {
+    return Object.freeze({
+      disabled: true,
+      label: "Refresh before retry",
+      message: executionResult.message,
+      status,
+    });
+  }
+  if (["invalidated", "stale"].includes(executionResult?.status)) {
+    return Object.freeze({
+      disabled: true,
+      label: "Refresh current profile",
+      message: executionResult.message,
+      status: executionResult.status,
+    });
+  }
   if (status === "no-op") {
     return Object.freeze({
       disabled: true,
       label: "No profile write needed",
       message: "The current plan is a deterministic no-op; no repository call will run.",
       status,
-    });
-  }
-  if (lifecycle.staleStateReset) {
-    return Object.freeze({
-      disabled: true,
-      label: "Refresh current profile",
-      message: "Previous profile-scoped readiness was reset before it could appear here.",
-      status: "disabled",
     });
   }
   if (status === "test-ready") {
@@ -250,6 +305,7 @@ function actionModel(status, plan, lifecycle) {
 export function createProfileExecutionOrchestrationModel({
   authState = null,
   executionReadiness = null,
+  executionResult = null,
   localData = null,
   profileScope = null,
   provisioningState = null,
@@ -258,11 +314,15 @@ export function createProfileExecutionOrchestrationModel({
   const lifecycle = lifecycleState(authState, profileScope, provisioningState);
   const scopedState = lifecycle.identityMatched ? provisioningState : null;
   const plan = scopedState?.plan ?? null;
+  const scopedExecutionResult = lifecycle.scopeMatches && !lifecycle.staleStateReset
+    ? executionResult
+    : null;
   const stages = Object.freeze([
     lifecycleStage(lifecycle),
     planStage(plan, scopedState, lifecycle),
     writeAdapterStage(plan, repositoryReadiness),
     confirmationStage(plan, repositoryReadiness, executionReadiness),
+    executionResultStage(scopedExecutionResult),
     stage(
       "localSafety",
       "Local data safety",
@@ -277,13 +337,15 @@ export function createProfileExecutionOrchestrationModel({
     ),
   ]);
   const blockers = Object.freeze(stages
-    .filter((item) => item.status === "blocked")
+    .filter((item) => ["blocked", "confirmation-blocked", "failed"].includes(item.status))
     .map((item) => Object.freeze({
       code: `${item.key}-blocked`,
       message: item.message,
       stage: item.key,
     })));
-  const loading = stages.some((item) => item.status === "loading");
+  const loading = stages.some((item) =>
+    ["loading", "executed-awaiting-confirmation"].includes(item.status),
+  );
   const testReady = Boolean(
     plan
     && plan.action !== "none"
@@ -291,10 +353,16 @@ export function createProfileExecutionOrchestrationModel({
     && repositoryReadiness?.canConfirm
     && executionReadiness?.canExecute,
   );
-  const status = orchestrationStatus({ blockers, loading, plan, testReady });
+  const status = orchestrationStatus({
+    blockers,
+    executionResult: scopedExecutionResult,
+    loading,
+    plan,
+    testReady,
+  });
 
   return Object.freeze({
-    action: actionModel(status, plan, lifecycle),
+    action: actionModel(status, plan, lifecycle, scopedExecutionResult),
     actionLabel: planLabel(plan),
     blockers,
     counts: plan?.counts ?? zeroCounts(),
@@ -302,6 +370,9 @@ export function createProfileExecutionOrchestrationModel({
     gates: Object.freeze({
       confirmationReady: repositoryReadiness?.canConfirm === true,
       executionReady: executionReadiness?.canExecute === true,
+      mockResultVisible: Boolean(
+        scopedExecutionResult && scopedExecutionResult.status !== "disabled",
+      ),
       productionWiringEnabled: false,
       writeAdapterReady: repositoryReadiness?.canWrite === true,
     }),
@@ -313,7 +384,8 @@ export function createProfileExecutionOrchestrationModel({
     profileRowWritten: false,
     providerTokensExposed: false,
     providerTokensStored: false,
-    safety: "Lifecycle isolated · Plan scoped · Local data unchanged · Tokens omitted · Production writes disabled",
+    result: scopedExecutionResult,
+    safety: "Lifecycle isolated · Plan scoped · Mock result sanitized · Local data unchanged · Tokens omitted · Production writes disabled",
     stages,
     staleStateReset: lifecycle.staleStateReset,
     status,

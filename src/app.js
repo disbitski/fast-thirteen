@@ -39,6 +39,7 @@ import {
 import { createProfileValidationReport } from "./profileValidationReport.js";
 import { createProfileExecutionReadiness } from "./profileExecutor.js";
 import { createProfileExecutionOrchestrationModel } from "./profileExecutionOrchestration.js";
+import { createProfileExecutionResultStatusModel } from "./profileExecutionResult.js";
 import {
   AUTH_SESSION_CHECK_SOURCE,
   createAuthSessionHealthController,
@@ -1072,8 +1073,8 @@ function refreshProfileProvisioning(readiness, { force = false } = {}) {
 }
 
 function validationTone(status) {
-  if (status === "passed") return "good";
-  if (status === "blocked") return "warn";
+  if (["confirmed", "no-op", "passed"].includes(status)) return "good";
+  if (["blocked", "confirmation-blocked", "failed"].includes(status)) return "warn";
   return "muted";
 }
 
@@ -1176,9 +1177,14 @@ function renderProfileSync() {
     profileScope,
     writeSupport: profileWriteRepositoryReadiness.canWrite,
   });
+  const profileExecutionResult = createProfileExecutionResultStatusModel({
+    plan: scopedProfileProvisioningState?.plan,
+    profileScope,
+  });
   const profileExecutionOrchestration = createProfileExecutionOrchestrationModel({
     authState,
     executionReadiness: profileExecutionReadiness,
+    executionResult: profileExecutionResult,
     localData: appData,
     profileScope,
     provisioningState: profileProvisioningState,

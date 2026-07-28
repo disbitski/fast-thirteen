@@ -494,6 +494,33 @@ flag from deliberately hard-off execution. The app passes
 disabled even if both public profile flags are true. A no-op plan reports that
 no repository is needed; it never turns the action into an executable control.
 
+`src/profileExecutionResult.js` adds the token-free result boundary between the
+mock controller contract and anything the UI may render. It maps only
+deterministic disabled, loading, executed-awaiting-confirmation, confirmed,
+confirmation-blocked, failed, invalidated, stale, and no-op states. Output is
+limited to a known action, numeric mock-call counts, request deduplication
+flags, static status copy, and local-safety flags. Raw controller messages,
+profile candidates, read-back rows, user ids, provider tokens, and arbitrary
+repository errors are discarded.
+
+`src/profileExecutionScenarioHarness.js` is a mock-only developer harness for
+exercising the existing controller and executor contracts. It can accept an
+injected fake executor or fake repository, maps every response through the
+token-free result model, and never exposes the raw controller state. Tests use
+it for create, update, deterministic no-op, duplicate concurrent execution,
+confirmation blockers, and stale completion after a profile transition. The
+browser app does not import or construct this harness or a profile execution
+controller.
+
+The profile validation area now adds Mock execution result as a seventh
+execution section, for eleven total report stages. The shipped browser creates
+only the default disabled/no-op status model from the current read-only plan.
+It still passes `executeWrites: false` and `executeConfirmations: false`, does
+not create a write repository or execution controller, and keeps the action
+disabled for every result state. Confirmed or blocked mock states can be
+rendered only through direct model/scenario tests until a later milestone
+deliberately adds a production-safe controller boundary.
+
 Use this validation flow:
 
 1. Map a token-free authenticated test state and confirm the candidate contains
@@ -544,8 +571,23 @@ Use this validation flow:
     model. Confirm its plan, counts, and action are reset before rendering.
 25. Compare create, update, and no-op status output. Create/update remain
     preview-only; no-op skips both write and confirmation stages.
-26. Inspect all themes at desktop and mobile widths. Confirm the ten-stage
+26. Inspect all themes at desktop and mobile widths. Confirm the eleven-stage
     profile validation report wraps without horizontal overflow.
+27. Feed disabled, loading, executed-awaiting-confirmation, confirmed,
+    confirmation-blocked, failed, invalidated, stale, and no-op controller
+    shapes through the result model. Confirm only deterministic static copy and
+    numeric call counts survive.
+28. Run mock create/update/no-op scenarios through the harness. Confirm the
+    result model reports confirmation, blockers, or no-op without changing
+    Local fasting data or sync metadata.
+29. Hold one mock write open and request the same plan again. Confirm the
+    second request is marked deduplicated and no second repository write runs.
+30. Invalidate profile A while its mock result is pending, start profile B,
+    then finish A. Confirm A is ignored and cannot replace B's loading or final
+    status.
+31. Inspect the production app source and rendered action. Confirm it imports
+    only `createProfileExecutionResultStatusModel`, never the mock scenario
+    harness or execution controller, and every profile action remains disabled.
 
 ### Two-Profile RLS Verification
 

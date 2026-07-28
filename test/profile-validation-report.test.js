@@ -251,6 +251,12 @@ test("validation report renders orchestration gates without enabling production 
         status: "disabled",
       },
       {
+        key: "profileExecutionResult",
+        label: "Mock execution result",
+        message: "No mock result is active.",
+        status: "disabled",
+      },
+      {
         key: "localSafety",
         label: "Local data safety",
         message: "Local data remains unchanged.",
@@ -273,9 +279,10 @@ test("validation report renders orchestration gates without enabling production 
   });
 
   assert.equal(report.status, "validated");
-  assert.equal(report.stages.length, 10);
+  assert.equal(report.stages.length, 11);
   assert.equal(report.stages.some((item) => item.key === "profileWriteAdapter"), true);
   assert.equal(report.stages.some((item) => item.key === "profileConfirmation"), true);
+  assert.equal(report.stages.some((item) => item.key === "profileExecutionResult"), true);
   assert.equal(report.gates.profileWriteAdapterReady, false);
   assert.equal(report.gates.profileConfirmationReady, false);
   assert.equal(report.gates.profileWritesEnabled, false);

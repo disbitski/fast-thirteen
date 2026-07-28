@@ -221,10 +221,13 @@ test("tracker renders the read-only authenticated profile provisioning preview",
   assert.match(app, /createProfileValidationReport/);
   assert.match(app, /createProfileExecutionReadiness/);
   assert.match(app, /createProfileExecutionOrchestrationModel/);
+  assert.match(app, /createProfileExecutionResultStatusModel/);
   assert.match(app, /supabaseProfileWriteRepositoryReadiness/);
   assert.match(app, /executeConfirmations: false/);
   assert.match(app, /executeWrites: false/);
   assert.doesNotMatch(app, /createSupabaseProfileWriteRepository/);
+  assert.doesNotMatch(app, /createProfileExecutionController/);
+  assert.doesNotMatch(app, /createProfileExecutionScenarioHarness/);
   assert.match(app, /profileProvisioningController\.invalidate/);
   assert.match(app, /renderProfileProvisioning/);
   assert.match(app, /renderProfileProvisioningRefresh/);

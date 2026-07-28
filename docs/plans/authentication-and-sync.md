@@ -70,7 +70,13 @@ execution orchestration model now renders lifecycle, plan, adapter,
 confirmation, Local data safety, and production-wiring readiness in the
 existing validation area. Public flags alone cannot enable execution: both
 code-level switches remain false and the browser app never constructs the
-write repository.
+write repository. A separate token-free execution-result model now maps mocked
+disabled, loading, awaiting-confirmation, confirmed, confirmation-blocked,
+failed, invalidated, stale, and deterministic no-op outcomes into the same
+validation area. A developer-only scenario harness verifies duplicate
+suppression and lifecycle isolation with fake repositories, while the browser
+app imports neither the harness nor the execution controller and keeps every
+profile action disabled.
 
 ## Phase 4: Guest Data Migration
 
