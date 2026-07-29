@@ -307,6 +307,7 @@ export function createProfileExecutionOrchestrationModel({
   executionReadiness = null,
   executionResult = null,
   localData = null,
+  mutationPreflight = null,
   profileScope = null,
   provisioningState = null,
   repositoryReadiness = null,
@@ -323,6 +324,7 @@ export function createProfileExecutionOrchestrationModel({
     writeAdapterStage(plan, repositoryReadiness),
     confirmationStage(plan, repositoryReadiness, executionReadiness),
     executionResultStage(scopedExecutionResult),
+    ...(mutationPreflight?.stages ?? []),
     stage(
       "localSafety",
       "Local data safety",
@@ -373,6 +375,7 @@ export function createProfileExecutionOrchestrationModel({
       mockResultVisible: Boolean(
         scopedExecutionResult && scopedExecutionResult.status !== "disabled",
       ),
+      mutationRehearsalGo: mutationPreflight?.go === true,
       productionWiringEnabled: false,
       writeAdapterReady: repositoryReadiness?.canWrite === true,
     }),
@@ -384,6 +387,7 @@ export function createProfileExecutionOrchestrationModel({
     profileRowWritten: false,
     providerTokensExposed: false,
     providerTokensStored: false,
+    rehearsal: mutationPreflight,
     result: scopedExecutionResult,
     safety: "Lifecycle isolated · Plan scoped · Mock result sanitized · Local data unchanged · Tokens omitted · Production writes disabled",
     stages,

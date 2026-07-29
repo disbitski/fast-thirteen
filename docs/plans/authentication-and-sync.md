@@ -76,7 +76,13 @@ failed, invalidated, stale, and deterministic no-op outcomes into the same
 validation area. A developer-only scenario harness verifies duplicate
 suppression and lifecycle isolation with fake repositories, while the browser
 app imports neither the harness nor the execution controller and keeps every
-profile action disabled.
+profile action disabled. A token-free profile mutation rehearsal/preflight
+model now composes lifecycle, session health, scoped plan, `profiles`-only
+targeting, mock write/confirmation support, sanitized result, fasting-session
+write isolation, and the remaining production blocker. Only injected mock
+scenarios can report go; the shipped browser passes `mockScenario: false`,
+keeps both code execution switches false, and remains no-go with all Local data
+unchanged.
 
 ## Phase 4: Guest Data Migration
 

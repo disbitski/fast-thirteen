@@ -40,6 +40,7 @@ import { createProfileValidationReport } from "./profileValidationReport.js";
 import { createProfileExecutionReadiness } from "./profileExecutor.js";
 import { createProfileExecutionOrchestrationModel } from "./profileExecutionOrchestration.js";
 import { createProfileExecutionResultStatusModel } from "./profileExecutionResult.js";
+import { createProfileMutationPreflightModel } from "./profileMutationPreflight.js";
 import {
   AUTH_SESSION_CHECK_SOURCE,
   createAuthSessionHealthController,
@@ -1181,11 +1182,24 @@ function renderProfileSync() {
     plan: scopedProfileProvisioningState?.plan,
     profileScope,
   });
+  const sessionHealth = authSessionHealthController.current();
+  const profileMutationPreflight = createProfileMutationPreflightModel({
+    authState,
+    executionReadiness: profileExecutionReadiness,
+    executionResult: profileExecutionResult,
+    localData: appData,
+    mockScenario: false,
+    plan: scopedProfileProvisioningState?.plan,
+    profileScope,
+    repositoryReadiness: profileWriteRepositoryReadiness,
+    sessionHealth,
+  });
   const profileExecutionOrchestration = createProfileExecutionOrchestrationModel({
     authState,
     executionReadiness: profileExecutionReadiness,
     executionResult: profileExecutionResult,
     localData: appData,
+    mutationPreflight: profileMutationPreflight,
     profileScope,
     provisioningState: profileProvisioningState,
     repositoryReadiness: profileWriteRepositoryReadiness,
@@ -1275,7 +1289,7 @@ function renderProfileSync() {
     profileScope,
     readiness: profileProvisioningReadiness,
     requestState: scopedProfileProvisioningState,
-    sessionHealth: authSessionHealthController.current(),
+    sessionHealth,
   }));
   renderProfileExecutionControl(profileExecutionOrchestration.action);
   renderMigrationPreview(createMigrationPreviewModel(migrationPlan, { migrationReadiness }));

@@ -5,6 +5,7 @@ import {
   createProfileExecutionReadiness,
 } from "../src/profileExecutor.js";
 import { createProfileExecutionResultStatusModel } from "../src/profileExecutionResult.js";
+import { createProfileMutationPreflightModel } from "../src/profileMutationPreflight.js";
 import { createProfileProvisioningPlan } from "../src/profileProvisioning.js";
 import { supabaseProfileWriteRepositoryReadiness } from "../src/supabaseProfileWriteRepository.js";
 
@@ -105,13 +106,27 @@ function buildModel(action, {
     plan,
     profileScope,
   });
+  const state = provisioningState(plan, stateOverrides);
+  const scopedPlan = state.identityKey === profileScope.identityKey ? plan : null;
+  const mutationPreflight = createProfileMutationPreflightModel({
+    authState,
+    executionReadiness,
+    executionResult,
+    localData,
+    mockScenario: false,
+    plan: scopedPlan,
+    profileScope,
+    repositoryReadiness,
+    sessionHealth: { status: "healthy" },
+  });
   return createProfileExecutionOrchestrationModel({
     authState,
     executionReadiness,
     executionResult,
     localData,
+    mutationPreflight,
     profileScope,
-    provisioningState: provisioningState(plan, stateOverrides),
+    provisioningState: state,
     repositoryReadiness,
   });
 }
@@ -152,6 +167,7 @@ test("public profile flags alone cannot enable code-level execution", () => {
   assert.equal(model.action.disabled, true);
   assert.equal(model.gates.writeAdapterReady, false);
   assert.equal(model.gates.confirmationReady, false);
+  assert.equal(model.stages.find((item) => item.key === "profileMutationProduction").status, "disabled");
   assert.match(writeStage.message, /code-level execution remains hard-off/);
   assert.match(confirmationStage.message, /code-level confirmation remains hard-off/);
 });

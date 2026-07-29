@@ -521,6 +521,25 @@ disabled for every result state. Confirmed or blocked mock states can be
 rendered only through direct model/scenario tests until a later milestone
 deliberately adds a production-safe controller boundary.
 
+`src/profileMutationPreflight.js` now composes those existing contracts into a
+single token-free profile mutation rehearsal report. It evaluates a healthy
+authenticated lifecycle, scoped read-only plan, `profiles`-only write target,
+mock write and confirmation support, sanitized execution result,
+`fast_sessions` mutation boundary, and the absent production wiring. A `go`
+result is possible only when an explicitly injected mock scenario passes every
+stage. Deterministic no-op plans receive a separate no-op result; loading,
+blocked, failed, stale, invalidated, unconfirmed, and code-disabled paths stay
+checking or no-go.
+
+The shipped browser calls the same preflight with `mockScenario: false`,
+`executeWrites: false`, and `executeConfirmations: false`. It imports neither
+the mock scenario harness nor the profile execution controller and does not
+construct a write repository. The validation report adds six rehearsal stages
+for seventeen total stages: lifecycle, plan, write boundary, mock support,
+result, and production blocker. The write boundary is always `profiles` only;
+`fast_sessions`, Local fasting history, backups, and sync metadata remain
+unchanged.
+
 Use this validation flow:
 
 1. Map a token-free authenticated test state and confirm the candidate contains
@@ -571,7 +590,7 @@ Use this validation flow:
     model. Confirm its plan, counts, and action are reset before rendering.
 25. Compare create, update, and no-op status output. Create/update remain
     preview-only; no-op skips both write and confirmation stages.
-26. Inspect all themes at desktop and mobile widths. Confirm the eleven-stage
+26. Inspect all themes at desktop and mobile widths. Confirm the seventeen-stage
     profile validation report wraps without horizontal overflow.
 27. Feed disabled, loading, executed-awaiting-confirmation, confirmed,
     confirmation-blocked, failed, invalidated, stale, and no-op controller
@@ -588,6 +607,21 @@ Use this validation flow:
 31. Inspect the production app source and rendered action. Confirm it imports
     only `createProfileExecutionResultStatusModel`, never the mock scenario
     harness or execution controller, and every profile action remains disabled.
+32. Run confirmed mock create and update results through the mutation
+    preflight. Confirm both can report `go` while production wiring and actual
+    profile writes remain false.
+33. Run a deterministic no-op result. Confirm preflight reports no-op without
+    inspecting a repository or requiring mock write support.
+34. Run confirmation-blocked, repository-failed, stale, and invalidated mock
+    results. Confirm each remains no-go and names the rehearsal result blocker.
+35. Hold a mock write open and request it twice. Confirm preflight reports
+    checking with duplicate suppression while exactly one write runs.
+36. Enable both browser-publishable profile flags while leaving code-level
+    switches and `mockScenario` false. Confirm preflight remains no-go and the
+    production blocker stays visible.
+37. Inspect the rehearsal stages and output. Confirm the target is `profiles`,
+    `fast_sessions` writes are false, Local data is unchanged, and no user id,
+    profile row, email, or provider token is present.
 
 ### Two-Profile RLS Verification
 
