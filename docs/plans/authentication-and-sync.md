@@ -82,7 +82,14 @@ targeting, mock write/confirmation support, sanitized result, fasting-session
 write isolation, and the remaining production blocker. Only injected mock
 scenarios can report go; the shipped browser passes `mockScenario: false`,
 keeps both code execution switches false, and remains no-go with all Local data
-unchanged.
+unchanged. A separate default-off throwaway-profile activation policy now
+requires a private allowlisted local/LAN origin, healthy matching lifecycle,
+successful read-only RLS ownership proof, scoped plan, `profiles`-only target,
+preserved-backup marker, mock write/confirmation support, and an unconsumed
+single-use operator confirmation. GitHub Pages and public origins always fail
+the policy. The shipped browser keeps activation and operator-test switches
+false, constructs no write repository or controller, and renders only the
+token-free disabled status.
 
 ## Phase 4: Guest Data Migration
 

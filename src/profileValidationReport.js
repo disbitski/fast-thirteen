@@ -292,6 +292,8 @@ export function createProfileValidationReport({
       mockProfileExecutionReady: executionReadiness?.canExecute === true,
       mockProfileResultVisible: executionOrchestration?.gates?.mockResultVisible === true,
       profileMutationRehearsalGo: executionOrchestration?.gates?.mutationRehearsalGo === true,
+      profileWriteActivationReady:
+        executionOrchestration?.gates?.profileWriteActivationReady === true,
       profileConfirmationReady: executionOrchestration?.gates?.confirmationReady === true,
       profileExecutionReady: executionOrchestration?.gates?.executionReady === true,
       profileWriteAdapterReady: executionOrchestration?.gates?.writeAdapterReady === true,

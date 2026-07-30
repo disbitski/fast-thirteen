@@ -6,6 +6,10 @@ import {
 } from "../src/profileExecutor.js";
 import { createProfileExecutionResultStatusModel } from "../src/profileExecutionResult.js";
 import { createProfileMutationPreflightModel } from "../src/profileMutationPreflight.js";
+import {
+  PROFILE_WRITE_CONFIRMATION_PHRASE,
+  createProfileWriteActivationPolicy,
+} from "../src/profileWriteActivationPolicy.js";
 import { createProfileProvisioningPlan } from "../src/profileProvisioning.js";
 import { supabaseProfileWriteRepositoryReadiness } from "../src/supabaseProfileWriteRepository.js";
 
@@ -72,6 +76,7 @@ function provisioningState(plan, overrides = {}) {
 }
 
 function buildModel(action, {
+  activationOverrides = {},
   config = {
     isConfigured: true,
     profileConfirmationsEnabled: false,
@@ -119,7 +124,43 @@ function buildModel(action, {
     repositoryReadiness,
     sessionHealth: { status: "healthy" },
   });
+  const activationPolicy = createProfileWriteActivationPolicy({
+    activationEnabled: activationOverrides.activationEnabled ?? false,
+    allowedOrigins: activationOverrides.allowedOrigins ?? ["http://127.0.0.1:4174"],
+    authState,
+    backupReadiness: activationOverrides.backupReadiness ?? {
+      marker: "local-backup-preserved",
+      offlineCopyAvailable: true,
+      preserved: true,
+    },
+    challenge: activationOverrides.challenge ?? {
+      consumed: false,
+      identityKey: profileScope.identityKey,
+      nonce: "orchestration-challenge",
+      response: PROFILE_WRITE_CONFIRMATION_PHRASE,
+      singleUse: true,
+    },
+    executionReadiness,
+    fastSessionsWritesEnabled: false,
+    localData,
+    location: activationOverrides.location ?? {
+      href: "http://127.0.0.1:4174/index.html",
+    },
+    operatorTestMode: activationOverrides.operatorTestMode ?? false,
+    plan: scopedPlan,
+    profileScope,
+    readEvidence: activationOverrides.readEvidence ?? {
+      identityKey: state.identityKey,
+      ownershipVerified: Boolean(scopedPlan),
+      status: scopedPlan ? "passed" : "not-run",
+      table: "profiles",
+    },
+    repositoryReadiness,
+    sessionHealth: { status: "healthy" },
+    target: "profiles",
+  });
   return createProfileExecutionOrchestrationModel({
+    activationPolicy,
     authState,
     executionReadiness,
     executionResult,
@@ -168,8 +209,35 @@ test("public profile flags alone cannot enable code-level execution", () => {
   assert.equal(model.gates.writeAdapterReady, false);
   assert.equal(model.gates.confirmationReady, false);
   assert.equal(model.stages.find((item) => item.key === "profileMutationProduction").status, "disabled");
+  assert.equal(model.stages.find((item) => item.key === "profileActivationSwitch").status, "disabled");
   assert.match(writeStage.message, /code-level execution remains hard-off/);
   assert.match(confirmationStage.message, /code-level confirmation remains hard-off/);
+});
+
+test("injected activation readiness is visible while browser execution stays disabled", () => {
+  const model = buildModel("create", {
+    activationOverrides: {
+      activationEnabled: true,
+      operatorTestMode: true,
+    },
+    config: {
+      isConfigured: true,
+      profileConfirmationsEnabled: true,
+      profileWritesEnabled: true,
+    },
+    executeConfirmations: true,
+    executeWrites: true,
+  });
+
+  assert.equal(model.gates.profileWriteActivationReady, true);
+  assert.equal(
+    model.stages.find((item) => item.key === "profileActivationChallenge").status,
+    "passed",
+  );
+  assert.equal(model.activationPolicy.activationReady, true);
+  assert.equal(model.action.disabled, true);
+  assert.equal(model.gates.productionWiringEnabled, false);
+  assert.equal(model.profileRowWritten, false);
 });
 
 test("create update and no-op plans map to deterministic orchestration states", () => {

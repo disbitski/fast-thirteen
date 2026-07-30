@@ -540,6 +540,29 @@ result, and production blocker. The write boundary is always `profiles` only;
 `fast_sessions`, Local fasting history, backups, and sync metadata remain
 unchanged.
 
+`src/profileWriteActivationPolicy.js` adds the next default-off boundary for a
+future throwaway-profile write test. Its ten token-free stages require a
+code-level activation switch, an explicitly allowlisted private local or LAN
+origin, a healthy matching authenticated lifecycle, successful read-only
+`profiles` RLS ownership evidence, a lifecycle-scoped create/update/no-op plan,
+a `profiles`-only mutation target, a preserved local-backup marker, separate
+mock write and read-back confirmation support, an unconsumed single-use
+operator confirmation, and injected test-only wiring.
+
+The policy can report ready only in a directly injected test. It always reports
+`profileWritesEnabled: false`, `fastSessionsWritesEnabled: false`, and
+`productionWiringEnabled: false`; readiness describes policy validation, not an
+executed mutation. GitHub Pages and other public origins fail even if they are
+listed in the normal OAuth redirect allowlist. A future executor must consume
+the operator confirmation atomically before issuing a write and must never
+reuse it.
+
+The browser passes `activationEnabled: false`, `operatorTestMode: false`, no
+confirmation, and no preserved-backup marker. It does not import or construct a
+write repository or execution controller. The ten policy stages are appended
+to the existing profile validation report for twenty-seven total stages while
+the action remains disabled in every theme and viewport.
+
 Use this validation flow:
 
 1. Map a token-free authenticated test state and confirm the candidate contains
@@ -590,7 +613,7 @@ Use this validation flow:
     model. Confirm its plan, counts, and action are reset before rendering.
 25. Compare create, update, and no-op status output. Create/update remain
     preview-only; no-op skips both write and confirmation stages.
-26. Inspect all themes at desktop and mobile widths. Confirm the seventeen-stage
+26. Inspect all themes at desktop and mobile widths. Confirm the twenty-seven-stage
     profile validation report wraps without horizontal overflow.
 27. Feed disabled, loading, executed-awaiting-confirmation, confirmed,
     confirmation-blocked, failed, invalidated, stale, and no-op controller
@@ -622,6 +645,31 @@ Use this validation flow:
 37. Inspect the rehearsal stages and output. Confirm the target is `profiles`,
     `fast_sessions` writes are false, Local data is unchanged, and no user id,
     profile row, email, or provider token is present.
+38. Inject every throwaway-profile activation gate on an explicitly allowlisted
+    localhost or private LAN origin. Confirm the policy can report ready while
+    profile writes, fasting-session writes, and production wiring remain false.
+39. Repeat the same policy check on the GitHub Pages sample and a public custom
+    domain, including origins listed for OAuth redirects. Confirm both fail the
+    private-origin gate.
+40. Disable the code-level activation switch while leaving both
+    browser-publishable profile flags true. Confirm the policy remains disabled
+    and does not inspect write support or operator confirmation.
+41. Change the authenticated user, lifecycle generation, session health, or
+    read-evidence identity. Confirm each path blocks without rendering user ids,
+    emails, profile rows, or provider tokens.
+42. Remove the RLS ownership proof, preserved-backup marker, or offline-copy
+    marker. Confirm each missing prerequisite blocks and Local data remains
+    unchanged.
+43. Change the mutation target to `fast_sessions` or enable fasting-session
+    writes. Confirm the target boundary fails closed.
+44. Test a missing, mismatched, and consumed operator confirmation. Confirm
+    each blocks; an unconsumed matching single-use confirmation passes only for
+    its current lifecycle.
+45. Run a deterministic no-op plan with no repository or confirmation support.
+    Confirm no activation is needed and no repository call is implied.
+46. Inspect all themes at desktop and mobile widths. Confirm the twenty-seven
+    stages wrap without horizontal overflow and Profile writes disabled remains
+    the only action state.
 
 ### Two-Profile RLS Verification
 

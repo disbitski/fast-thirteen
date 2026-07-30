@@ -41,6 +41,7 @@ import { createProfileExecutionReadiness } from "./profileExecutor.js";
 import { createProfileExecutionOrchestrationModel } from "./profileExecutionOrchestration.js";
 import { createProfileExecutionResultStatusModel } from "./profileExecutionResult.js";
 import { createProfileMutationPreflightModel } from "./profileMutationPreflight.js";
+import { createProfileWriteActivationPolicy } from "./profileWriteActivationPolicy.js";
 import {
   AUTH_SESSION_CHECK_SOURCE,
   createAuthSessionHealthController,
@@ -1194,7 +1195,40 @@ function renderProfileSync() {
     repositoryReadiness: profileWriteRepositoryReadiness,
     sessionHealth,
   });
+  const profileWriteActivationPolicy = createProfileWriteActivationPolicy({
+    activationEnabled: false,
+    allowedOrigins: supabaseConfig.authRedirectOrigins,
+    authState,
+    backupReadiness: {
+      marker: null,
+      offlineCopyAvailable: true,
+      preserved: false,
+    },
+    challenge: null,
+    executionReadiness: profileExecutionReadiness,
+    fastSessionsWritesEnabled: false,
+    localData: appData,
+    location: globalThis.location,
+    operatorTestMode: false,
+    plan: scopedProfileProvisioningState?.plan,
+    profileScope,
+    readEvidence: {
+      identityKey: scopedProfileProvisioningState?.identityKey ?? null,
+      ownershipVerified: Boolean(
+        scopedProfileProvisioningState?.plan
+        && scopedProfileProvisioningState.plan.blockers?.length === 0,
+      ),
+      status: scopedProfileProvisioningState?.plan
+        ? "passed"
+        : scopedProfileProvisioningState?.status ?? "not-run",
+      table: "profiles",
+    },
+    repositoryReadiness: profileWriteRepositoryReadiness,
+    sessionHealth,
+    target: "profiles",
+  });
   const profileExecutionOrchestration = createProfileExecutionOrchestrationModel({
+    activationPolicy: profileWriteActivationPolicy,
     authState,
     executionReadiness: profileExecutionReadiness,
     executionResult: profileExecutionResult,

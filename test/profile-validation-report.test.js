@@ -221,6 +221,7 @@ test("validation report renders orchestration gates without enabling production 
     gates: {
       confirmationReady: false,
       executionReady: false,
+      profileWriteActivationReady: true,
       productionWiringEnabled: false,
       writeAdapterReady: false,
     },
@@ -285,6 +286,7 @@ test("validation report renders orchestration gates without enabling production 
   assert.equal(report.stages.some((item) => item.key === "profileExecutionResult"), true);
   assert.equal(report.gates.profileWriteAdapterReady, false);
   assert.equal(report.gates.profileConfirmationReady, false);
+  assert.equal(report.gates.profileWriteActivationReady, true);
   assert.equal(report.gates.profileWritesEnabled, false);
   assert.equal(report.gates.productionWiringEnabled, false);
 });
