@@ -65,7 +65,7 @@
               title="SpaceX"
             ></button>
           </fieldset>
-          <span class="local-badge" id="profile-badge">Guest mode · Local data</span>
+          <span class="local-badge" id="profile-badge" hidden>Guest mode · Local data</span>
         </div>
       </header>
 
@@ -134,7 +134,7 @@
               <input id="import-file" type="file" accept="application/json,.json" hidden />
             </div>
           </div>
-          <div class="profile-control">
+          <div class="profile-control" hidden>
             <span>
               <strong id="profile-mode">Guest mode</strong>
               <small id="sync-description">Tracking locally now. Cloud sync can plug in later.</small>
@@ -313,7 +313,7 @@
               </small>
             </div>
           </div>
-          <div class="migration-preview" id="migration-preview" data-preview-status="auth-required">
+          <div class="migration-preview" id="migration-preview" data-preview-status="auth-required" hidden>
             <div>
               <p class="eyebrow">Migration dry run</p>
               <h3 id="migration-preview-title">Sign in to preview migration</h3>
@@ -332,7 +332,7 @@
               </small>
             </div>
           </div>
-          <div class="sync-preview" id="sync-preview" data-preview-status="disabled">
+          <div class="sync-preview" id="sync-preview" data-preview-status="disabled" hidden>
             <div>
               <p class="eyebrow">Cloud read preview</p>
               <h3 id="sync-preview-title">Cloud sync preview disabled</h3>
@@ -412,7 +412,7 @@
               </small>
             </div>
           </div>
-          <div class="push-preview" id="push-preview" data-preview-status="disabled">
+          <div class="push-preview" id="push-preview" data-preview-status="disabled" hidden>
             <div>
               <p class="eyebrow">Cloud push preview</p>
               <h3 id="push-preview-title">Cloud push preview disabled</h3>
@@ -431,7 +431,7 @@
               </small>
             </div>
           </div>
-          <div class="orchestration-preview" id="orchestration-preview" data-preview-status="local-only">
+          <div class="orchestration-preview" id="orchestration-preview" data-preview-status="local-only" hidden>
             <div>
               <p class="eyebrow">Sync orchestration</p>
               <h3 id="orchestration-preview-title">Sync orchestration local-only</h3>
@@ -453,7 +453,7 @@
         </div>
       </section>
 
-      <section class="dashboard" aria-labelledby="dashboard-title">
+      <section class="dashboard" aria-labelledby="dashboard-title" hidden>
         <div class="section-heading">
           <div>
             <p class="eyebrow">Your rhythm</p>

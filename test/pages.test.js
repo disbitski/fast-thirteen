@@ -243,3 +243,24 @@ test("tracker renders the read-only authenticated profile provisioning preview",
   assert.match(app, /refreshProfileProvisioning/);
   assert.match(app, /profileProvisioningRefresh\.addEventListener/);
 });
+
+test("tracker homepage keeps cloud scope creep out of the daily fasting loop", () => {
+  const index = readFileSync("index.html", "utf8");
+
+  for (const id of [
+    "profile-badge",
+    "migration-preview",
+    "sync-preview",
+    "push-preview",
+    "orchestration-preview",
+  ]) {
+    assert.match(index, new RegExp(`id="${id}"[^>]*hidden`));
+  }
+
+  assert.match(index, /class="dashboard"[^>]*hidden/);
+  assert.match(index, /id="fast-button"/);
+  assert.match(index, /id="timer"/);
+  assert.match(index, /id="target-hours"/);
+  assert.match(index, /id="session-list"/);
+  assert.match(index, /href="dashboard\.html"/);
+});
