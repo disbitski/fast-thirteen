@@ -246,6 +246,7 @@ test("tracker renders the read-only authenticated profile provisioning preview",
 
 test("tracker homepage keeps cloud scope creep out of the daily fasting loop", () => {
   const index = readFileSync("index.html", "utf8");
+  const styles = readFileSync("styles.css", "utf8");
 
   for (const id of [
     "profile-badge",
@@ -263,4 +264,5 @@ test("tracker homepage keeps cloud scope creep out of the daily fasting loop", (
   assert.match(index, /id="target-hours"/);
   assert.match(index, /id="session-list"/);
   assert.match(index, /href="dashboard\.html"/);
+  assert.match(styles, /\[hidden\]\s*\{\s*display:\s*none\s*!important;/);
 });
