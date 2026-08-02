@@ -614,7 +614,7 @@ function renderHistory() {
         <div class="session-result-column">
           <span class="session-duration">${formatDuration(durationMs(session)).slice(0, 5)}</span>
           <span class="session-result ${complete ? "complete" : ""}">${complete ? "Goal reached" : "Fast ended early"}</span>
-          <button class="text-button edit-session" type="button" data-session-id="${session.id}">Edit</button>
+          <button class="text-button edit-session" type="button" data-session-id="${session.id}" aria-label="Edit fast completed ${formatDate(session.endedAt)}">Edit</button>
         </div>
       `;
       return item;

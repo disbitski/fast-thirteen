@@ -27,6 +27,15 @@ test("sample data is versioned and dashboard-ready", () => {
   assert.ok(completedSessions.length >= 7);
 });
 
+test("history edit controls identify the completed fast", () => {
+  const app = readFileSync("src/app.js", "utf8");
+
+  assert.match(
+    app,
+    /aria-label="Edit fast completed \$\{formatDate\(session\.endedAt\)\}"/,
+  );
+});
+
 test("tracker exposes the local-safe push preview surface", () => {
   const index = readFileSync("index.html", "utf8");
   const app = readFileSync("src/app.js", "utf8");
