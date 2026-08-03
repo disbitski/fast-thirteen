@@ -4,6 +4,7 @@ import {
   durationMs,
   endFast,
   formatDuration,
+  formatHoursAndMinutes,
   isComplete,
   normalizeTargetHours,
   progress,
@@ -612,7 +613,7 @@ function renderHistory() {
           <span class="session-times">${formatTime(session.startedAt)} to ${formatTime(session.endedAt)}</span>
         </div>
         <div class="session-result-column">
-          <span class="session-duration">${formatDuration(durationMs(session)).slice(0, 5)}</span>
+          <span class="session-duration">${formatHoursAndMinutes(durationMs(session))}</span>
           <span class="session-result ${complete ? "complete" : ""}">${complete ? "Goal reached" : "Fast ended early"}</span>
           <button class="text-button edit-session" type="button" data-session-id="${session.id}" aria-label="Edit fast completed ${formatDate(session.endedAt)}">Edit</button>
         </div>
@@ -633,7 +634,7 @@ function openSessionDialog(sessionId) {
   elements.sessionStartedAt.value = toLocalInputValue(session.startedAt);
   elements.sessionEndedAt.value = toLocalInputValue(session.endedAt);
   elements.sessionSummary.textContent =
-    `${formatDuration(durationMs(session)).slice(0, 5)} · ${session.targetHours}-hour goal · ` +
+    `${formatHoursAndMinutes(durationMs(session))} · ${session.targetHours}-hour goal · ` +
     `${isComplete(session) ? "Goal reached" : "Ended early"}`;
   elements.sessionDialog.showModal();
 }

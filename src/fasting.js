@@ -3,6 +3,7 @@ export const MIN_TARGET_HOURS = 1;
 export const MAX_TARGET_HOURS = 48;
 
 const HOUR_MS = 60 * 60 * 1000;
+const MINUTE_MS = 60 * 1000;
 const DAY_MS = 24 * HOUR_MS;
 
 export function normalizeTargetHours(value) {
@@ -142,4 +143,12 @@ export function formatDuration(milliseconds) {
   const seconds = totalSeconds % 60;
 
   return [hours, minutes, seconds].map((value) => String(value).padStart(2, "0")).join(":");
+}
+
+export function formatHoursAndMinutes(milliseconds) {
+  const totalMinutes = Math.floor(milliseconds / MINUTE_MS);
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+
+  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
 }

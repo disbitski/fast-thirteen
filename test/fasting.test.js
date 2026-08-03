@@ -8,6 +8,7 @@ import {
   durationMs,
   endFast,
   formatDuration,
+  formatHoursAndMinutes,
   isComplete,
   normalizeTargetHours,
   progress,
@@ -68,8 +69,9 @@ test("counts a streak ending today or yesterday", () => {
   assert.equal(currentStreak(sessions, new Date("2026-06-14T12:00:00")), 0);
 });
 
-test("formats elapsed time for the timer", () => {
+test("formats elapsed time for timer and history displays", () => {
   assert.equal(formatDuration((13 * 60 * 60 + 4 * 60 + 9) * 1000), "13:04:09");
+  assert.equal(formatHoursAndMinutes((100 * 60 * 60 + 4 * 60 + 9) * 1000), "100:04");
 });
 
 test("normalizes fasting targets to safe half-hour increments", () => {
