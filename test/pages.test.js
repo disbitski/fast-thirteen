@@ -36,6 +36,15 @@ test("history edit controls identify the completed fast", () => {
   );
 });
 
+test("active fast history avoids repeated live announcements", () => {
+  const app = readFileSync("src/app.js", "utf8");
+
+  assert.match(
+    app,
+    /sessionList\.setAttribute\("aria-live", activeSession \? "off" : "polite"\)/,
+  );
+});
+
 test("tracker exposes the local-safe push preview surface", () => {
   const index = readFileSync("index.html", "utf8");
   const app = readFileSync("src/app.js", "utf8");

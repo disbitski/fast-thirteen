@@ -596,6 +596,7 @@ function renderStats() {
 function renderHistory() {
   const completedSessions = recentSessionsForDays(sessions, new Date(), 7);
 
+  elements.sessionList.setAttribute("aria-live", activeSession ? "off" : "polite");
   elements.emptyState.hidden = Boolean(activeSession) || completedSessions.length > 0;
   elements.sessionList.replaceChildren(
     ...(activeSession
