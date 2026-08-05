@@ -1556,7 +1556,7 @@ elements.exportButton.addEventListener("click", () => {
   link.href = url;
   link.download = `fast-thirteen-backup-${date}.json`;
   link.click();
-  URL.revokeObjectURL(url);
+  setTimeout(() => URL.revokeObjectURL(url), 0);
   elements.saveStatus.textContent = "Backup exported";
 });
 
