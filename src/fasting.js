@@ -4,7 +4,6 @@ export const MAX_TARGET_HOURS = 48;
 
 const HOUR_MS = 60 * 60 * 1000;
 const MINUTE_MS = 60 * 1000;
-const DAY_MS = 24 * HOUR_MS;
 
 export function normalizeTargetHours(value) {
   const target = Number(value);
@@ -105,6 +104,12 @@ function localDayKey(value) {
   return new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
 }
 
+function previousLocalDayKey(dayKey) {
+  const date = new Date(dayKey);
+  date.setDate(date.getDate() - 1);
+  return date.getTime();
+}
+
 export function currentStreak(sessions, now = new Date()) {
   const completedDays = new Set(
     sessions
@@ -113,12 +118,12 @@ export function currentStreak(sessions, now = new Date()) {
   );
 
   const today = localDayKey(now);
-  let cursor = completedDays.has(today) ? today : today - DAY_MS;
+  let cursor = completedDays.has(today) ? today : previousLocalDayKey(today);
   let streak = 0;
 
   while (completedDays.has(cursor)) {
     streak += 1;
-    cursor -= DAY_MS;
+    cursor = previousLocalDayKey(cursor);
   }
 
   return streak;

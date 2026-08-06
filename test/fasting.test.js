@@ -69,6 +69,27 @@ test("counts a streak ending today or yesterday", () => {
   assert.equal(currentStreak(sessions, new Date("2026-06-14T12:00:00")), 0);
 });
 
+test("keeps a streak across a daylight-saving time change", () => {
+  const previousTimeZone = process.env.TZ;
+  process.env.TZ = "America/New_York";
+
+  try {
+    const sessions = [
+      session("2026-10-30T20:00:00", "2026-10-31T10:00:00"),
+      session("2026-10-31T20:00:00", "2026-11-01T10:00:00"),
+      session("2026-11-01T20:00:00", "2026-11-02T10:00:00"),
+    ];
+
+    assert.equal(currentStreak(sessions, new Date("2026-11-02T12:00:00")), 3);
+  } finally {
+    if (previousTimeZone === undefined) {
+      delete process.env.TZ;
+    } else {
+      process.env.TZ = previousTimeZone;
+    }
+  }
+});
+
 test("formats elapsed time for timer and history displays", () => {
   assert.equal(formatDuration((13 * 60 * 60 + 4 * 60 + 9) * 1000), "13:04:09");
   assert.equal(formatHoursAndMinutes((100 * 60 * 60 + 4 * 60 + 9) * 1000), "100:04");
