@@ -97,6 +97,7 @@ const sessions = appData.sessions;
 let activeSession = sessions.find((session) => !session.deletedAt && !session.endedAt) ?? null;
 let editingSessionId = null;
 let deleteConfirmationPending = false;
+let lastFastButtonActionAt = Number.NEGATIVE_INFINITY;
 let selectedTheme = applyTheme(document.documentElement, loadTheme(localStorage));
 const supabaseConfig = loadSupabaseConfig(globalThis);
 const supabaseSdkBootstrap = createSupabaseSdkBootstrap();
@@ -115,6 +116,7 @@ if (callbackAuthState) cleanAuthCallbackUrl(globalThis.location, globalThis.hist
 
 const SHARED_DATA_URL = "api/data";
 const SAMPLE_DATA_URL = "sample-data.json";
+const FAST_BUTTON_COOLDOWN_MS = 500;
 
 const elements = {
   button: document.querySelector("#fast-button"),
@@ -1412,6 +1414,10 @@ function applyAuthState(state, {
 }
 
 elements.button.addEventListener("click", () => {
+  const actionAt = Date.now();
+  if (actionAt - lastFastButtonActionAt < FAST_BUTTON_COOLDOWN_MS) return;
+  lastFastButtonActionAt = actionAt;
+
   if (activeSession) {
     const index = sessions.findIndex((session) => session.id === activeSession.id);
     sessions[index] = endFast(activeSession);

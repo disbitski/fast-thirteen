@@ -45,6 +45,16 @@ test("active fast history avoids repeated live announcements", () => {
   );
 });
 
+test("fast button ignores duplicate taps before changing session state", () => {
+  const app = readFileSync("src/app.js", "utf8");
+
+  assert.match(app, /const FAST_BUTTON_COOLDOWN_MS = 500;/);
+  assert.match(
+    app,
+    /if \(actionAt - lastFastButtonActionAt < FAST_BUTTON_COOLDOWN_MS\) return;/,
+  );
+});
+
 test("tracker exposes the local-safe push preview surface", () => {
   const index = readFileSync("index.html", "utf8");
   const app = readFileSync("src/app.js", "utf8");
