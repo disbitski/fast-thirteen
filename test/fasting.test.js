@@ -148,6 +148,12 @@ test("deleted sessions do not affect dashboard statistics", () => {
   assert.equal(summarize([deleted]).totalHours, 0);
 });
 
+test("does not allow an active fast to be deleted", () => {
+  const active = session("2026-06-14T22:00:00.000Z", null);
+
+  assert.throws(() => deleteSession(active), /An active fast cannot be deleted/);
+});
+
 test("rejects corrections that end in the future", () => {
   const completed = session("2026-06-14T23:00:00.000Z", "2026-06-15T11:00:00.000Z");
 
