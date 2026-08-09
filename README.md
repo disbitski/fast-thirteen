@@ -52,7 +52,7 @@ Instagram: [@thedavedev](https://www.instagram.com/thedavedev/).
 - Guest mode and local data sync status foundations
 - Optional Google sign-in scaffold that stays disabled without Supabase config
 - Persistent light, black/cyan, black/purple, and SpaceX themes
-- Configurable fasting goals captured per session
+- Fasting goals from 1 to 48 hours in 30-minute steps, captured per session
 - Versioned local data with migration from the original storage format
 - JSON backup export and restore
 
