@@ -74,6 +74,7 @@ export function normalizeSync(sync) {
 }
 
 function normalizeSession(session) {
+  const startedAt = new Date(session?.startedAt);
   const endedAt = session?.endedAt == null ? null : new Date(session.endedAt);
   const deletedAt = session?.deletedAt == null ? null : new Date(session.deletedAt);
   const updatedAt = new Date(session?.updatedAt ?? session?.endedAt ?? session?.startedAt);
@@ -81,8 +82,9 @@ function normalizeSession(session) {
   if (
     !session ||
     typeof session.id !== "string" ||
-    Number.isNaN(Date.parse(session.startedAt)) ||
+    Number.isNaN(startedAt.getTime()) ||
     (endedAt && Number.isNaN(endedAt.getTime())) ||
+    (endedAt && endedAt.getTime() < startedAt.getTime()) ||
     (deletedAt && Number.isNaN(deletedAt.getTime())) ||
     Number.isNaN(updatedAt.getTime())
   ) {
@@ -91,7 +93,7 @@ function normalizeSession(session) {
 
   return {
     id: session.id,
-    startedAt: new Date(session.startedAt).toISOString(),
+    startedAt: startedAt.toISOString(),
     endedAt: endedAt?.toISOString() ?? null,
     targetHours: normalizeTargetHours(session.targetHours),
     updatedAt: updatedAt.toISOString(),

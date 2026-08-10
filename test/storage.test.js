@@ -68,7 +68,11 @@ test("migrates the original sessions-only storage format", () => {
 test("ignores malformed sessions and applies default settings", () => {
   const storage = memoryStorage({
     [STORAGE_KEY]: JSON.stringify({
-      sessions: [{ id: "bad" }, session],
+      sessions: [
+        { id: "bad" },
+        { ...session, id: "reversed", endedAt: "2026-06-14T21:00:00.000Z" },
+        session,
+      ],
     }),
   });
 
