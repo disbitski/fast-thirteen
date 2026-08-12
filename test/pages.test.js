@@ -55,6 +55,12 @@ test("fast button ignores duplicate taps before changing session state", () => {
   );
 });
 
+test("active fast history labels the goal completion time", () => {
+  const app = readFileSync("src/app.js", "utf8");
+
+  assert.match(app, /Started \$\{formatTime\(session\.startedAt\)\} · Goal time/);
+});
+
 test("tracker exposes the local-safe push preview surface", () => {
   const index = readFileSync("index.html", "utf8");
   const app = readFileSync("src/app.js", "utf8");
