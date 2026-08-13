@@ -61,6 +61,12 @@ test("active fast history labels the goal completion time", () => {
   assert.match(app, /Started \$\{formatTime\(session\.startedAt\)\} · Goal time/);
 });
 
+test("session correction dialog describes the fast being edited", () => {
+  const index = readFileSync("index.html", "utf8");
+
+  assert.match(index, /id="session-dialog"[\s\S]*aria-describedby="session-summary"/);
+});
+
 test("tracker exposes the local-safe push preview surface", () => {
   const index = readFileSync("index.html", "utf8");
   const app = readFileSync("src/app.js", "utf8");
