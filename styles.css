@@ -1768,7 +1768,13 @@ h3 {
 }
 
 .number-control input:focus-visible,
+.form-field input:focus-visible,
+.primary-button:focus-visible,
 .secondary-button:focus-visible,
+.danger-button:focus-visible,
+.text-button:focus-visible,
+.icon-button:focus-visible,
+.history-hint a:focus-visible,
 .profile-menu summary:focus-visible,
 .range-toggle button:focus-visible {
   outline: 2px solid var(--green);
