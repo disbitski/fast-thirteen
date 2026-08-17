@@ -165,6 +165,14 @@ private struct WatchSettingsView: View {
                 Text("Apple Health has no fasting-session record type, so Fast Thirteen keeps this data private and accurate.")
                     .font(.footnote)
             }
+
+            Section("About") {
+                NavigationLink {
+                    FastThirteenAboutView()
+                } label: {
+                    Label("About Fast Thirteen", systemImage: "info.circle")
+                }
+            }
         }
         .navigationTitle("Settings")
     }

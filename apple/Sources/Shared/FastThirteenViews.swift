@@ -203,6 +203,7 @@ private struct FastMetricCard: View {
 
 struct FastHistoryView: View {
     @EnvironmentObject private var store: FastThirteenStore
+    @State private var editingSession: FastingSession?
 
     var body: some View {
         NavigationStack {
@@ -211,17 +212,105 @@ struct FastHistoryView: View {
                     ContentUnavailableView("No completed fasts", systemImage: "clock", description: Text("Finish your first fast and it will appear here."))
                 } else {
                     ForEach(store.completedSessions) { session in
-                        VStack(alignment: .leading, spacing: 5) {
-                            Text(session.startedAt, format: .dateTime.month().day().year())
-                                .font(.headline)
-                            Text("\(FastTimeFormatter.duration(session.elapsed())) · \(session.targetHours, specifier: "%.1f")-hour goal")
-                                .foregroundStyle(.secondary)
+                        Button {
+                            editingSession = session
+                        } label: {
+                            HStack(spacing: 12) {
+                                VStack(alignment: .leading, spacing: 5) {
+                                    Text(session.startedAt, format: .dateTime.month().day().year())
+                                        .font(.headline)
+                                    Text("\(FastTimeFormatter.duration(session.elapsed())) · \(session.targetHours, specifier: "%.1f")-hour goal")
+                                        .foregroundStyle(.secondary)
+                                }
+                                Spacer()
+                                Label("Edit", systemImage: "pencil")
+                                    .labelStyle(.iconOnly)
+                                    .foregroundStyle(.tint)
+                            }
+                            .contentShape(Rectangle())
                         }
+                        .buttonStyle(.plain)
+                        .accessibilityHint("Opens start and end time correction")
                     }
                 }
             }
             .navigationTitle("History")
         }
+        .sheet(item: $editingSession) { session in
+            FastSessionEditor(session: session)
+                .environmentObject(store)
+        }
+    }
+}
+
+private struct FastSessionEditor: View {
+    @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var store: FastThirteenStore
+    let session: FastingSession
+
+    @State private var startedAt: Date
+    @State private var endedAt: Date
+    @State private var showDeleteConfirmation = false
+
+    init(session: FastingSession) {
+        self.session = session
+        _startedAt = State(initialValue: session.startedAt)
+        _endedAt = State(initialValue: session.endedAt ?? .now)
+    }
+
+    private var canSave: Bool {
+        endedAt > startedAt && endedAt <= .now
+    }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("Correct timestamps") {
+                    DatePicker("Started", selection: $startedAt, displayedComponents: [.date, .hourAndMinute])
+                    DatePicker("Ended", selection: $endedAt, in: ...Date.now, displayedComponents: [.date, .hourAndMinute])
+                }
+
+                Section("Updated duration") {
+                    LabeledContent("Fasting time", value: FastTimeFormatter.duration(endedAt.timeIntervalSince(startedAt)))
+                    Text("Corrections update dashboard totals and sync to your other devices.")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                }
+
+                Section {
+                    Button("Delete fast", role: .destructive) {
+                        showDeleteConfirmation = true
+                    }
+                } footer: {
+                    Text("Deletion syncs as a tombstone so this fast stays removed everywhere.")
+                }
+            }
+            .navigationTitle("Edit fast")
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") {
+                        if store.correctSession(id: session.id, startedAt: startedAt, endedAt: endedAt) {
+                            dismiss()
+                        }
+                    }
+                    .disabled(!canSave)
+                }
+            }
+            .alert("Delete this fast?", isPresented: $showDeleteConfirmation) {
+                Button("Cancel", role: .cancel) {}
+                Button("Delete fast", role: .destructive) {
+                    if store.deleteSession(id: session.id) {
+                        dismiss()
+                    }
+                }
+            } message: {
+                Text("This removes the fast from history and updates every Cloudflare-connected device.")
+            }
+        }
+        .frame(minWidth: 360, minHeight: 420)
     }
 }
 
@@ -301,9 +390,49 @@ struct FastSettingsView: View {
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                 }
+
+                Section("About") {
+                    NavigationLink {
+                        FastThirteenAboutView()
+                    } label: {
+                        Label("About Fast Thirteen", systemImage: "info.circle")
+                    }
+                }
             }
             .navigationTitle("Settings")
         }
+    }
+}
+
+struct FastThirteenAboutView: View {
+    var body: some View {
+        ScrollView {
+            VStack(spacing: 18) {
+                Image(systemName: "timer.circle.fill")
+                    .font(.system(size: 72))
+                    .symbolRenderingMode(.palette)
+                    .foregroundStyle(.tint, .quaternary)
+
+                Text("Fast Thirteen")
+                    .font(.largeTitle.weight(.bold))
+
+                Text("A focused fasting tracker that makes a daily 13-hour rhythm simple across Mac, iPhone, Apple Watch, and the web.")
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+
+                Link(destination: URL(string: "https://thedavedev.com/")!) {
+                    Label("Follow Dave online at thedavedev.com", systemImage: "arrow.up.right.square")
+                        .font(.headline)
+                }
+
+                Text("Version \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0")")
+                    .font(.footnote)
+                    .foregroundStyle(.tertiary)
+            }
+            .frame(maxWidth: 520)
+            .padding(28)
+        }
+        .navigationTitle("About")
     }
 }
 

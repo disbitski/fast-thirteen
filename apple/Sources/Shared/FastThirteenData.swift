@@ -93,6 +93,20 @@ struct FastingSession: Codable, Equatable, Identifiable {
     }
 }
 
+enum FastingSessionEditError: LocalizedError, Equatable {
+    case futureEnd
+    case invalidRange
+    case notEditable
+
+    var errorDescription: String? {
+        switch self {
+        case .futureEnd: "A completed fast cannot end in the future."
+        case .invalidRange: "End time must be after start time."
+        case .notEditable: "This fast is no longer available to edit."
+        }
+    }
+}
+
 struct FastingInsights: Equatable {
     var completedCount: Int
     var currentStreakDays: Int
@@ -116,6 +130,40 @@ struct FastThirteenData: Codable, Equatable {
         sessions
             .filter { !$0.isDeleted && $0.endedAt != nil }
             .sorted { $0.startedAt > $1.startedAt }
+    }
+
+    mutating func correctSession(
+        id: String,
+        startedAt: Date,
+        endedAt: Date,
+        updatedAt: Date = .now
+    ) throws {
+        guard let index = sessions.firstIndex(where: { $0.id == id }),
+              sessions[index].endedAt != nil,
+              !sessions[index].isDeleted else {
+            throw FastingSessionEditError.notEditable
+        }
+        guard endedAt > startedAt else {
+            throw FastingSessionEditError.invalidRange
+        }
+        guard endedAt <= updatedAt else {
+            throw FastingSessionEditError.futureEnd
+        }
+
+        sessions[index].startedAt = startedAt
+        sessions[index].endedAt = endedAt
+        sessions[index].updatedAt = updatedAt
+    }
+
+    mutating func deleteSession(id: String, deletedAt: Date = .now) throws {
+        guard let index = sessions.firstIndex(where: { $0.id == id }),
+              sessions[index].endedAt != nil,
+              !sessions[index].isDeleted else {
+            throw FastingSessionEditError.notEditable
+        }
+
+        sessions[index].deletedAt = deletedAt
+        sessions[index].updatedAt = deletedAt
     }
 
     func insights(at now: Date = .now, calendar: Calendar = .current) -> FastingInsights {

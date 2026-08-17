@@ -70,6 +70,30 @@ final class FastThirteenStore: ObservableObject {
         persistAndSync("Goal saved on this device")
     }
 
+    @discardableResult
+    func correctSession(id: String, startedAt: Date, endedAt: Date) -> Bool {
+        do {
+            try data.correctSession(id: id, startedAt: startedAt, endedAt: endedAt)
+            persistAndSync("Fast correction saved on this device")
+            return true
+        } catch {
+            state = .unavailable(error.localizedDescription)
+            return false
+        }
+    }
+
+    @discardableResult
+    func deleteSession(id: String) -> Bool {
+        do {
+            try data.deleteSession(id: id)
+            persistAndSync("Fast deleted on this device")
+            return true
+        } catch {
+            state = .unavailable(error.localizedDescription)
+            return false
+        }
+    }
+
     func selectTheme(_ theme: FastThirteenTheme) {
         self.theme = theme
         defaults.set(theme.rawValue, forKey: Self.themeKey)

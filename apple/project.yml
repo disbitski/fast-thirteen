@@ -23,6 +23,7 @@ targets:
     sources:
       - path: Sources/Shared
       - path: Apps/iPhone
+      - path: Resources/iOS/Assets.xcassets
     settings:
       base:
         GENERATE_INFOPLIST_FILE: NO
@@ -49,6 +50,7 @@ targets:
     sources:
       - path: Sources/Shared
       - path: Apps/Mac
+      - path: Resources/macOS/Assets.xcassets
     settings:
       base:
         CODE_SIGN_ENTITLEMENTS: Configuration/macOS.entitlements
@@ -73,6 +75,7 @@ targets:
     sources:
       - path: Sources/Shared
       - path: Apps/Watch
+      - path: Resources/watchOS/Assets.xcassets
     settings:
       base:
         GENERATE_INFOPLIST_FILE: NO

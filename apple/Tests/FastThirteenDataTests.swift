@@ -48,4 +48,39 @@ final class FastThirteenDataTests: XCTestCase {
         XCTAssertEqual(insights.averageHours, 13, accuracy: 0.001)
         XCTAssertEqual(insights.goalHitRate, 0.5, accuracy: 0.001)
     }
+
+    func testCompletedSessionCorrectionAndDeletionPreserveCloudMergeSafety() throws {
+        let originalStart = Date(timeIntervalSince1970: 10_000)
+        let originalEnd = originalStart.addingTimeInterval(13 * 3_600)
+        let correctedStart = originalStart.addingTimeInterval(900)
+        let correctedEnd = originalEnd.addingTimeInterval(1_800)
+        let correctionTime = correctedEnd.addingTimeInterval(60)
+        let deletionTime = correctionTime.addingTimeInterval(60)
+        let original = FastingSession(
+            id: "editable",
+            startedAt: originalStart,
+            endedAt: originalEnd,
+            targetHours: 13,
+            updatedAt: originalEnd,
+            deletedAt: nil
+        )
+        var data = FastThirteenData(sessions: [original])
+
+        try data.correctSession(
+            id: original.id,
+            startedAt: correctedStart,
+            endedAt: correctedEnd,
+            updatedAt: correctionTime
+        )
+
+        XCTAssertEqual(data.sessions[0].startedAt, correctedStart)
+        XCTAssertEqual(data.sessions[0].endedAt, correctedEnd)
+        XCTAssertEqual(data.sessions[0].updatedAt, correctionTime)
+
+        try data.deleteSession(id: original.id, deletedAt: deletionTime)
+
+        XCTAssertEqual(data.sessions[0].deletedAt, deletionTime)
+        XCTAssertEqual(data.sessions[0].updatedAt, deletionTime)
+        XCTAssertTrue(data.merged(with: FastThirteenData(sessions: [original])).completedSessions.isEmpty)
+    }
 }

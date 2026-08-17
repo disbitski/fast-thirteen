@@ -9,14 +9,17 @@
 /* Begin PBXBuildFile section */
 		05A9C716999F1F4F8C1E0A60 /* FastThirteenData.swift in Sources */ = {isa = PBXBuildFile; fileRef = B74A6095CA9795C103297A43 /* FastThirteenData.swift */; };
 		13C39AE53C8A18368FF55B8D /* FastThirteenMacApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3D0F6871B5FC3AD76570FD7 /* FastThirteenMacApp.swift */; };
+		1B00AFA2F644E592E429B282 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 03BE70989ACD02918A95857E /* Assets.xcassets */; };
 		2F5721C968893B35ECE5404E /* FastThirteenWatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27333184CAE94298D7A4D7B4 /* FastThirteenWatchApp.swift */; };
 		35514B69FE48E5317CA25366 /* FastThirteenStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FDF904FA50BFF6163D65F57 /* FastThirteenStore.swift */; };
 		429EDE1B676B1D4FBE4ACF57 /* CloudSyncKeyStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E62C832325A0E31DD3224A83 /* CloudSyncKeyStore.swift */; };
+		47303F6E5388A8036C09F08C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AF054E411F71D892E9B23953 /* Assets.xcassets */; };
 		4978835A2B95DE6FC050682E /* FastThirteenViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DAFA6A172A8016A29E54F70 /* FastThirteenViews.swift */; };
 		55A3735B46B8FCD68CCB192E /* FastThirteenIOSApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F19D0DFB116AE99C78D12878 /* FastThirteenIOSApp.swift */; };
 		5FA176659AF291ABB08D86D0 /* CloudSyncKeyStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E62C832325A0E31DD3224A83 /* CloudSyncKeyStore.swift */; };
 		A96E24EB06F409ED08A3D151 /* CloudSyncKeyStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E62C832325A0E31DD3224A83 /* CloudSyncKeyStore.swift */; };
 		B09BDF335CA3E483A80F8A44 /* FastThirteenStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FDF904FA50BFF6163D65F57 /* FastThirteenStore.swift */; };
+		B63E502FC78A38E0DE019518 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 78E4D3319F94CBD0A23A4418 /* Assets.xcassets */; };
 		BA913D7A59DE4E5475F937DE /* FastThirteenDataTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DE08678F80DB2A535491E97 /* FastThirteenDataTests.swift */; };
 		BB87A27BE510DAC18F66B320 /* FastThirteenData.swift in Sources */ = {isa = PBXBuildFile; fileRef = B74A6095CA9795C103297A43 /* FastThirteenData.swift */; };
 		C0301DE4112C165D8EF0DC61 /* FastThirteenData.swift in Sources */ = {isa = PBXBuildFile; fileRef = B74A6095CA9795C103297A43 /* FastThirteenData.swift */; };
@@ -36,12 +39,15 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		03BE70989ACD02918A95857E /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		0DE08678F80DB2A535491E97 /* FastThirteenDataTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FastThirteenDataTests.swift; sourceTree = "<group>"; };
 		27333184CAE94298D7A4D7B4 /* FastThirteenWatchApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FastThirteenWatchApp.swift; sourceTree = "<group>"; };
 		4D0929881A8CEA8D3AB67A64 /* FastThirteen-iOS.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = "FastThirteen-iOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		4DAFA6A172A8016A29E54F70 /* FastThirteenViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FastThirteenViews.swift; sourceTree = "<group>"; };
 		6FDF904FA50BFF6163D65F57 /* FastThirteenStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FastThirteenStore.swift; sourceTree = "<group>"; };
+		78E4D3319F94CBD0A23A4418 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		7E864074A866810CD5479A7B /* FastThirteen-macOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "FastThirteen-macOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		AF054E411F71D892E9B23953 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		B74A6095CA9795C103297A43 /* FastThirteenData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FastThirteenData.swift; sourceTree = "<group>"; };
 		C02114821133660932636D68 /* FastThirteen-watchOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "FastThirteen-watchOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		E3D0F6871B5FC3AD76570FD7 /* FastThirteenMacApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FastThirteenMacApp.swift; sourceTree = "<group>"; };
@@ -51,6 +57,22 @@
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
+		209A6815A946312F174A1B19 /* macOS */ = {
+			isa = PBXGroup;
+			children = (
+				78E4D3319F94CBD0A23A4418 /* Assets.xcassets */,
+			);
+			path = macOS;
+			sourceTree = "<group>";
+		};
+		2842093DA6D5781CDCC2A470 /* iOS */ = {
+			isa = PBXGroup;
+			children = (
+				AF054E411F71D892E9B23953 /* Assets.xcassets */,
+			);
+			path = iOS;
+			sourceTree = "<group>";
+		};
 		37043FE799B082EE2FAF8A6D /* Apps */ = {
 			isa = PBXGroup;
 			children = (
@@ -100,6 +122,7 @@
 			isa = PBXGroup;
 			children = (
 				37043FE799B082EE2FAF8A6D /* Apps */,
+				BC2D443002E335976B7E6962 /* Resources */,
 				73DC3026445EF616CF6D11C6 /* Sources */,
 				8544017E25776BD1426BF0D1 /* Tests */,
 				C13266EF1FD1B0E123610C83 /* Products */,
@@ -114,6 +137,16 @@
 			path = Mac;
 			sourceTree = "<group>";
 		};
+		BC2D443002E335976B7E6962 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				2842093DA6D5781CDCC2A470 /* iOS */,
+				209A6815A946312F174A1B19 /* macOS */,
+				DA54E5EE6E1D7D91EC6B7FA0 /* watchOS */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
 		C13266EF1FD1B0E123610C83 /* Products */ = {
 			isa = PBXGroup;
 			children = (
@@ -123,6 +156,14 @@
 				F5D2A1E88FB7A2C68FDF8C6E /* FastThirteenTests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		DA54E5EE6E1D7D91EC6B7FA0 /* watchOS */ = {
+			isa = PBXGroup;
+			children = (
+				03BE70989ACD02918A95857E /* Assets.xcassets */,
+			);
+			path = watchOS;
 			sourceTree = "<group>";
 		};
 		F8ADCB4B3551CDD948F183F7 /* Watch */ = {
@@ -141,6 +182,7 @@
 			buildConfigurationList = 1F7A1CEDAA05DB151F14CBF6 /* Build configuration list for PBXNativeTarget "FastThirteen-watchOS" */;
 			buildPhases = (
 				E4FD714F0D47D37D845EEAC8 /* Sources */,
+				4473E7983AEC8819B8127E39 /* Resources */,
 			);
 			buildRules = (
 			);
@@ -158,6 +200,7 @@
 			buildConfigurationList = 42C9BD4343A66CFC03870E33 /* Build configuration list for PBXNativeTarget "FastThirteen-iOS" */;
 			buildPhases = (
 				5BFF76C30AE87EBCB91A6DB6 /* Sources */,
+				8849D48BC10E198872245D20 /* Resources */,
 			);
 			buildRules = (
 			);
@@ -175,6 +218,7 @@
 			buildConfigurationList = C396190D41A6F3E4F6E039AE /* Build configuration list for PBXNativeTarget "FastThirteen-macOS" */;
 			buildPhases = (
 				C89537BD6AF11569808397F0 /* Sources */,
+				A083612F89716AC93B6BACF5 /* Resources */,
 			);
 			buildRules = (
 			);
@@ -237,6 +281,33 @@
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		4473E7983AEC8819B8127E39 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1B00AFA2F644E592E429B282 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		8849D48BC10E198872245D20 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				47303F6E5388A8036C09F08C /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A083612F89716AC93B6BACF5 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B63E502FC78A38E0DE019518 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		5BFF76C30AE87EBCB91A6DB6 /* Sources */ = {
