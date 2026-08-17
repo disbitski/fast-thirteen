@@ -2,6 +2,7 @@ import { normalizeTargetHours } from "./fasting.js";
 import { loadData, mergeData, normalizeData, parseBackup, saveData, serializeBackup } from "./storage.js";
 import { applyTheme, loadTheme, saveTheme } from "./theme.js";
 import {
+  cloudConnectionModel,
   cloudDataUrl,
   cloudRequestHeaders,
   loadCloudSyncKey,
@@ -13,6 +14,7 @@ import {
 let appData = loadData(localStorage);
 let dataSource = loadDataSource(localStorage, globalThis.location);
 let cloudSyncKey = loadCloudSyncKey(localStorage);
+let cloudConnectionState = "idle";
 let selectedTheme = applyTheme(document.documentElement, loadTheme(localStorage));
 
 const elements = {
@@ -20,8 +22,12 @@ const elements = {
   importButton: document.querySelector("#import-button"),
   importFile: document.querySelector("#import-file"),
   cloudKey: document.querySelector("#cloud-key"),
+  cloudConnection: document.querySelector(".cloud-connection-control"),
+  cloudStatusDetail: document.querySelector("#cloud-status-detail"),
+  cloudStatusTitle: document.querySelector("#cloud-status-title"),
   cloudSource: document.querySelector("#cloud-source"),
   localSource: document.querySelector("#local-source"),
+  refreshCloud: document.querySelector("#refresh-cloud"),
   saveCloudKey: document.querySelector("#save-cloud-key"),
   cloudOrigin: document.querySelector("#cloud-origin"),
   sourceDetail: document.querySelector("#source-detail"),
@@ -32,6 +38,10 @@ const elements = {
 
 function activeSession() {
   return appData.sessions.find((session) => !session.deletedAt && !session.endedAt) ?? null;
+}
+
+function completedFastCount() {
+  return appData.sessions.filter((session) => !session.deletedAt && session.endedAt).length;
 }
 
 function persistLocal(message) {
@@ -60,16 +70,24 @@ async function saveToCloud() {
 async function loadFromCloud() {
   const url = cloudDataUrl(dataSource);
   if (!url || !cloudSyncKey) {
+    cloudConnectionState = "idle";
     elements.status.textContent = "Save your private sync key before connecting to Cloudflare.";
+    render();
     return false;
   }
 
+  cloudConnectionState = "connecting";
+  render();
   try {
     const response = await fetch(url, {
       cache: "no-store",
       headers: cloudRequestHeaders(cloudSyncKey),
     });
-    if (!response.ok) throw new Error("Server unavailable");
+    if (!response.ok) {
+      const error = new Error("Server unavailable");
+      error.status = response.status;
+      throw error;
+    }
     const { data } = await response.json();
 
     if (data) {
@@ -81,9 +99,15 @@ async function loadFromCloud() {
         ? "Your local history is now backed up in Cloudflare"
         : "Cloud storage is empty, but could not save the first backup";
     }
+    cloudConnectionState = "connected";
+    render();
     return true;
-  } catch {
-    elements.status.textContent = "Cloudflare could not be reached. Your local data is unchanged.";
+  } catch (error) {
+    cloudConnectionState = error?.status === 401 ? "invalid-key" : "failed";
+    elements.status.textContent = error?.status === 401
+      ? "Cloudflare rejected this browser's private sync key. Your local data is unchanged."
+      : "Cloudflare could not be reached. Your local data is unchanged.";
+    render();
     return false;
   }
 }
@@ -96,9 +120,22 @@ function render() {
   elements.cloudKey.value = cloudSyncKey;
   elements.localSource.setAttribute("aria-pressed", String(dataSource.mode === "local"));
   elements.cloudSource.setAttribute("aria-pressed", String(dataSource.mode === "cloud"));
+  const connection = cloudConnectionModel({
+    source: dataSource,
+    syncKey: cloudSyncKey,
+    state: cloudConnectionState,
+    completedCount: completedFastCount(),
+  });
+  elements.cloudConnection.dataset.cloudStatus = connection.status;
+  elements.cloudStatusTitle.textContent = connection.title;
+  elements.cloudStatusDetail.textContent = connection.detail;
+  elements.refreshCloud.disabled = !connection.canRefresh;
+  elements.refreshCloud.textContent = connection.status === "connecting"
+    ? "Refreshing..."
+    : "Refresh from Cloudflare";
   elements.sourceDetail.textContent =
     dataSource.mode === "cloud"
-      ? "Cloudflare is selected. This device keeps an offline copy and syncs through the private API when it is reachable."
+      ? connection.detail
       : "This device is selected. Fasts stay in this browser until you choose Cloudflare sync again.";
 
   for (const option of elements.themeOptions) {
@@ -117,6 +154,7 @@ elements.targetHours.addEventListener("change", render);
 elements.localSource.addEventListener("click", () => {
   const result = saveDataSource(localStorage, { ...dataSource, mode: "local" }, globalThis.location);
   dataSource = result.source;
+  cloudConnectionState = "idle";
   elements.status.textContent = result.saved
     ? "Using data stored on this device"
     : "Could not save the data-source preference";
@@ -126,6 +164,7 @@ elements.localSource.addEventListener("click", () => {
 elements.cloudSource.addEventListener("click", async () => {
   const result = saveDataSource(localStorage, { ...dataSource, mode: "cloud" }, globalThis.location);
   dataSource = result.source;
+  cloudConnectionState = "idle";
   if (!result.saved) {
     elements.status.textContent = "Could not save the data-source preference";
     return;
@@ -138,12 +177,18 @@ elements.cloudSource.addEventListener("click", async () => {
 elements.saveCloudKey.addEventListener("click", async () => {
   const result = saveCloudSyncKey(localStorage, elements.cloudKey.value);
   cloudSyncKey = result.key;
+  cloudConnectionState = "idle";
   elements.status.textContent = result.saved
     ? cloudSyncKey
       ? "Private sync key saved on this device"
       : "Private sync key removed from this device"
     : "Could not save the private sync key";
   if (result.saved && cloudSyncKey && dataSource.mode === "cloud") await loadFromCloud();
+  else render();
+});
+
+elements.refreshCloud.addEventListener("click", () => {
+  void loadFromCloud();
 });
 
 elements.exportButton.addEventListener("click", () => {
@@ -186,3 +231,4 @@ for (const option of elements.themeOptions) {
 }
 
 render();
+if (dataSource.mode === "cloud" && cloudSyncKey) void loadFromCloud();

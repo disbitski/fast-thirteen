@@ -819,16 +819,35 @@ h3 {
 }
 
 .sync-key-control,
-.sync-key-entry {
+.sync-key-entry,
+.cloud-connection-control {
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
-.sync-key-control {
+.sync-key-control,
+.cloud-connection-control {
   flex-basis: 100%;
   justify-content: space-between;
   padding-top: 8px;
+}
+
+.cloud-connection-control {
+  border-top: 1px solid var(--line);
+}
+
+.cloud-connection-control > span {
+  flex: 1 1 auto;
+}
+
+.cloud-connection-control[data-cloud-status="connected"] strong {
+  color: var(--green);
+}
+
+.cloud-connection-control[data-cloud-status="invalid-key"] strong,
+.cloud-connection-control[data-cloud-status="failed"] strong {
+  color: var(--orange);
 }
 
 .sync-key-entry input {
@@ -2205,7 +2224,8 @@ h3 {
 
   .data-source-control > span,
   .data-source-control > .server-origin,
-  .data-source-control > .sync-key-control {
+  .data-source-control > .sync-key-control,
+  .data-source-control > .cloud-connection-control {
     flex: none;
     width: 100%;
   }
@@ -2220,7 +2240,8 @@ h3 {
   }
 
   .sync-key-control,
-  .sync-key-entry {
+  .sync-key-entry,
+  .cloud-connection-control {
     align-items: stretch;
     flex-direction: column;
     width: 100%;

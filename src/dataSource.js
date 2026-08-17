@@ -91,3 +91,71 @@ export function cloudRequestHeaders(syncKey, includeContentType = false) {
   if (includeContentType) headers["Content-Type"] = "application/json";
   return headers;
 }
+
+export function cloudConnectionModel({
+  source,
+  syncKey,
+  state = "idle",
+  completedCount = 0,
+} = {}) {
+  if (source?.mode !== "cloud") {
+    return {
+      canRefresh: false,
+      detail: "Fasting history stays in this browser until Cloudflare sync is selected.",
+      status: "local",
+      title: "This device only",
+    };
+  }
+
+  if (!syncKey) {
+    return {
+      canRefresh: false,
+      detail: "Cloudflare is selected, but this browser still needs the private sync key.",
+      status: "key-needed",
+      title: "Cloudflare not connected",
+    };
+  }
+
+  if (state === "connecting") {
+    return {
+      canRefresh: false,
+      detail: "Reading the latest fasting history without replacing this browser's offline copy.",
+      status: "connecting",
+      title: "Connecting to Cloudflare",
+    };
+  }
+
+  if (state === "connected") {
+    return {
+      canRefresh: true,
+      detail: `${completedCount} completed ${completedCount === 1 ? "fast" : "fasts"} available on this device.`,
+      status: "connected",
+      title: "Connected to Cloudflare",
+    };
+  }
+
+  if (state === "invalid-key") {
+    return {
+      canRefresh: true,
+      detail: "Replace the saved private sync key before refreshing again.",
+      status: "invalid-key",
+      title: "Cloudflare key rejected",
+    };
+  }
+
+  if (state === "failed") {
+    return {
+      canRefresh: true,
+      detail: "Your offline history is safe. Retry when this device is online.",
+      status: "failed",
+      title: "Cloudflare unavailable",
+    };
+  }
+
+  return {
+    canRefresh: true,
+    detail: "A private sync key is saved. Refresh to verify the shared history on this browser.",
+    status: "ready",
+    title: "Cloudflare ready to connect",
+  };
+}

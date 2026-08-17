@@ -367,11 +367,17 @@ function persistAuthProfileState(message) {
   void saveSharedData(appData);
 }
 
+function completedFastCount() {
+  return sessions.filter((session) => !session.deletedAt && session.endedAt).length;
+}
+
 async function loadSharedData() {
   const dataUrl = cloudDataUrl(dataSource);
   if (!dataUrl || !cloudSyncKey) {
     if (sessions.length > 0) {
-      elements.saveStatus.textContent = dataUrl ? "Cloud key needed; saved on this device" : "Saved on this device";
+      elements.saveStatus.textContent = dataUrl
+        ? `Cloud key needed; showing ${completedFastCount()} completed fasts from this browser`
+        : "Saved on this device";
       render();
       return;
     }
@@ -388,7 +394,11 @@ async function loadSharedData() {
       cache: "no-store",
       headers: cloudRequestHeaders(cloudSyncKey),
     });
-    if (!response.ok) throw new Error("Shared data unavailable");
+    if (!response.ok) {
+      const error = new Error("Shared data unavailable");
+      error.status = response.status;
+      throw error;
+    }
     const { data } = await response.json();
 
     if (data) {
@@ -401,12 +411,14 @@ async function loadSharedData() {
       await saveSharedData(appData);
     }
 
-    elements.saveStatus.textContent = "Synced with Cloudflare";
+    elements.saveStatus.textContent = `Synced with Cloudflare · ${completedFastCount()} completed fasts`;
     render();
-  } catch {
+  } catch (error) {
     if (isGitHubPagesLocation(globalThis.location)) await loadSampleData();
     else {
-      elements.saveStatus.textContent = "Cloud sync unavailable; using this device";
+      elements.saveStatus.textContent = error?.status === 401
+        ? `Cloud key rejected; showing ${completedFastCount()} completed fasts from this browser`
+        : `Cloud sync unavailable; showing ${completedFastCount()} completed fasts from this browser`;
       render();
     }
   }
