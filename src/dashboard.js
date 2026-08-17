@@ -1,12 +1,20 @@
 import { ANALYTICS_RANGES, calculateAnalytics, calculateLifetimeMetrics } from "./analytics.js";
 import { mergeData, loadData, normalizeData, saveData } from "./storage.js";
 import { applyTheme, loadTheme, saveTheme } from "./theme.js";
+import {
+  cloudDataUrl,
+  cloudRequestHeaders,
+  isGitHubPagesLocation,
+  loadCloudSyncKey,
+  loadDataSource,
+} from "./dataSource.js";
 
 let appData = loadData(localStorage);
 let selectedTheme = applyTheme(document.documentElement, loadTheme(localStorage));
 let selectedRangeDays = ANALYTICS_RANGES[0].days;
-const SHARED_DATA_URL = "api/data";
 const SAMPLE_DATA_URL = "sample-data.json";
+const dataSource = loadDataSource(localStorage, globalThis.location);
+const cloudSyncKey = loadCloudSyncKey(localStorage);
 
 const elements = {
   analyticsSource: document.querySelector("#analytics-source"),
@@ -181,19 +189,41 @@ function render() {
 }
 
 async function loadSharedData() {
+  const dataUrl = cloudDataUrl(dataSource);
+  if (!dataUrl || !cloudSyncKey) {
+    if (appData.sessions.length > 0) {
+      elements.analyticsSource.textContent = savedSourceLabel("Reading this device", appData);
+      render();
+      return;
+    }
+    if (isGitHubPagesLocation(globalThis.location)) await loadSampleData();
+    else {
+      elements.analyticsSource.textContent = savedSourceLabel("Reading this device", appData);
+      render();
+    }
+    return;
+  }
+
   try {
-    const response = await fetch(SHARED_DATA_URL, { cache: "no-store" });
+    const response = await fetch(dataUrl, {
+      cache: "no-store",
+      headers: cloudRequestHeaders(cloudSyncKey),
+    });
     if (!response.ok) throw new Error("Shared data unavailable");
     const { data } = await response.json();
 
     if (data) {
       appData = appData.sessions.length > 0 ? mergeData(data, appData) : normalizeData(data);
       saveData(localStorage, appData);
-      elements.analyticsSource.textContent = savedSourceLabel("Saved on this Mac", appData);
+      elements.analyticsSource.textContent = savedSourceLabel("Synced with Cloudflare", appData);
       render();
     }
   } catch {
-    await loadSampleData();
+    if (isGitHubPagesLocation(globalThis.location)) await loadSampleData();
+    else {
+      elements.analyticsSource.textContent = savedSourceLabel("Cloud sync unavailable; reading this device", appData);
+      render();
+    }
   }
 }
 

@@ -1,0 +1,135 @@
+name: FastThirteen
+
+options:
+  bundleIdPrefix: com.disbitski
+  createIntermediateGroups: true
+  deploymentTarget:
+    iOS: "17.0"
+    macOS: "14.0"
+    watchOS: "10.0"
+  xcodeVersion: "26.0"
+
+settings:
+  base:
+    CURRENT_PROJECT_VERSION: 1
+    MARKETING_VERSION: 1.0.0
+    SWIFT_STRICT_CONCURRENCY: complete
+    SWIFT_VERSION: 6.0
+
+targets:
+  FastThirteen-iOS:
+    type: application
+    platform: iOS
+    sources:
+      - path: Sources/Shared
+      - path: Apps/iPhone
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: NO
+        INFOPLIST_FILE: Configuration/iOS-Info.plist
+        PRODUCT_BUNDLE_IDENTIFIER: com.disbitski.fastthirteen.ios
+        PRODUCT_MODULE_NAME: FastThirteenIOS
+        PRODUCT_NAME: Fast Thirteen
+        TARGETED_DEVICE_FAMILY: "1,2"
+    info:
+      path: Configuration/iOS-Info.plist
+      properties:
+        CFBundleDisplayName: Fast Thirteen
+        CFBundleName: FastThirteen
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        LSRequiresIPhoneOS: true
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: false
+        UILaunchScreen: {}
+
+  FastThirteen-macOS:
+    type: application
+    platform: macOS
+    sources:
+      - path: Sources/Shared
+      - path: Apps/Mac
+    settings:
+      base:
+        CODE_SIGN_ENTITLEMENTS: Configuration/macOS.entitlements
+        GENERATE_INFOPLIST_FILE: NO
+        INFOPLIST_FILE: Configuration/macOS-Info.plist
+        PRODUCT_BUNDLE_IDENTIFIER: com.disbitski.fastthirteen.macos
+        PRODUCT_MODULE_NAME: FastThirteenMac
+        PRODUCT_NAME: Fast Thirteen
+    info:
+      path: Configuration/macOS-Info.plist
+      properties:
+        CFBundleDisplayName: Fast Thirteen
+        CFBundleName: FastThirteen
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        LSApplicationCategoryType: public.app-category.healthcare-fitness
+        LSMinimumSystemVersion: $(MACOSX_DEPLOYMENT_TARGET)
+
+  FastThirteen-watchOS:
+    type: application
+    platform: watchOS
+    sources:
+      - path: Sources/Shared
+      - path: Apps/Watch
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: NO
+        INFOPLIST_FILE: Configuration/watchOS-Info.plist
+        PRODUCT_BUNDLE_IDENTIFIER: com.disbitski.fastthirteen.watch
+        PRODUCT_MODULE_NAME: FastThirteenWatch
+        PRODUCT_NAME: Fast Thirteen
+    info:
+      path: Configuration/watchOS-Info.plist
+      properties:
+        CFBundleDisplayName: Fast Thirteen
+        CFBundleName: FastThirteen
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+
+  FastThirteenTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - path: Tests
+    dependencies:
+      - target: FastThirteen-macOS
+    settings:
+      base:
+        BUNDLE_LOADER: $(TEST_HOST)
+        GENERATE_INFOPLIST_FILE: YES
+        PRODUCT_BUNDLE_IDENTIFIER: com.disbitski.fastthirteen.tests
+        PRODUCT_MODULE_NAME: FastThirteenTests
+        TEST_HOST: $(BUILT_PRODUCTS_DIR)/Fast Thirteen.app/Contents/MacOS/Fast Thirteen
+
+schemes:
+  FastThirteen-iOS:
+    build:
+      targets:
+        FastThirteen-iOS: all
+    run:
+      config: Debug
+    archive:
+      config: Release
+  FastThirteen-macOS:
+    build:
+      targets:
+        FastThirteen-macOS: all
+        FastThirteenTests: [test]
+    test:
+      config: Debug
+      targets:
+        - FastThirteenTests
+    run:
+      config: Debug
+    archive:
+      config: Release
+  FastThirteen-watchOS:
+    build:
+      targets:
+        FastThirteen-watchOS: all
+    run:
+      config: Debug
+    archive:
+      config: Release

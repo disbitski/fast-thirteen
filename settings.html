@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Fast Thirteen settings for goals, data storage, and backups." />
+    <title>Fast Thirteen Settings</title>
+    <script>
+      try {
+        const theme = localStorage.getItem("fast-thirteen-theme");
+        if (["light", "cyan", "purple", "spacex"].includes(theme)) {
+          document.documentElement.dataset.theme = theme;
+        }
+      } catch {}
+    </script>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="shell settings-shell">
+      <header class="topbar">
+        <a class="brand" href="index.html" aria-label="Fast Thirteen home">
+          <span class="brand-mark">13</span>
+          <span>Fast Thirteen</span>
+        </a>
+        <div class="topbar-actions">
+          <nav class="topnav" aria-label="Fast Thirteen pages">
+            <a href="index.html">Tracker</a>
+            <a href="dashboard.html">Dashboard</a>
+            <a aria-current="page" href="settings.html">Settings</a>
+          </nav>
+          <fieldset class="theme-picker" aria-label="Color theme">
+            <legend>Color theme</legend>
+            <button class="theme-option light" type="button" data-theme-option="light" aria-label="Use light theme" aria-pressed="true" title="Light"></button>
+            <button class="theme-option cyan" type="button" data-theme-option="cyan" aria-label="Use black and cyan theme" aria-pressed="false" title="Black and cyan"></button>
+            <button class="theme-option purple" type="button" data-theme-option="purple" aria-label="Use black and purple theme" aria-pressed="false" title="Black and purple"></button>
+            <button class="theme-option spacex" type="button" data-theme-option="spacex" aria-label="Use SpaceX theme" aria-pressed="false" title="SpaceX"></button>
+          </fieldset>
+        </div>
+      </header>
+
+      <section class="settings-page" aria-labelledby="settings-title">
+        <div class="settings-page-heading">
+          <p class="eyebrow">Settings</p>
+          <h1 id="settings-title">Set the rhythm. Keep the history.</h1>
+          <p class="hero-copy">Your tracker stays focused. Make changes here whenever you need them.</p>
+        </div>
+
+        <div class="settings-card">
+          <label class="goal-control" for="target-hours">
+            <span>
+              <strong>Fasting target</strong>
+              <small>Used when you begin your next fast.</small>
+            </span>
+            <span class="number-control">
+              <input id="target-hours" type="number" min="1" max="48" step="0.5" inputmode="decimal" value="13" />
+              <span>hours</span>
+            </span>
+          </label>
+
+          <section class="data-source-control" aria-labelledby="data-source-title">
+            <span>
+              <strong id="data-source-title">Data location</strong>
+              <small id="source-detail">Choose this device or private Cloudflare sync.</small>
+            </span>
+            <div class="source-actions" role="group" aria-label="Data location">
+              <button class="secondary-button" id="local-source" type="button" aria-pressed="false">Use this device</button>
+              <button class="secondary-button" id="cloud-source" type="button" aria-pressed="false">Use Cloudflare sync</button>
+            </div>
+            <code class="server-origin" id="cloud-origin">https://fast-api.thedavedev.com</code>
+            <div class="sync-key-control">
+              <label for="cloud-key">
+                <strong>Private sync key</strong>
+                <small>Stored only on this device and sent over HTTPS.</small>
+              </label>
+              <div class="sync-key-entry">
+                <input id="cloud-key" type="password" autocomplete="off" spellcheck="false" />
+                <button class="secondary-button" id="save-cloud-key" type="button">Save key</button>
+              </div>
+            </div>
+          </section>
+
+          <div class="backup-control">
+            <span>
+              <strong>Local backup</strong>
+              <small>Export your history or restore it on this browser.</small>
+            </span>
+            <div class="backup-actions">
+              <button class="secondary-button" id="export-button" type="button">Export data</button>
+              <button class="secondary-button" id="import-button" type="button">Import backup</button>
+              <input id="import-file" type="file" accept="application/json,.json" hidden />
+            </div>
+          </div>
+        </div>
+        <p class="save-status settings-status" id="settings-status" role="status">Settings saved on this device</p>
+      </section>
+    </main>
+    <script type="module" src="src/settings.js"></script>
+  </body>
+</html>

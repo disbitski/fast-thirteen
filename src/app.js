@@ -21,6 +21,13 @@ import {
 } from "./storage.js";
 import { applyTheme, loadTheme, saveTheme } from "./theme.js";
 import {
+  cloudDataUrl,
+  cloudRequestHeaders,
+  isGitHubPagesLocation,
+  loadCloudSyncKey,
+  loadDataSource,
+} from "./dataSource.js";
+import {
   cleanAuthCallbackUrl,
   createAuthService,
   mapAuthStateToProfile,
@@ -114,9 +121,10 @@ const callbackAuthState = readAuthCallbackState(
 let authState = authService.initialState(callbackAuthState);
 if (callbackAuthState) cleanAuthCallbackUrl(globalThis.location, globalThis.history);
 
-const SHARED_DATA_URL = "api/data";
 const SAMPLE_DATA_URL = "sample-data.json";
 const FAST_BUTTON_COOLDOWN_MS = 500;
+let dataSource = loadDataSource(localStorage, globalThis.location);
+let cloudSyncKey = loadCloudSyncKey(localStorage);
 
 const elements = {
   button: document.querySelector("#fast-button"),
@@ -347,7 +355,7 @@ function persistData(message = "Saved locally") {
   appData = result.data;
   elements.saveStatus.textContent = result.saved ? message : "Could not save locally";
   renderProfileSync();
-  saveSharedData(appData);
+  void saveSharedData(appData);
 }
 
 function persistAuthProfileState(message) {
@@ -356,12 +364,30 @@ function persistAuthProfileState(message) {
   appData = result.data;
   elements.saveStatus.textContent = result.saved ? message : "Could not save profile locally";
   renderProfileSync();
-  saveSharedData(appData);
+  void saveSharedData(appData);
 }
 
 async function loadSharedData() {
+  const dataUrl = cloudDataUrl(dataSource);
+  if (!dataUrl || !cloudSyncKey) {
+    if (sessions.length > 0) {
+      elements.saveStatus.textContent = dataUrl ? "Cloud key needed; saved on this device" : "Saved on this device";
+      render();
+      return;
+    }
+    if (isGitHubPagesLocation(globalThis.location)) await loadSampleData();
+    else {
+      elements.saveStatus.textContent = dataUrl ? "Cloud key needed; saved on this device" : "Saved on this device";
+      render();
+    }
+    return;
+  }
+
   try {
-    const response = await fetch(SHARED_DATA_URL, { cache: "no-store" });
+    const response = await fetch(dataUrl, {
+      cache: "no-store",
+      headers: cloudRequestHeaders(cloudSyncKey),
+    });
     if (!response.ok) throw new Error("Shared data unavailable");
     const { data } = await response.json();
 
@@ -375,10 +401,14 @@ async function loadSharedData() {
       await saveSharedData(appData);
     }
 
-    elements.saveStatus.textContent = "Saved on this Mac";
+    elements.saveStatus.textContent = "Synced with Cloudflare";
     render();
   } catch {
-    await loadSampleData();
+    if (isGitHubPagesLocation(globalThis.location)) await loadSampleData();
+    else {
+      elements.saveStatus.textContent = "Cloud sync unavailable; using this device";
+      render();
+    }
   }
 }
 
@@ -404,13 +434,16 @@ async function loadSampleData() {
 }
 
 async function saveSharedData(value) {
+  const dataUrl = cloudDataUrl(dataSource);
+  if (!dataUrl || !cloudSyncKey) return;
+
   try {
-    const response = await fetch(SHARED_DATA_URL, {
+    const response = await fetch(dataUrl, {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
+      headers: cloudRequestHeaders(cloudSyncKey, true),
       body: JSON.stringify(value),
     });
-    if (response.ok) elements.saveStatus.textContent = "Saved on this Mac";
+    if (response.ok) elements.saveStatus.textContent = "Synced with Cloudflare";
   } catch {}
 }
 
@@ -683,6 +716,7 @@ function renderTheme() {
 }
 
 function renderSettings() {
+  if (!elements.targetHours) return;
   elements.targetHours.value = appData.settings.targetHours;
   elements.targetHours.disabled = Boolean(activeSession);
 }

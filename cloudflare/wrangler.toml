@@ -1,0 +1,16 @@
+name = "fast-thirteen-api"
+main = "src/worker.js"
+compatibility_date = "2026-07-29"
+workers_dev = true
+
+[[routes]]
+pattern = "fast-api.thedavedev.com"
+custom_domain = true
+
+[[d1_databases]]
+binding = "DB"
+database_name = "fast-thirteen"
+database_id = "TO_BE_CREATED"
+
+[vars]
+ALLOWED_ORIGINS = "https://disbitski.github.io,http://localhost:4173,http://127.0.0.1:4173,http://192.168.86.50:4173"

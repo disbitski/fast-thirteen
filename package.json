@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "start": "node server.js",
-    "test": "node --test"
+    "test": "node --test",
+    "test:cloudflare": "node --test cloudflare/test/*.test.js"
   },
   "engines": {
     "node": ">=20"

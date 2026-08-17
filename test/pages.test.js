@@ -6,8 +6,9 @@ import { normalizeData } from "../src/storage.js";
 test("static pages use project-relative assets for GitHub Pages", () => {
   const index = readFileSync("index.html", "utf8");
   const dashboard = readFileSync("dashboard.html", "utf8");
+  const settings = readFileSync("settings.html", "utf8");
 
-  for (const html of [index, dashboard]) {
+  for (const html of [index, dashboard, settings]) {
     assert.doesNotMatch(html, /href="\/(?:dashboard\.html|styles\.css)?"/);
     assert.doesNotMatch(html, /src="\/(?:config\.js|src\/)/);
   }
@@ -16,6 +17,20 @@ test("static pages use project-relative assets for GitHub Pages", () => {
   assert.match(index, /src="src\/app\.js"/);
   assert.match(dashboard, /href="index\.html"/);
   assert.match(dashboard, /src="src\/dashboard\.js"/);
+  assert.match(settings, /src="src\/settings\.js"/);
+});
+
+test("settings owns goal, backup, and Cloudflare data-source controls", () => {
+  const index = readFileSync("index.html", "utf8");
+  const settings = readFileSync("settings.html", "utf8");
+
+  assert.match(index, /href="settings\.html">Settings/);
+  assert.match(settings, /id="target-hours"/);
+  assert.match(settings, /id="export-button"/);
+  assert.match(settings, /id="import-button"/);
+  assert.match(settings, /id="cloud-source"/);
+  assert.match(settings, /id="cloud-key"/);
+  assert.match(settings, /id="local-source"/);
 });
 
 test("sample data is versioned and dashboard-ready", () => {

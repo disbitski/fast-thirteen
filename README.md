@@ -48,13 +48,15 @@ Instagram: [@thedavedev](https://www.instagram.com/thedavedev/).
 - Separate analytics dashboard with weekly charts and fasting insights
 - Recent-session history
 - Completed-session details with timestamp correction and confirmed deletion
-- Browser-local persistence
+- Browser-local persistence, with a focused Settings page for backups and data location
+- Choose this device or private Cloudflare sync for history on every device
 - Guest mode and local data sync status foundations
 - Optional Google sign-in scaffold that stays disabled without Supabase config
 - Persistent light, black/cyan, black/purple, and SpaceX themes
 - Fasting goals from 1 to 48 hours in 30-minute steps, captured per session
 - Versioned local data with migration from the original storage format
 - JSON backup export and restore
+- SwiftUI companion apps for iPhone, macOS, and Apple Watch
 
 ## Run Locally
 
@@ -75,21 +77,45 @@ npm test
 
 ## Local Data
 
-Fast Thirteen stores active and completed fasts in a local file on the Mac
-running the server, with browser storage as a fallback. Closing the tab,
-restarting the browser, restarting the local server, or switching between the
-localhost and LAN URLs will not remove that data.
+Fast Thirteen stores active and completed fasts on the current device and can
+sync the same versioned history through a private Cloudflare Worker and D1
+database. Closing the tab or restarting the app does not remove the offline
+copy.
 
 The local data format is sync-ready: sessions carry `updatedAt` and `deletedAt`
 fields, backups include guest profile metadata, and sync status is tracked even
 while the app remains local-only.
 
-Other devices on the same network can use the Mac's LAN URL while the server
-is running. They will share the same fasting history.
+The Cloudflare data source works away from home and keeps the web, iPhone, Mac,
+and Apple Watch clients on the same history. The previous Mac Tower file stays
+available as a migration backup.
 
 Use **Export data** periodically to create a JSON backup. Browser storage can
 still be lost if site data is manually cleared or the browser profile is
 removed.
+
+Cloudflare architecture and deployment notes live in
+[`docs/cloudflare-sync.md`](docs/cloudflare-sync.md). The private sync key is a
+Worker secret and is never committed to Git.
+
+## Apple Apps
+
+The SwiftUI app project is in [`apple/`](apple/). It includes dedicated iPhone,
+Mac, and Apple Watch targets that default to private Cloudflare sync through
+`https://fast-api.thedavedev.com`. Each app keeps an offline local copy, stores
+the private sync key in Keychain, and lets you switch to device-only storage in
+Settings.
+
+Generate and open the Xcode project with:
+
+```sh
+cd apple
+xcodegen generate
+open FastThirteen.xcodeproj
+```
+
+For the current Apple Health limitation and why Fast Thirteen does not write
+fasts as unrelated health samples, see [`docs/apple-health.md`](docs/apple-health.md).
 
 ## Supabase Foundation
 
@@ -132,7 +158,6 @@ enabled.
 - Reminders and target-reached notifications
 - Personal analytics dashboard with weekly and monthly fasting trends
 - Authentication and cloud synchronization
-- SwiftUI apps for iPhone, Mac, and Apple Watch
 - Widgets, complications, and target-reached notifications
 
 ## Health Note

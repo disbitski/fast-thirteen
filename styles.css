@@ -689,6 +689,27 @@ h3 {
   margin: 15px 0 0;
 }
 
+.settings-page {
+  max-width: 860px;
+  margin: 56px auto 0;
+  padding-top: 56px;
+  border-top: 1px solid var(--line);
+}
+
+.settings-page-heading {
+  margin-bottom: 28px;
+}
+
+.settings-page-heading h1 {
+  margin: 0;
+  font-size: clamp(2rem, 5vw, 3.6rem);
+  letter-spacing: -0.06em;
+}
+
+.settings-page-heading .hero-copy {
+  max-width: 620px;
+}
+
 .dashboard,
 .history,
 .settings {
@@ -726,7 +747,8 @@ h3 {
 
 .goal-control,
 .backup-control,
-.profile-control {
+.profile-control,
+.data-source-control {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -735,26 +757,30 @@ h3 {
 }
 
 .goal-control,
-.backup-control {
+.backup-control,
+.data-source-control {
   border-bottom: 1px solid var(--line);
 }
 
 .goal-control strong,
 .backup-control strong,
-.profile-control strong {
+.profile-control strong,
+.data-source-control strong {
   display: block;
   margin-bottom: 5px;
 }
 
 .goal-control small,
 .backup-control small,
-.profile-control small {
+.profile-control small,
+.data-source-control small {
   color: var(--muted);
 }
 
 .number-control,
 .backup-actions,
-.profile-actions {
+.profile-actions,
+.source-actions {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -763,6 +789,60 @@ h3 {
 .number-control {
   color: var(--muted);
   font-size: 0.82rem;
+}
+
+.data-source-control {
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.data-source-control > span {
+  flex: 1 1 280px;
+}
+
+.source-actions {
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.source-actions [aria-pressed="true"] {
+  color: var(--accent-ink);
+  border-color: var(--green);
+  background: var(--green);
+}
+
+.server-origin {
+  flex-basis: 100%;
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
+.sync-key-control,
+.sync-key-entry {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sync-key-control {
+  flex-basis: 100%;
+  justify-content: space-between;
+  padding-top: 8px;
+}
+
+.sync-key-entry input {
+  width: min(320px, 52vw);
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  color: var(--ink);
+  background: var(--card);
+}
+
+.settings-status {
+  display: block;
+  margin: 16px 4px 0;
 }
 
 .number-control input {
@@ -2113,14 +2193,41 @@ h3 {
 
   .goal-control,
   .backup-control,
-  .profile-control {
+  .profile-control,
+  .data-source-control {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .data-source-control {
+    flex-wrap: nowrap;
+  }
+
+  .data-source-control > span,
+  .data-source-control > .server-origin,
+  .data-source-control > .sync-key-control {
+    flex: none;
+    width: 100%;
   }
 
   .profile-actions {
     justify-content: flex-start;
     max-width: 100%;
+  }
+
+  .source-actions {
+    justify-content: flex-start;
+  }
+
+  .sync-key-control,
+  .sync-key-entry {
+    align-items: stretch;
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .sync-key-entry input {
+    width: 100%;
   }
 
   .migration-preview,

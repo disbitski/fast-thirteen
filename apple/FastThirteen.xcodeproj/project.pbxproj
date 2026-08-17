@@ -1,0 +1,617 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		05A9C716999F1F4F8C1E0A60 /* FastThirteenData.swift in Sources */ = {isa = PBXBuildFile; fileRef = B74A6095CA9795C103297A43 /* FastThirteenData.swift */; };
+		13C39AE53C8A18368FF55B8D /* FastThirteenMacApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3D0F6871B5FC3AD76570FD7 /* FastThirteenMacApp.swift */; };
+		2F5721C968893B35ECE5404E /* FastThirteenWatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27333184CAE94298D7A4D7B4 /* FastThirteenWatchApp.swift */; };
+		35514B69FE48E5317CA25366 /* FastThirteenStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FDF904FA50BFF6163D65F57 /* FastThirteenStore.swift */; };
+		429EDE1B676B1D4FBE4ACF57 /* CloudSyncKeyStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E62C832325A0E31DD3224A83 /* CloudSyncKeyStore.swift */; };
+		4978835A2B95DE6FC050682E /* FastThirteenViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DAFA6A172A8016A29E54F70 /* FastThirteenViews.swift */; };
+		55A3735B46B8FCD68CCB192E /* FastThirteenIOSApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F19D0DFB116AE99C78D12878 /* FastThirteenIOSApp.swift */; };
+		5FA176659AF291ABB08D86D0 /* CloudSyncKeyStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E62C832325A0E31DD3224A83 /* CloudSyncKeyStore.swift */; };
+		A96E24EB06F409ED08A3D151 /* CloudSyncKeyStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E62C832325A0E31DD3224A83 /* CloudSyncKeyStore.swift */; };
+		B09BDF335CA3E483A80F8A44 /* FastThirteenStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FDF904FA50BFF6163D65F57 /* FastThirteenStore.swift */; };
+		BA913D7A59DE4E5475F937DE /* FastThirteenDataTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DE08678F80DB2A535491E97 /* FastThirteenDataTests.swift */; };
+		BB87A27BE510DAC18F66B320 /* FastThirteenData.swift in Sources */ = {isa = PBXBuildFile; fileRef = B74A6095CA9795C103297A43 /* FastThirteenData.swift */; };
+		C0301DE4112C165D8EF0DC61 /* FastThirteenData.swift in Sources */ = {isa = PBXBuildFile; fileRef = B74A6095CA9795C103297A43 /* FastThirteenData.swift */; };
+		C3B81F6818079072E49834D1 /* FastThirteenViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DAFA6A172A8016A29E54F70 /* FastThirteenViews.swift */; };
+		D319CCDA3947B48A99AE024E /* FastThirteenStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FDF904FA50BFF6163D65F57 /* FastThirteenStore.swift */; };
+		E7E4C57E84DF72F9DEE0BF48 /* FastThirteenViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DAFA6A172A8016A29E54F70 /* FastThirteenViews.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		5B22F10784FB137987252159 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = ACAA9017C24F8E9EC2BC9339 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 3FF76B1C6B61B23A902C3C98;
+			remoteInfo = "FastThirteen-macOS";
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		0DE08678F80DB2A535491E97 /* FastThirteenDataTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FastThirteenDataTests.swift; sourceTree = "<group>"; };
+		27333184CAE94298D7A4D7B4 /* FastThirteenWatchApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FastThirteenWatchApp.swift; sourceTree = "<group>"; };
+		4D0929881A8CEA8D3AB67A64 /* FastThirteen-iOS.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = "FastThirteen-iOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		4DAFA6A172A8016A29E54F70 /* FastThirteenViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FastThirteenViews.swift; sourceTree = "<group>"; };
+		6FDF904FA50BFF6163D65F57 /* FastThirteenStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FastThirteenStore.swift; sourceTree = "<group>"; };
+		7E864074A866810CD5479A7B /* FastThirteen-macOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "FastThirteen-macOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		B74A6095CA9795C103297A43 /* FastThirteenData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FastThirteenData.swift; sourceTree = "<group>"; };
+		C02114821133660932636D68 /* FastThirteen-watchOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "FastThirteen-watchOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		E3D0F6871B5FC3AD76570FD7 /* FastThirteenMacApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FastThirteenMacApp.swift; sourceTree = "<group>"; };
+		E62C832325A0E31DD3224A83 /* CloudSyncKeyStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudSyncKeyStore.swift; sourceTree = "<group>"; };
+		F19D0DFB116AE99C78D12878 /* FastThirteenIOSApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FastThirteenIOSApp.swift; sourceTree = "<group>"; };
+		F5D2A1E88FB7A2C68FDF8C6E /* FastThirteenTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FastThirteenTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		37043FE799B082EE2FAF8A6D /* Apps */ = {
+			isa = PBXGroup;
+			children = (
+				498B36A3BA4F468C45D7199C /* iPhone */,
+				A44EC910E12CF3096E4A30B8 /* Mac */,
+				F8ADCB4B3551CDD948F183F7 /* Watch */,
+			);
+			path = Apps;
+			sourceTree = "<group>";
+		};
+		498B36A3BA4F468C45D7199C /* iPhone */ = {
+			isa = PBXGroup;
+			children = (
+				F19D0DFB116AE99C78D12878 /* FastThirteenIOSApp.swift */,
+			);
+			path = iPhone;
+			sourceTree = "<group>";
+		};
+		4D148459B224D96C28E33A84 /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				E62C832325A0E31DD3224A83 /* CloudSyncKeyStore.swift */,
+				B74A6095CA9795C103297A43 /* FastThirteenData.swift */,
+				6FDF904FA50BFF6163D65F57 /* FastThirteenStore.swift */,
+				4DAFA6A172A8016A29E54F70 /* FastThirteenViews.swift */,
+			);
+			path = Shared;
+			sourceTree = "<group>";
+		};
+		73DC3026445EF616CF6D11C6 /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				4D148459B224D96C28E33A84 /* Shared */,
+			);
+			path = Sources;
+			sourceTree = "<group>";
+		};
+		8544017E25776BD1426BF0D1 /* Tests */ = {
+			isa = PBXGroup;
+			children = (
+				0DE08678F80DB2A535491E97 /* FastThirteenDataTests.swift */,
+			);
+			path = Tests;
+			sourceTree = "<group>";
+		};
+		9484B1F1AD47F25451FAACD9 = {
+			isa = PBXGroup;
+			children = (
+				37043FE799B082EE2FAF8A6D /* Apps */,
+				73DC3026445EF616CF6D11C6 /* Sources */,
+				8544017E25776BD1426BF0D1 /* Tests */,
+				C13266EF1FD1B0E123610C83 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		A44EC910E12CF3096E4A30B8 /* Mac */ = {
+			isa = PBXGroup;
+			children = (
+				E3D0F6871B5FC3AD76570FD7 /* FastThirteenMacApp.swift */,
+			);
+			path = Mac;
+			sourceTree = "<group>";
+		};
+		C13266EF1FD1B0E123610C83 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				4D0929881A8CEA8D3AB67A64 /* FastThirteen-iOS.app */,
+				7E864074A866810CD5479A7B /* FastThirteen-macOS.app */,
+				C02114821133660932636D68 /* FastThirteen-watchOS.app */,
+				F5D2A1E88FB7A2C68FDF8C6E /* FastThirteenTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		F8ADCB4B3551CDD948F183F7 /* Watch */ = {
+			isa = PBXGroup;
+			children = (
+				27333184CAE94298D7A4D7B4 /* FastThirteenWatchApp.swift */,
+			);
+			path = Watch;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		087FA96C17E9DB38253BF902 /* FastThirteen-watchOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1F7A1CEDAA05DB151F14CBF6 /* Build configuration list for PBXNativeTarget "FastThirteen-watchOS" */;
+			buildPhases = (
+				E4FD714F0D47D37D845EEAC8 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "FastThirteen-watchOS";
+			packageProductDependencies = (
+			);
+			productName = "FastThirteen-watchOS";
+			productReference = C02114821133660932636D68 /* FastThirteen-watchOS.app */;
+			productType = "com.apple.product-type.application";
+		};
+		0EAAEB493B0F21C7798F3049 /* FastThirteen-iOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 42C9BD4343A66CFC03870E33 /* Build configuration list for PBXNativeTarget "FastThirteen-iOS" */;
+			buildPhases = (
+				5BFF76C30AE87EBCB91A6DB6 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "FastThirteen-iOS";
+			packageProductDependencies = (
+			);
+			productName = "FastThirteen-iOS";
+			productReference = 4D0929881A8CEA8D3AB67A64 /* FastThirteen-iOS.app */;
+			productType = "com.apple.product-type.application";
+		};
+		3FF76B1C6B61B23A902C3C98 /* FastThirteen-macOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C396190D41A6F3E4F6E039AE /* Build configuration list for PBXNativeTarget "FastThirteen-macOS" */;
+			buildPhases = (
+				C89537BD6AF11569808397F0 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "FastThirteen-macOS";
+			packageProductDependencies = (
+			);
+			productName = "FastThirteen-macOS";
+			productReference = 7E864074A866810CD5479A7B /* FastThirteen-macOS.app */;
+			productType = "com.apple.product-type.application";
+		};
+		C22FD2E27915F2B332D049E9 /* FastThirteenTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = ED893EB8B6CC25FAD2A71F88 /* Build configuration list for PBXNativeTarget "FastThirteenTests" */;
+			buildPhases = (
+				B112261E3E69270F3E5FF985 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				15BF3F269767D5B4DBEAF8BE /* PBXTargetDependency */,
+			);
+			name = FastThirteenTests;
+			packageProductDependencies = (
+			);
+			productName = FastThirteenTests;
+			productReference = F5D2A1E88FB7A2C68FDF8C6E /* FastThirteenTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		ACAA9017C24F8E9EC2BC9339 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 2600;
+				TargetAttributes = {
+				};
+			};
+			buildConfigurationList = 8E5403B5E1FFFB236AE4A2E7 /* Build configuration list for PBXProject "FastThirteen" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 9484B1F1AD47F25451FAACD9;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = C13266EF1FD1B0E123610C83 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				0EAAEB493B0F21C7798F3049 /* FastThirteen-iOS */,
+				3FF76B1C6B61B23A902C3C98 /* FastThirteen-macOS */,
+				087FA96C17E9DB38253BF902 /* FastThirteen-watchOS */,
+				C22FD2E27915F2B332D049E9 /* FastThirteenTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		5BFF76C30AE87EBCB91A6DB6 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				429EDE1B676B1D4FBE4ACF57 /* CloudSyncKeyStore.swift in Sources */,
+				05A9C716999F1F4F8C1E0A60 /* FastThirteenData.swift in Sources */,
+				55A3735B46B8FCD68CCB192E /* FastThirteenIOSApp.swift in Sources */,
+				D319CCDA3947B48A99AE024E /* FastThirteenStore.swift in Sources */,
+				E7E4C57E84DF72F9DEE0BF48 /* FastThirteenViews.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B112261E3E69270F3E5FF985 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				BA913D7A59DE4E5475F937DE /* FastThirteenDataTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C89537BD6AF11569808397F0 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				5FA176659AF291ABB08D86D0 /* CloudSyncKeyStore.swift in Sources */,
+				C0301DE4112C165D8EF0DC61 /* FastThirteenData.swift in Sources */,
+				13C39AE53C8A18368FF55B8D /* FastThirteenMacApp.swift in Sources */,
+				B09BDF335CA3E483A80F8A44 /* FastThirteenStore.swift in Sources */,
+				4978835A2B95DE6FC050682E /* FastThirteenViews.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E4FD714F0D47D37D845EEAC8 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A96E24EB06F409ED08A3D151 /* CloudSyncKeyStore.swift in Sources */,
+				BB87A27BE510DAC18F66B320 /* FastThirteenData.swift in Sources */,
+				35514B69FE48E5317CA25366 /* FastThirteenStore.swift in Sources */,
+				C3B81F6818079072E49834D1 /* FastThirteenViews.swift in Sources */,
+				2F5721C968893B35ECE5404E /* FastThirteenWatchApp.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		15BF3F269767D5B4DBEAF8BE /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 3FF76B1C6B61B23A902C3C98 /* FastThirteen-macOS */;
+			targetProxy = 5B22F10784FB137987252159 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		0476752D0531F419459706FC /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = "Configuration/watchOS-Info.plist";
+				PRODUCT_BUNDLE_IDENTIFIER = com.disbitski.fastthirteen.watch;
+				PRODUCT_MODULE_NAME = FastThirteenWatch;
+				PRODUCT_NAME = "Fast Thirteen";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = 4;
+			};
+			name = Debug;
+		};
+		0B8762651DC29DDE3A4344CE /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Configuration/macOS.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = "Configuration/macOS-Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.disbitski.fastthirteen.macos;
+				PRODUCT_MODULE_NAME = FastThirteenMac;
+				PRODUCT_NAME = "Fast Thirteen";
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		11F1286AF861E2C342839DB8 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.disbitski.fastthirteen.tests;
+				PRODUCT_MODULE_NAME = FastThirteenTests;
+				SDKROOT = macosx;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Fast Thirteen.app/Contents/MacOS/Fast Thirteen";
+			};
+			name = Debug;
+		};
+		2EAC093CFF17730C3FEF511C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = Debug;
+		};
+		5DCD3E9A339ED8028A276B68 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = Release;
+		};
+		6343DD84503986A30BD438C7 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = "Configuration/watchOS-Info.plist";
+				PRODUCT_BUNDLE_IDENTIFIER = com.disbitski.fastthirteen.watch;
+				PRODUCT_MODULE_NAME = FastThirteenWatch;
+				PRODUCT_NAME = "Fast Thirteen";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = 4;
+			};
+			name = Release;
+		};
+		64A9C2A571C1843330A2C751 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = "Configuration/iOS-Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.disbitski.fastthirteen.ios;
+				PRODUCT_MODULE_NAME = FastThirteenIOS;
+				PRODUCT_NAME = "Fast Thirteen";
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		CB504607AD50B80C59079730 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.disbitski.fastthirteen.tests;
+				PRODUCT_MODULE_NAME = FastThirteenTests;
+				SDKROOT = macosx;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Fast Thirteen.app/Contents/MacOS/Fast Thirteen";
+			};
+			name = Release;
+		};
+		E9454EA0D396AAC041E8F48B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = "Configuration/iOS-Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.disbitski.fastthirteen.ios;
+				PRODUCT_MODULE_NAME = FastThirteenIOS;
+				PRODUCT_NAME = "Fast Thirteen";
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		FFC22753A3160F7A95549548 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Configuration/macOS.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = "Configuration/macOS-Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.disbitski.fastthirteen.macos;
+				PRODUCT_MODULE_NAME = FastThirteenMac;
+				PRODUCT_NAME = "Fast Thirteen";
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		1F7A1CEDAA05DB151F14CBF6 /* Build configuration list for PBXNativeTarget "FastThirteen-watchOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0476752D0531F419459706FC /* Debug */,
+				6343DD84503986A30BD438C7 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		42C9BD4343A66CFC03870E33 /* Build configuration list for PBXNativeTarget "FastThirteen-iOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				64A9C2A571C1843330A2C751 /* Debug */,
+				E9454EA0D396AAC041E8F48B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		8E5403B5E1FFFB236AE4A2E7 /* Build configuration list for PBXProject "FastThirteen" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				2EAC093CFF17730C3FEF511C /* Debug */,
+				5DCD3E9A339ED8028A276B68 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		C396190D41A6F3E4F6E039AE /* Build configuration list for PBXNativeTarget "FastThirteen-macOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				FFC22753A3160F7A95549548 /* Debug */,
+				0B8762651DC29DDE3A4344CE /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		ED893EB8B6CC25FAD2A71F88 /* Build configuration list for PBXNativeTarget "FastThirteenTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				11F1286AF861E2C342839DB8 /* Debug */,
+				CB504607AD50B80C59079730 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = ACAA9017C24F8E9EC2BC9339 /* Project object */;
+}
