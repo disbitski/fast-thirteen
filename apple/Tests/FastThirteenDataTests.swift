@@ -14,4 +14,38 @@ final class FastThirteenDataTests: XCTestCase {
         XCTAssertNil(merged.sessions.first(where: { $0.id == "local" })?.endedAt)
         XCTAssertNotNil(merged.sessions.first(where: { $0.id == "remote" }))
     }
+
+    func testInsightsCalculateTotalsGoalsAndCurrentStreak() {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+        let today = calendar.startOfDay(for: Date(timeIntervalSince1970: 1_786_915_200))
+        let now = today.addingTimeInterval(12 * 3_600)
+        let yesterday = calendar.date(byAdding: .day, value: -1, to: today)!
+        let sessions = [
+            FastingSession(
+                id: "today",
+                startedAt: today.addingTimeInterval(-6 * 3_600),
+                endedAt: today.addingTimeInterval(8 * 3_600),
+                targetHours: 13,
+                updatedAt: now,
+                deletedAt: nil
+            ),
+            FastingSession(
+                id: "yesterday",
+                startedAt: yesterday.addingTimeInterval(-4 * 3_600),
+                endedAt: yesterday.addingTimeInterval(8 * 3_600),
+                targetHours: 13,
+                updatedAt: now,
+                deletedAt: nil
+            )
+        ]
+
+        let insights = FastThirteenData(sessions: sessions).insights(at: now, calendar: calendar)
+
+        XCTAssertEqual(insights.completedCount, 2)
+        XCTAssertEqual(insights.currentStreakDays, 2)
+        XCTAssertEqual(insights.totalHours, 26, accuracy: 0.001)
+        XCTAssertEqual(insights.averageHours, 13, accuracy: 0.001)
+        XCTAssertEqual(insights.goalHitRate, 0.5, accuracy: 0.001)
+    }
 }

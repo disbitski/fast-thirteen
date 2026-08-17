@@ -3,10 +3,9 @@
 A focused fasting tracker built around one simple daily goal: fast for at
 least 13 hours.
 
-The first milestone is a dependency-free web MVP. It can start and end a fast,
-store sessions in the browser, and summarize progress. The domain logic is
-kept separate so it can later be shared conceptually with iPhone, Mac, and
-Apple Watch clients.
+Fast Thirteen includes a dependency-free web app plus native SwiftUI clients
+for iPhone, Mac, and Apple Watch. Every client can start and end a fast, keep an
+offline copy, and securely share the same history through Cloudflare.
 
 ## Try The Live UI
 
@@ -20,6 +19,24 @@ without running anything locally.
 | Light | Black/Cyan | SpaceX |
 | --- | --- | --- |
 | ![Fast Thirteen light theme](docs/assets/fast-thirteen-light.png) | ![Fast Thirteen black and cyan theme](docs/assets/fast-thirteen-cyan.png) | ![Fast Thirteen SpaceX theme](docs/assets/fast-thirteen-spacex.png) |
+
+## Native App Preview
+
+The Apple apps use platform-native navigation, dashboards, Keychain-backed
+sync setup, and device-specific theme preferences. Choose System, Cyan,
+Purple, SpaceX, or Light from Settings on every device.
+
+### macOS Dashboard
+
+![Fast Thirteen native macOS dashboard in the SpaceX theme](docs/assets/fast-thirteen-mac.png)
+
+| iPhone | Apple Watch |
+| --- | --- |
+| <img src="docs/assets/fast-thirteen-iphone.png" alt="Fast Thirteen native iPhone tracker in the Purple theme" width="360"> | <img src="docs/assets/fast-thirteen-watch.png" alt="Fast Thirteen standalone Apple Watch tracker in the Cyan theme" width="240"> |
+
+The iPhone and Mac apps separate Tracker, Dashboard, History, and Settings into
+native top-level destinations. The standalone Watch app uses watchOS vertical
+pages for Fast, Dashboard, and Settings, and talks directly to Cloudflare.
 
 ## Why I Built This
 
@@ -56,7 +73,7 @@ Instagram: [@thedavedev](https://www.instagram.com/thedavedev/).
 - Fasting goals from 1 to 48 hours in 30-minute steps, captured per session
 - Versioned local data with migration from the original storage format
 - JSON backup export and restore
-- SwiftUI companion apps for iPhone, macOS, and Apple Watch
+- Native SwiftUI apps for iPhone, macOS, and standalone Apple Watch
 
 ## Run Locally
 
@@ -101,9 +118,10 @@ Worker secret and is never committed to Git.
 ## Apple Apps
 
 The SwiftUI app project is in [`apple/`](apple/). It includes dedicated iPhone,
-Mac, and Apple Watch targets that default to private Cloudflare sync through
-`https://fast-api.thedavedev.com`. Each app keeps an offline local copy, stores
-the private sync key in Keychain, and lets you switch to device-only storage in
+Mac, and standalone Apple Watch targets that default to private Cloudflare sync
+through `https://fast-api.thedavedev.com`. Each app keeps an offline local
+copy, stores the private sync key in Keychain, offers native tracker and
+dashboard screens, and lets you switch data location and color theme in
 Settings.
 
 Generate and open the Xcode project with:

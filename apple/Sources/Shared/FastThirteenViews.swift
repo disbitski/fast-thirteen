@@ -1,15 +1,26 @@
 import SwiftUI
+#if !os(watchOS)
+import Charts
+#endif
 
 struct FastThirteenRootView: View {
+    @EnvironmentObject private var store: FastThirteenStore
+
     var body: some View {
         TabView {
             TrackerView()
                 .tabItem { Label("Tracker", systemImage: "timer") }
+#if !os(watchOS)
+            FastDashboardView()
+                .tabItem { Label("Dashboard", systemImage: "chart.bar.fill") }
+#endif
             FastHistoryView()
                 .tabItem { Label("History", systemImage: "clock.arrow.circlepath") }
             FastSettingsView()
                 .tabItem { Label("Settings", systemImage: "gearshape") }
         }
+        .preferredColorScheme(store.theme.colorScheme)
+        .tint(store.theme.tint)
     }
 }
 
@@ -86,6 +97,110 @@ private struct ActiveFastCard: View {
     }
 }
 
+#if !os(watchOS)
+struct FastDashboardView: View {
+    @EnvironmentObject private var store: FastThirteenStore
+
+    private var recentSessions: [FastingSession] {
+        Array(store.completedSessions.prefix(7).reversed())
+    }
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 20) {
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 150), spacing: 12)], spacing: 12) {
+                        FastMetricCard(
+                            label: "Current streak",
+                            value: "\(store.insights.currentStreakDays) days",
+                            icon: "flame.fill"
+                        )
+                        FastMetricCard(
+                            label: "Completed fasts",
+                            value: "\(store.insights.completedCount)",
+                            icon: "checkmark.circle.fill"
+                        )
+                        FastMetricCard(
+                            label: "Total fasting",
+                            value: String(format: "%.1f hr", store.insights.totalHours),
+                            icon: "sum"
+                        )
+                        FastMetricCard(
+                            label: "Average fast",
+                            value: String(format: "%.1f hr", store.insights.averageHours),
+                            icon: "chart.line.uptrend.xyaxis"
+                        )
+                        FastMetricCard(
+                            label: "Goals reached",
+                            value: store.insights.goalHitRate.formatted(.percent.precision(.fractionLength(0))),
+                            icon: "target"
+                        )
+                    }
+
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Recent rhythm")
+                            .font(.title2.weight(.bold))
+                        Text("Your seven most recent completed fasts compared with the current \(store.targetHours, specifier: "%.1f")-hour goal.")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+
+                        if recentSessions.isEmpty {
+                            ContentUnavailableView(
+                                "No completed fasts",
+                                systemImage: "chart.bar",
+                                description: Text("Finish a fast to start building your dashboard.")
+                            )
+                            .frame(maxWidth: .infinity, minHeight: 180)
+                        } else {
+                            Chart(recentSessions) { session in
+                                BarMark(
+                                    x: .value("Date", session.startedAt, unit: .day),
+                                    y: .value("Hours", session.elapsed() / 3_600)
+                                )
+                                .foregroundStyle(store.theme.tint.gradient)
+
+                                RuleMark(y: .value("Goal", store.targetHours))
+                                    .foregroundStyle(.secondary)
+                                    .lineStyle(StrokeStyle(lineWidth: 1, dash: [5]))
+                            }
+                            .chartYAxisLabel("Hours")
+                            .frame(height: 220)
+                        }
+                    }
+                    .padding(18)
+                    .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 20))
+                }
+                .frame(maxWidth: 900)
+                .padding()
+            }
+            .navigationTitle("Dashboard")
+        }
+    }
+}
+
+private struct FastMetricCard: View {
+    let label: String
+    let value: String
+    let icon: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Image(systemName: icon)
+                .font(.title2)
+                .foregroundStyle(.tint)
+            Text(value)
+                .font(.title2.weight(.bold).monospacedDigit())
+            Text(label)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(16)
+        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 18))
+    }
+}
+#endif
+
 struct FastHistoryView: View {
     @EnvironmentObject private var store: FastThirteenStore
 
@@ -132,6 +247,24 @@ struct FastSettingsView: View {
                         .foregroundStyle(.secondary)
                 }
 
+                Section("Appearance") {
+                    Picker("Theme", selection: Binding(
+                        get: { store.theme },
+                        set: { store.selectTheme($0) }
+                    )) {
+                        ForEach(FastThirteenTheme.allCases) { theme in
+                            Text(theme.title).tag(theme)
+                        }
+                    }
+#if !os(watchOS)
+                    .pickerStyle(.menu)
+#endif
+
+                    Text(store.theme.detail)
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                }
+
                 Section("Data location") {
                     Picker("Fasting data", selection: Binding(
                         get: { store.dataSource },
@@ -170,6 +303,25 @@ struct FastSettingsView: View {
                 }
             }
             .navigationTitle("Settings")
+        }
+    }
+}
+
+extension FastThirteenTheme {
+    var colorScheme: ColorScheme? {
+        switch self {
+        case .system: nil
+        case .light: .light
+        case .cyan, .purple, .spaceX: .dark
+        }
+    }
+
+    var tint: Color {
+        switch self {
+        case .system, .light: .blue
+        case .cyan: Color(red: 0.10, green: 0.82, blue: 1.00)
+        case .purple: Color(red: 0.65, green: 0.33, blue: 1.00)
+        case .spaceX: Color(red: 1.00, green: 0.38, blue: 0.08)
         }
     }
 }

@@ -20,24 +20,29 @@ final class FastThirteenStore: ObservableObject {
     @Published private(set) var dataSource: TrackerDataSource
     @Published private(set) var state: TrackerStoreState
     @Published private(set) var hasCloudSyncKey: Bool
+    @Published private(set) var theme: FastThirteenTheme
 
     private let defaults: UserDefaults
     private var cloudSyncKey: String
     private static let dataKey = "fast-thirteen.apple.data"
     private static let sourceKey = "fast-thirteen.apple.data-source"
+    private static let themeKey = "fast-thirteen.apple.theme"
 
     init(defaults: UserDefaults = .standard) {
+        let syncKey = CloudSyncKeyStore.load()
         self.defaults = defaults
         self.data = Self.readLocalData(from: defaults)
         self.dataSource = TrackerDataSource(rawValue: defaults.string(forKey: Self.sourceKey) ?? "") ?? .cloud
         self.state = .ready("Ready on this device")
-        self.cloudSyncKey = CloudSyncKeyStore.load()
-        self.hasCloudSyncKey = !cloudSyncKey.isEmpty
+        self.cloudSyncKey = syncKey
+        self.hasCloudSyncKey = !syncKey.isEmpty
+        self.theme = FastThirteenTheme(rawValue: defaults.string(forKey: Self.themeKey) ?? "") ?? .system
     }
 
     var activeSession: FastingSession? { data.activeSession }
     var completedSessions: [FastingSession] { data.completedSessions }
     var targetHours: Double { data.settings.targetHours }
+    var insights: FastingInsights { data.insights() }
 
     func startFast(at date: Date = .now) {
         guard activeSession == nil else { return }
@@ -63,6 +68,11 @@ final class FastThirteenStore: ObservableObject {
     func updateTarget(hours: Double) {
         data.settings.targetHours = min(48, max(1, (hours * 2).rounded() / 2))
         persistAndSync("Goal saved on this device")
+    }
+
+    func selectTheme(_ theme: FastThirteenTheme) {
+        self.theme = theme
+        defaults.set(theme.rawValue, forKey: Self.themeKey)
     }
 
     func selectDataSource(_ source: TrackerDataSource) async {

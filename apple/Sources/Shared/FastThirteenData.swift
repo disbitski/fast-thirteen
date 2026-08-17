@@ -21,6 +21,36 @@ enum TrackerDataSource: String, CaseIterable, Codable, Identifiable {
     }
 }
 
+enum FastThirteenTheme: String, CaseIterable, Identifiable {
+    case system
+    case cyan
+    case purple
+    case spaceX = "spacex"
+    case light
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .system: "System"
+        case .cyan: "Cyan"
+        case .purple: "Purple"
+        case .spaceX: "SpaceX"
+        case .light: "Light"
+        }
+    }
+
+    var detail: String {
+        switch self {
+        case .system: "Follows this device's appearance."
+        case .cyan: "Black with electric cyan highlights."
+        case .purple: "Black with vivid purple highlights."
+        case .spaceX: "Black with launch-orange highlights."
+        case .light: "Bright surfaces with crisp blue highlights."
+        }
+    }
+}
+
 enum FastThirteenCloud {
     static let origin = URL(string: "https://fast-api.thedavedev.com")!
     static let dataURL = origin.appending(path: "v1/data")
@@ -63,6 +93,14 @@ struct FastingSession: Codable, Equatable, Identifiable {
     }
 }
 
+struct FastingInsights: Equatable {
+    var completedCount: Int
+    var currentStreakDays: Int
+    var totalHours: Double
+    var averageHours: Double
+    var goalHitRate: Double
+}
+
 struct FastThirteenData: Codable, Equatable {
     var version: Int = 3
     var settings: FastingSettings = .init()
@@ -78,6 +116,38 @@ struct FastThirteenData: Codable, Equatable {
         sessions
             .filter { !$0.isDeleted && $0.endedAt != nil }
             .sorted { $0.startedAt > $1.startedAt }
+    }
+
+    func insights(at now: Date = .now, calendar: Calendar = .current) -> FastingInsights {
+        let completed = completedSessions
+        let totalSeconds = completed.reduce(0) { $0 + $1.elapsed() }
+        let totalHours = totalSeconds / 3_600
+        let averageHours = completed.isEmpty ? 0 : totalHours / Double(completed.count)
+        let goalsMet = completed.filter { $0.elapsed() >= $0.targetHours * 3_600 }.count
+        let goalHitRate = completed.isEmpty ? 0 : Double(goalsMet) / Double(completed.count)
+        let completedDays = Set(completed.compactMap { session in
+            session.endedAt.map { calendar.startOfDay(for: $0) }
+        })
+
+        let today = calendar.startOfDay(for: now)
+        var day = completedDays.contains(today)
+            ? today
+            : calendar.date(byAdding: .day, value: -1, to: today) ?? today
+        var currentStreakDays = 0
+
+        while completedDays.contains(day) {
+            currentStreakDays += 1
+            guard let previous = calendar.date(byAdding: .day, value: -1, to: day) else { break }
+            day = previous
+        }
+
+        return FastingInsights(
+            completedCount: completed.count,
+            currentStreakDays: currentStreakDays,
+            totalHours: totalHours,
+            averageHours: averageHours,
+            goalHitRate: goalHitRate
+        )
     }
 
     func merged(with remote: FastThirteenData) -> FastThirteenData {
