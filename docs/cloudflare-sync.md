@@ -25,20 +25,41 @@ Cloudflare's current free allowances are much larger than a personal tracker's
 expected traffic: 100,000 Worker requests per day, 5 million D1 rows read per
 day, 100,000 rows written per day, and 5 GB of D1 storage.
 
+The personal beta was deployed on August 17, 2026. Its initial Mac Tower
+snapshot was backed up locally, uploaded to D1, read back through the public
+API, and verified session by session before clients were pointed at it.
+
 ## Deployment
 
 After authenticating Wrangler:
 
 ```sh
+cd cloudflare
 wrangler d1 create fast-thirteen
-wrangler d1 execute fast-thirteen --remote --file cloudflare/schema.sql
-wrangler secret put SYNC_TOKEN --config cloudflare/wrangler.toml
-wrangler deploy --config cloudflare/wrangler.toml
+wrangler d1 execute fast-thirteen --remote --file schema.sql --config wrangler.toml
+wrangler secret put SYNC_TOKEN --config wrangler.toml
+wrangler deploy --config wrangler.toml
 ```
 
 Patch the returned D1 database ID into `cloudflare/wrangler.toml` before the
 schema and deploy commands. Do not place the sync key in `wrangler.toml`, an
 environment example, the Xcode project, or browser JavaScript.
+
+## Personal Device Setup
+
+The recoverable deployment copy of the private key is stored in the Mac login
+Keychain under a service separate from the app-owned Keychain item. Copy it to
+the clipboard without printing it in Terminal:
+
+```sh
+security find-generic-password -s com.disbitski.fastthirteen.cloud-deployment \
+  -a personal-sync-key -w | pbcopy
+```
+
+Paste the key into **Settings > Data location** in the web, Mac, iPhone, or
+Apple Watch client, save it, and choose **Cloudflare sync**. Each native client
+then stores its own copy in Keychain and retains an offline fasting-history
+copy. Do not send the key through email, chat, screenshots, or source control.
 
 ## Data Safety
 

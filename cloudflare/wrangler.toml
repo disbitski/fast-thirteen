@@ -10,7 +10,7 @@ custom_domain = true
 [[d1_databases]]
 binding = "DB"
 database_name = "fast-thirteen"
-database_id = "TO_BE_CREATED"
+database_id = "e7f2f91f-14a1-44a0-8fae-e238fea1c81f"
 
 [vars]
 ALLOWED_ORIGINS = "https://disbitski.github.io,http://localhost:4173,http://127.0.0.1:4173,http://192.168.86.50:4173"

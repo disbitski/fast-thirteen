@@ -141,7 +141,9 @@ struct FastSettingsView: View {
                             Text(source.title).tag(source)
                         }
                     }
+#if !os(watchOS)
                     .pickerStyle(.menu)
+#endif
 
                     Text(store.dataSource.detail)
                         .font(.footnote)
