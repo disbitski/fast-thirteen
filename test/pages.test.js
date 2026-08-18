@@ -33,6 +33,12 @@ test("settings owns goal, backup, and Cloudflare data-source controls", () => {
   assert.match(settings, /id="local-source"/);
 });
 
+test("tracker labels its seven-day history clearly", () => {
+  const index = readFileSync("index.html", "utf8");
+
+  assert.match(index, /id="history-title">Fasts from the past 7 days<\/h2>/);
+});
+
 test("sample data is versioned and dashboard-ready", () => {
   const sample = normalizeData(JSON.parse(readFileSync("sample-data.json", "utf8")));
   const completedSessions = sample.sessions.filter((session) => !session.deletedAt && session.endedAt);
