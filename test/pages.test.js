@@ -76,6 +76,15 @@ test("fast button ignores duplicate taps before changing session state", () => {
   );
 });
 
+test("fast button exposes its active fasting state", () => {
+  const index = readFileSync("index.html", "utf8");
+  const app = readFileSync("src/app.js", "utf8");
+
+  assert.match(index, /id="fast-button"[^>]*aria-pressed="false"/);
+  assert.match(app, /elements\.button\.setAttribute\("aria-pressed", "false"\)/);
+  assert.match(app, /elements\.button\.setAttribute\("aria-pressed", "true"\)/);
+});
+
 test("active fast history labels the goal completion time", () => {
   const app = readFileSync("src/app.js", "utf8");
 

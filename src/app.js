@@ -604,6 +604,7 @@ function renderHero(now = new Date()) {
     elements.timer.textContent = "00:00:00";
     elements.timerLabel.textContent = `${appData.settings.targetHours}-hour goal`;
     elements.button.textContent = "Start fast";
+    elements.button.setAttribute("aria-pressed", "false");
     elements.button.classList.remove("is-active");
     elements.targetCopy.textContent = `Your target is ${targetLabel(appData.settings.targetHours)}.`;
     elements.progressRing.style.setProperty("--progress", "0deg");
@@ -626,6 +627,7 @@ function renderHero(now = new Date()) {
   elements.timer.textContent = formatDuration(elapsed);
   elements.timerLabel.textContent = complete ? "Goal complete" : `${Math.round(percent * 100)}% complete`;
   elements.button.textContent = "End current fast";
+  elements.button.setAttribute("aria-pressed", "true");
   elements.button.classList.add("is-active");
   elements.targetCopy.textContent = complete
     ? `Target reached at ${formatTime(targetEnd)}.`
