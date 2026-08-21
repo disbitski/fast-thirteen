@@ -39,6 +39,12 @@ test("tracker labels its seven-day history clearly", () => {
   assert.match(index, /id="history-title">Fasts from the past 7 days<\/h2>/);
 });
 
+test("tracker initial goal copy matches the live goal format", () => {
+  const index = readFileSync("index.html", "utf8");
+
+  assert.match(index, /id="timer-label">13-hour goal<\/span>/);
+});
+
 test("sample data is versioned and dashboard-ready", () => {
   const sample = normalizeData(JSON.parse(readFileSync("sample-data.json", "utf8")));
   const completedSessions = sample.sessions.filter((session) => !session.deletedAt && session.endedAt);
