@@ -607,6 +607,7 @@ function renderHero(now = new Date()) {
     elements.button.setAttribute("aria-pressed", "false");
     elements.button.classList.remove("is-active");
     elements.targetCopy.textContent = `Your target is ${targetLabel(appData.settings.targetHours)}.`;
+    elements.progressRing.setAttribute("aria-valuenow", "0");
     elements.progressRing.style.setProperty("--progress", "0deg");
     return;
   }
@@ -615,6 +616,7 @@ function renderHero(now = new Date()) {
   const elapsed = durationMs(activeSession, now);
   const complete = isComplete(activeSession, now);
   const percent = progress(activeSession, now);
+  const percentComplete = Math.round(percent * 100);
   const targetEnd = new Date(
     new Date(activeSession.startedAt).getTime() + activeSession.targetHours * 60 * 60 * 1000,
   );
@@ -625,13 +627,14 @@ function renderHero(now = new Date()) {
     ? "Your daily target is complete. End the fast whenever you are ready."
     : `You started at ${formatTime(activeSession.startedAt)}. Keep going at your own pace.`;
   elements.timer.textContent = formatDuration(elapsed);
-  elements.timerLabel.textContent = complete ? "Goal complete" : `${Math.round(percent * 100)}% complete`;
+  elements.timerLabel.textContent = complete ? "Goal complete" : `${percentComplete}% complete`;
   elements.button.textContent = "End current fast";
   elements.button.setAttribute("aria-pressed", "true");
   elements.button.classList.add("is-active");
   elements.targetCopy.textContent = complete
     ? `Target reached at ${formatTime(targetEnd)}.`
     : `Target time: ${formatTime(targetEnd)}.`;
+  elements.progressRing.setAttribute("aria-valuenow", String(percentComplete));
   elements.progressRing.style.setProperty("--progress", `${percent * 360}deg`);
 }
 

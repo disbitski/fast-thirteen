@@ -91,6 +91,14 @@ test("fast button exposes its active fasting state", () => {
   assert.match(app, /elements\.button\.setAttribute\("aria-pressed", "true"\)/);
 });
 
+test("goal ring exposes its current progress", () => {
+  const index = readFileSync("index.html", "utf8");
+  const app = readFileSync("src/app.js", "utf8");
+
+  assert.match(index, /id="progress-ring"[\s\S]*role="progressbar"[\s\S]*aria-valuenow="0"/);
+  assert.match(app, /progressRing\.setAttribute\("aria-valuenow", String\(percentComplete\)\)/);
+});
+
 test("active fast history labels the goal completion time", () => {
   const app = readFileSync("src/app.js", "utf8");
 

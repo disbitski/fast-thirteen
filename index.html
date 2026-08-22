@@ -80,7 +80,15 @@
         </div>
 
         <div class="timer-card">
-          <div class="progress-ring" id="progress-ring">
+          <div
+            class="progress-ring"
+            id="progress-ring"
+            role="progressbar"
+            aria-label="Fasting goal progress"
+            aria-valuemin="0"
+            aria-valuemax="100"
+            aria-valuenow="0"
+          >
             <div class="progress-inner">
               <span class="timer" id="timer" role="timer">00:00:00</span>
               <span class="timer-label" id="timer-label">13-hour goal</span>
