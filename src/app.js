@@ -608,6 +608,7 @@ function renderHero(now = new Date()) {
     elements.button.classList.remove("is-active");
     elements.targetCopy.textContent = `Your target is ${targetLabel(appData.settings.targetHours)}.`;
     elements.progressRing.setAttribute("aria-valuenow", "0");
+    elements.progressRing.setAttribute("aria-valuetext", "Not fasting");
     elements.progressRing.style.setProperty("--progress", "0deg");
     return;
   }
@@ -635,6 +636,10 @@ function renderHero(now = new Date()) {
     ? `Target reached at ${formatTime(targetEnd)}.`
     : `Target time: ${formatTime(targetEnd)}.`;
   elements.progressRing.setAttribute("aria-valuenow", String(percentComplete));
+  elements.progressRing.setAttribute(
+    "aria-valuetext",
+    complete ? "Goal complete" : `${percentComplete}% complete`,
+  );
   elements.progressRing.style.setProperty("--progress", `${percent * 360}deg`);
 }
 

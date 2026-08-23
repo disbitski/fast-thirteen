@@ -96,7 +96,9 @@ test("goal ring exposes its current progress", () => {
   const app = readFileSync("src/app.js", "utf8");
 
   assert.match(index, /id="progress-ring"[\s\S]*role="progressbar"[\s\S]*aria-valuenow="0"/);
+  assert.match(index, /id="progress-ring"[\s\S]*aria-valuetext="Not fasting"/);
   assert.match(app, /progressRing\.setAttribute\("aria-valuenow", String\(percentComplete\)\)/);
+  assert.match(app, /complete \? "Goal complete" : `\$\{percentComplete\}% complete`/);
 });
 
 test("active fast history labels the goal completion time", () => {
