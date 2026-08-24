@@ -59,7 +59,7 @@ test("history edit controls identify the completed fast", () => {
 
   assert.match(
     app,
-    /aria-label="Edit fast completed \$\{formatDate\(session\.endedAt\)\}"/,
+    /aria-label="Edit fast from \$\{formatTime\(session\.startedAt\)\} to \$\{formatTime\(session\.endedAt\)\} on \$\{formatDate\(session\.endedAt\)\}"/,
   );
 });
 
