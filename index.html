@@ -526,11 +526,11 @@
         <div class="session-summary" id="session-summary"></div>
         <label class="form-field">
           <span>Started</span>
-          <input id="session-started-at" type="datetime-local" required />
+          <input id="session-started-at" type="datetime-local" aria-describedby="session-error" required />
         </label>
         <label class="form-field">
           <span>Ended</span>
-          <input id="session-ended-at" type="datetime-local" required />
+          <input id="session-ended-at" type="datetime-local" aria-describedby="session-error" required />
         </label>
         <p class="form-error" id="session-error" role="alert"></p>
         <div class="dialog-actions">
