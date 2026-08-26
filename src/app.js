@@ -689,6 +689,8 @@ function openSessionDialog(sessionId) {
   deleteConfirmationPending = false;
   elements.deleteSession.textContent = "Delete session";
   elements.sessionError.textContent = "";
+  elements.sessionStartedAt.setAttribute("aria-invalid", "false");
+  elements.sessionEndedAt.setAttribute("aria-invalid", "false");
   elements.sessionStartedAt.value = toLocalInputValue(session.startedAt);
   elements.sessionEndedAt.value = toLocalInputValue(session.endedAt);
   elements.sessionSummary.textContent =
@@ -1508,6 +1510,8 @@ elements.sessionForm.addEventListener("submit", (event) => {
     closeSessionDialog();
     render();
   } catch (error) {
+    elements.sessionStartedAt.setAttribute("aria-invalid", "true");
+    elements.sessionEndedAt.setAttribute("aria-invalid", "true");
     elements.sessionError.textContent = error.message;
   }
 });

@@ -109,10 +109,13 @@ test("active fast history labels the goal completion time", () => {
 
 test("session correction dialog describes the fast being edited", () => {
   const index = readFileSync("index.html", "utf8");
+  const app = readFileSync("src/app.js", "utf8");
 
   assert.match(index, /id="session-dialog"[\s\S]*aria-describedby="session-summary"/);
   assert.match(index, /id="session-started-at"[^>]*aria-describedby="session-error"/);
   assert.match(index, /id="session-ended-at"[^>]*aria-describedby="session-error"/);
+  assert.match(app, /sessionStartedAt\.setAttribute\("aria-invalid", "true"\)/);
+  assert.match(app, /sessionEndedAt\.setAttribute\("aria-invalid", "true"\)/);
 });
 
 test("tracker exposes the local-safe push preview surface", () => {
