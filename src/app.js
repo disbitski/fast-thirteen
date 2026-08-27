@@ -688,15 +688,19 @@ function openSessionDialog(sessionId) {
   editingSessionId = session.id;
   deleteConfirmationPending = false;
   elements.deleteSession.textContent = "Delete session";
-  elements.sessionError.textContent = "";
-  elements.sessionStartedAt.setAttribute("aria-invalid", "false");
-  elements.sessionEndedAt.setAttribute("aria-invalid", "false");
+  clearSessionValidation();
   elements.sessionStartedAt.value = toLocalInputValue(session.startedAt);
   elements.sessionEndedAt.value = toLocalInputValue(session.endedAt);
   elements.sessionSummary.textContent =
     `${formatHoursAndMinutes(durationMs(session))} · ${session.targetHours}-hour goal · ` +
     `${isComplete(session) ? "Goal reached" : "Ended early"}`;
   elements.sessionDialog.showModal();
+}
+
+function clearSessionValidation() {
+  elements.sessionError.textContent = "";
+  elements.sessionStartedAt.setAttribute("aria-invalid", "false");
+  elements.sessionEndedAt.setAttribute("aria-invalid", "false");
 }
 
 function closeSessionDialog() {
@@ -1493,6 +1497,12 @@ elements.button.addEventListener("click", () => {
 elements.sessionList.addEventListener("click", (event) => {
   const button = event.target.closest("[data-session-id]");
   if (button) openSessionDialog(button.dataset.sessionId);
+});
+
+elements.sessionForm.addEventListener("input", () => {
+  clearSessionValidation();
+  deleteConfirmationPending = false;
+  elements.deleteSession.textContent = "Delete session";
 });
 
 elements.sessionForm.addEventListener("submit", (event) => {

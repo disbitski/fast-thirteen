@@ -116,6 +116,7 @@ test("session correction dialog describes the fast being edited", () => {
   assert.match(index, /id="session-ended-at"[^>]*aria-describedby="session-error"/);
   assert.match(app, /sessionStartedAt\.setAttribute\("aria-invalid", "true"\)/);
   assert.match(app, /sessionEndedAt\.setAttribute\("aria-invalid", "true"\)/);
+  assert.match(app, /sessionForm\.addEventListener\("input", \(\) => \{[\s\S]*clearSessionValidation\(\);[\s\S]*deleteConfirmationPending = false;/);
 });
 
 test("tracker exposes the local-safe push preview surface", () => {
