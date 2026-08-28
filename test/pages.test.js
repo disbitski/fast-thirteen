@@ -355,6 +355,7 @@ test("tracker homepage keeps cloud scope creep out of the daily fasting loop", (
   assert.match(index, /id="timer"[^>]*role="timer"/);
   assert.doesNotMatch(index, /id="timer"[^>]*aria-live/);
   assert.match(index, /id="target-hours"/);
+  assert.match(index, /class="empty-icon"[^>]*aria-hidden="true"/);
   assert.match(index, /id="session-list"[^>]*aria-live="polite"/);
   assert.match(index, /href="dashboard\.html"/);
   assert.match(styles, /\[hidden\]\s*\{\s*display:\s*none\s*!important;/);
