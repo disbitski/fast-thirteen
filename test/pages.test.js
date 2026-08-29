@@ -112,6 +112,7 @@ test("session correction dialog describes the fast being edited", () => {
   const app = readFileSync("src/app.js", "utf8");
 
   assert.match(index, /id="session-dialog"[\s\S]*aria-describedby="session-summary"/);
+  assert.match(index, /id="close-session-dialog"[^>]*aria-label="Close session editor"/);
   assert.match(index, /id="session-started-at"[^>]*aria-describedby="session-error"/);
   assert.match(index, /id="session-ended-at"[^>]*aria-describedby="session-error"/);
   assert.match(app, /sessionStartedAt\.setAttribute\("aria-invalid", "true"\)/);
