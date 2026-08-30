@@ -95,9 +95,10 @@ test("goal ring exposes its current progress", () => {
   const index = readFileSync("index.html", "utf8");
   const app = readFileSync("src/app.js", "utf8");
 
-  assert.match(index, /id="progress-ring"[\s\S]*role="progressbar"[\s\S]*aria-valuenow="0"/);
-  assert.match(index, /id="progress-ring"[\s\S]*aria-valuetext="Not fasting"/);
-  assert.match(app, /progressRing\.setAttribute\("aria-valuenow", String\(percentComplete\)\)/);
+  assert.match(index, /id="timer"[^>]*role="timer"/);
+  assert.match(index, /id="timer-label"[\s\S]*role="progressbar"[\s\S]*aria-valuenow="0"/);
+  assert.match(index, /id="timer-label"[\s\S]*aria-valuetext="Not fasting"/);
+  assert.match(app, /timerLabel\.setAttribute\("aria-valuenow", String\(percentComplete\)\)/);
   assert.match(app, /complete \? "Goal complete" : `\$\{percentComplete\}% complete`/);
 });
 
