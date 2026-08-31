@@ -1544,6 +1544,10 @@ elements.deleteSession.addEventListener("click", () => {
 
 elements.cancelSessionEdit.addEventListener("click", closeSessionDialog);
 elements.closeSessionDialog.addEventListener("click", closeSessionDialog);
+elements.sessionDialog.addEventListener("close", () => {
+  editingSessionId = null;
+  deleteConfirmationPending = false;
+});
 
 elements.targetHours.addEventListener("input", () => {
   appData.settings.targetHours = normalizeTargetHours(elements.targetHours.value);
