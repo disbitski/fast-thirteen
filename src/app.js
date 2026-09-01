@@ -687,7 +687,7 @@ function openSessionDialog(sessionId) {
 
   editingSessionId = session.id;
   deleteConfirmationPending = false;
-  elements.deleteSession.textContent = "Delete session";
+  elements.deleteSession.textContent = "Delete fast";
   clearSessionValidation();
   elements.sessionStartedAt.value = toLocalInputValue(session.startedAt);
   elements.sessionEndedAt.value = toLocalInputValue(session.endedAt);
@@ -1502,7 +1502,7 @@ elements.sessionList.addEventListener("click", (event) => {
 elements.sessionForm.addEventListener("input", () => {
   clearSessionValidation();
   deleteConfirmationPending = false;
-  elements.deleteSession.textContent = "Delete session";
+  elements.deleteSession.textContent = "Delete fast";
 });
 
 elements.sessionForm.addEventListener("submit", (event) => {
@@ -1530,14 +1530,14 @@ elements.deleteSession.addEventListener("click", () => {
   if (!deleteConfirmationPending) {
     deleteConfirmationPending = true;
     elements.deleteSession.textContent = "Confirm delete";
-    elements.sessionError.textContent = "Click Confirm delete to permanently remove this session.";
+    elements.sessionError.textContent = "Click Confirm delete to remove this fast from your history.";
     return;
   }
 
   const index = sessions.findIndex((session) => session.id === editingSessionId);
   if (index < 0) return;
   sessions[index] = deleteSession(sessions[index]);
-  persistData("Session deleted");
+  persistData("Fast deleted");
   closeSessionDialog();
   render();
 });

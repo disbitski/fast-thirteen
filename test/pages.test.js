@@ -114,12 +114,14 @@ test("session correction dialog describes the fast being edited", () => {
 
   assert.match(index, /id="session-dialog"[\s\S]*aria-describedby="session-summary"/);
   assert.match(index, /id="close-session-dialog"[^>]*aria-label="Close session editor"/);
+  assert.match(index, /id="delete-session"[^>]*>Delete fast<\/button>/);
   assert.match(index, /id="session-started-at"[^>]*aria-describedby="session-error"/);
   assert.match(index, /id="session-ended-at"[^>]*aria-describedby="session-error"/);
   assert.match(app, /sessionStartedAt\.setAttribute\("aria-invalid", "true"\)/);
   assert.match(app, /sessionEndedAt\.setAttribute\("aria-invalid", "true"\)/);
   assert.match(app, /sessionForm\.addEventListener\("input", \(\) => \{[\s\S]*clearSessionValidation\(\);[\s\S]*deleteConfirmationPending = false;/);
   assert.match(app, /sessionDialog\.addEventListener\("close", \(\) => \{[\s\S]*editingSessionId = null;[\s\S]*deleteConfirmationPending = false;/);
+  assert.match(app, /remove this fast from your history/);
 });
 
 test("tracker exposes the local-safe push preview surface", () => {
