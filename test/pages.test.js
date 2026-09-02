@@ -61,6 +61,8 @@ test("history edit controls identify the completed fast", () => {
     app,
     /aria-label="Edit fast from \$\{formatTime\(session\.startedAt\)\} to \$\{formatTime\(session\.endedAt\)\} on \$\{formatDate\(session\.endedAt\)\}"/,
   );
+  assert.match(app, /<time class="session-date" datetime="\$\{session\.endedAt\}">/);
+  assert.match(app, /<time datetime="\$\{session\.startedAt\}">\$\{formatTime\(session\.startedAt\)\}<\/time>/);
 });
 
 test("active fast history avoids repeated live announcements", () => {
