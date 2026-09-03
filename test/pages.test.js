@@ -107,7 +107,14 @@ test("goal ring exposes its current progress", () => {
 test("active fast history labels the goal completion time", () => {
   const app = readFileSync("src/app.js", "utf8");
 
-  assert.match(app, /Started \$\{formatTime\(session\.startedAt\)\} · Goal time/);
+  assert.match(
+    app,
+    /Started <time datetime="\$\{session\.startedAt\}">\$\{formatTime\(session\.startedAt\)\}<\/time> · Goal time/,
+  );
+  assert.match(
+    app,
+    /<time datetime="\$\{targetEnd\.toISOString\(\)\}">\$\{formatTime\(targetEnd\)\}<\/time>/,
+  );
 });
 
 test("session correction dialog describes the fast being edited", () => {
