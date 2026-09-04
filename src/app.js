@@ -638,7 +638,9 @@ function renderHero(now = new Date()) {
   elements.timerLabel.setAttribute("aria-valuenow", String(percentComplete));
   elements.timerLabel.setAttribute(
     "aria-valuetext",
-    complete ? "Goal complete" : `${percentComplete}% complete`,
+    complete
+      ? `${targetLabel(activeSession.targetHours)} goal complete`
+      : `${percentComplete}% of ${targetLabel(activeSession.targetHours)} goal`,
   );
   elements.progressRing.style.setProperty("--progress", `${percent * 360}deg`);
 }

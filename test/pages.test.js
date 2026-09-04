@@ -101,7 +101,11 @@ test("goal ring exposes its current progress", () => {
   assert.match(index, /id="timer-label"[\s\S]*role="progressbar"[\s\S]*aria-valuenow="0"/);
   assert.match(index, /id="timer-label"[\s\S]*aria-valuetext="Not fasting"/);
   assert.match(app, /timerLabel\.setAttribute\("aria-valuenow", String\(percentComplete\)\)/);
-  assert.match(app, /complete \? "Goal complete" : `\$\{percentComplete\}% complete`/);
+  assert.match(app, /`\$\{targetLabel\(activeSession\.targetHours\)\} goal complete`/);
+  assert.match(
+    app,
+    /`\$\{percentComplete\}% of \$\{targetLabel\(activeSession\.targetHours\)\} goal`/,
+  );
 });
 
 test("active fast history labels the goal completion time", () => {
