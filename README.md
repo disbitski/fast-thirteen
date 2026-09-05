@@ -92,6 +92,19 @@ Run the domain tests:
 npm test
 ```
 
+## Forgot To End A Fast?
+
+You can correct the recorded time in the web app:
+
+1. If the timer is still running, choose **End current fast** first.
+2. In **Fasts from the past 7 days**, choose **Edit** beside that fast.
+3. Set **Ended** to when you actually finished. Check both the date and time,
+   especially for an overnight fast. You can also correct **Started** here.
+4. Choose **Save correction** to save the corrected session.
+
+For an accidental entry, choose **Delete fast**, then **Confirm delete**.
+Choose **Cancel** to close the editor without saving your edits.
+
 ## Local Data
 
 Fast Thirteen stores active and completed fasts on the current device and can
