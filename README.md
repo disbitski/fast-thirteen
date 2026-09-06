@@ -92,6 +92,16 @@ Run the domain tests:
 npm test
 ```
 
+## Change Your Fasting Target
+
+In the web app, open **Settings** and change **Fasting target**. Choose from
+1 to 48 hours in half-hour steps, such as `13.5` for 13 hours and 30 minutes.
+The setting saves automatically.
+
+The new target applies when you start your next fast. An active fast and past
+sessions keep the target they started with, so changing this setting does not
+change whether those sessions reached their goal.
+
 ## Forgot To End A Fast?
 
 You can correct the recorded time in the web app:
