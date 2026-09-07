@@ -36,6 +36,16 @@ test("caps progress when a fast exceeds its target", () => {
   assert.equal(isComplete(complete), true);
 });
 
+test("an ended fast does not keep progressing as time passes", () => {
+  const active = startFast(new Date("2026-09-06T20:00:00.000Z"), 13);
+  const ended = endFast(active, new Date("2026-09-07T08:00:00.000Z"));
+  const nextDay = new Date("2026-09-08T08:00:00.000Z");
+
+  assert.equal(durationMs(ended, nextDay), 12 * 60 * 60 * 1000);
+  assert.equal(progress(ended, nextDay), 12 / 13);
+  assert.equal(isComplete(ended, nextDay), false);
+});
+
 test("ending a fast rejects impossible timestamps", () => {
   const active = session("2026-06-12T08:00:00.000Z", null);
 
