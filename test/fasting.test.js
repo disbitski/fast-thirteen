@@ -29,6 +29,17 @@ test("calculates duration and progress toward a 13-hour fast", () => {
   assert.equal(isComplete(active, now), false);
 });
 
+test("a half-hour goal completes at the exact target time", () => {
+  const active = startFast(new Date("2026-09-08T18:00:00.000Z"), 14.5);
+  const justBefore = new Date("2026-09-09T08:29:59.999Z");
+  const atTarget = new Date("2026-09-09T08:30:00.000Z");
+
+  assert.equal(isComplete(active, justBefore), false);
+  assert.ok(progress(active, justBefore) < 1);
+  assert.equal(isComplete(active, atTarget), true);
+  assert.equal(progress(active, atTarget), 1);
+});
+
 test("caps progress when a fast exceeds its target", () => {
   const complete = session("2026-06-11T18:00:00.000Z", "2026-06-12T08:00:00.000Z");
 
