@@ -128,8 +128,15 @@ test("session correction dialog describes the fast being edited", () => {
   assert.match(index, /id="session-dialog"[\s\S]*aria-describedby="session-summary"/);
   assert.match(index, /id="close-session-dialog"[^>]*aria-label="Close session editor"/);
   assert.match(index, /id="delete-session"[^>]*>Delete fast<\/button>/);
-  assert.match(index, /id="session-started-at"[^>]*aria-describedby="session-error"/);
-  assert.match(index, /id="session-ended-at"[^>]*aria-describedby="session-error"/);
+  for (const fieldId of ["session-started-at", "session-ended-at"]) {
+    const field = index.match(new RegExp(`<input[^>]*id="${fieldId}"[^>]*>`))?.[0];
+    assert.ok(field, `${fieldId} exists`);
+    const descriptions = field.match(/aria-describedby="([^"]+)"/)?.[1].trim().split(/\s+/) ?? [];
+    for (const descriptionId of ["session-time-hint", "session-error"]) {
+      assert.ok(descriptions.includes(descriptionId), `${fieldId} references ${descriptionId}`);
+      assert.ok(index.includes(`id="${descriptionId}"`), `${descriptionId} exists`);
+    }
+  }
   assert.match(app, /sessionStartedAt\.setAttribute\("aria-invalid", "true"\)/);
   assert.match(app, /sessionEndedAt\.setAttribute\("aria-invalid", "true"\)/);
   assert.match(app, /sessionForm\.addEventListener\("input", \(\) => \{[\s\S]*clearSessionValidation\(\);[\s\S]*deleteConfirmationPending = false;/);
