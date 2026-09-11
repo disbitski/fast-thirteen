@@ -617,7 +617,7 @@ function renderHero(now = new Date()) {
   const elapsed = durationMs(activeSession, now);
   const complete = isComplete(activeSession, now);
   const percent = progress(activeSession, now);
-  const percentComplete = Math.round(percent * 100);
+  const percentComplete = Math.floor(percent * 100);
   const targetEnd = new Date(
     new Date(activeSession.startedAt).getTime() + activeSession.targetHours * 60 * 60 * 1000,
   );
