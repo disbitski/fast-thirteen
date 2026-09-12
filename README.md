@@ -77,6 +77,8 @@ Instagram: [@thedavedev](https://www.instagram.com/thedavedev/).
 
 ## Run Locally
 
+Use Node.js 20 or newer and run these commands from the repository root.
+
 ```sh
 npm start
 ```
@@ -86,10 +88,16 @@ Open [http://localhost:4173](http://localhost:4173).
 The local server disables browser caching so the current app code is always
 used after a reload.
 
-Run the domain tests:
+Run all tests:
 
 ```sh
 npm test
+```
+
+To check only the fasting logic while working on a small change:
+
+```sh
+node --test test/fasting.test.js
 ```
 
 ## Change Your Fasting Target
