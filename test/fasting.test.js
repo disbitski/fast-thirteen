@@ -57,6 +57,18 @@ test("an ended fast does not keep progressing as time passes", () => {
   assert.equal(isComplete(ended, nextDay), false);
 });
 
+test("ending a fast twice preserves the original end time", () => {
+  const active = startFast(new Date("2026-09-12T18:00:00.000Z"), 13);
+  const ended = endFast(active, new Date("2026-09-13T07:00:00.000Z"));
+  const original = { ...ended };
+
+  assert.throws(
+    () => endFast(ended, new Date("2026-09-13T08:00:00.000Z")),
+    /Fast has already ended/,
+  );
+  assert.deepEqual(ended, original);
+});
+
 test("ending a fast rejects impossible timestamps", () => {
   const active = session("2026-06-12T08:00:00.000Z", null);
 
