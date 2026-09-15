@@ -110,6 +110,10 @@ The new target applies when you start your next fast. An active fast and past
 sessions keep the target they started with, so changing this setting does not
 change whether those sessions reached their goal.
 
+Reaching the target does not automatically end your fast. The timer keeps
+running until you choose **End current fast**. End it when you actually finish
+fasting so the recorded duration reflects your session.
+
 ## Forgot To End A Fast?
 
 You can correct the recorded time in the web app:
