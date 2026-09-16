@@ -174,6 +174,24 @@ test("corrects a completed session while preserving its target", () => {
   assert.equal(isComplete(corrected), true);
 });
 
+test("shortening a fast below its goal removes goal completion", () => {
+  const original = session("2026-09-15T18:00:00.000Z", "2026-09-16T08:00:00.000Z", 13);
+  assert.equal(isComplete(original), true);
+
+  const corrected = correctSession(
+    original,
+    original.startedAt,
+    "2026-09-16T06:00:00.000Z",
+    new Date("2026-09-16T09:00:00.000Z"),
+  );
+
+  assert.equal(corrected.id, original.id);
+  assert.equal(corrected.targetHours, 13);
+  assert.equal(durationMs(corrected), 12 * 60 * 60 * 1000);
+  assert.equal(isComplete(corrected), false);
+  assert.equal(original.endedAt, "2026-09-16T08:00:00.000Z");
+});
+
 test("rejects invalid session corrections", () => {
   const completed = session("2026-06-14T23:00:00.000Z", "2026-06-15T11:00:00.000Z");
 
