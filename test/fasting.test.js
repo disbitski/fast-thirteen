@@ -201,6 +201,20 @@ test("rejects invalid session corrections", () => {
   );
 });
 
+test("missing correction timestamps leave the original fast unchanged", () => {
+  const completed = session("2026-09-17T18:00:00.000Z", "2026-09-18T07:00:00.000Z");
+  const original = { ...completed };
+  const now = new Date("2026-09-18T08:00:00.000Z");
+
+  for (const [startedAt, endedAt] of [["", completed.endedAt], [completed.startedAt, ""]]) {
+    assert.throws(
+      () => correctSession(completed, startedAt, endedAt, now),
+      /Start and end times are required/,
+    );
+    assert.deepEqual(completed, original);
+  }
+});
+
 test("deleted sessions do not affect dashboard statistics", () => {
   const completed = session("2026-06-14T22:00:00.000Z", "2026-06-15T11:00:00.000Z");
   const deleted = deleteSession(completed, new Date("2026-06-15T12:00:00.000Z"));
