@@ -675,7 +675,7 @@ function renderHistory() {
         <div class="session-result-column">
           <span class="session-duration">${formatHoursAndMinutes(durationMs(session))}</span>
           <span class="session-result ${complete ? "complete" : ""}">${complete ? "Goal reached" : "Fast ended early"}</span>
-          <button class="text-button edit-session" type="button" data-session-id="${session.id}" aria-label="Edit fast from ${formatTime(session.startedAt)} to ${formatTime(session.endedAt)} on ${formatDate(session.endedAt)}">Edit</button>
+          <button class="text-button edit-session" type="button" data-session-id="${session.id}" aria-label="Edit fast from ${formatDate(session.startedAt)} at ${formatTime(session.startedAt)} to ${formatDate(session.endedAt)} at ${formatTime(session.endedAt)}">Edit</button>
         </div>
       `;
       return item;
