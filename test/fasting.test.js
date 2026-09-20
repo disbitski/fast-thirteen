@@ -39,6 +39,15 @@ test("a spring clock change does not count the skipped hour toward a fast", () =
   assert.equal(isComplete(active, new Date("2026-03-08T09:00:00-04:00")), true);
 });
 
+test("the repeated autumn hour counts toward elapsed fasting time", () => {
+  const active = startFast(new Date("2026-11-01T01:30:00-04:00"), 1);
+  const repeatedTime = new Date("2026-11-01T01:30:00-05:00");
+
+  assert.equal(durationMs(active, repeatedTime), 60 * 60 * 1000);
+  assert.equal(progress(active, repeatedTime), 1);
+  assert.equal(isComplete(active, repeatedTime), true);
+});
+
 test("a half-hour goal completes at the exact target time", () => {
   const active = startFast(new Date("2026-09-08T18:00:00.000Z"), 14.5);
   const justBefore = new Date("2026-09-09T08:29:59.999Z");
