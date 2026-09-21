@@ -127,6 +127,11 @@ You can correct the recorded time in the web app:
 For an accidental entry, choose **Delete fast**, then **Confirm delete**.
 Choose **Cancel** to close the editor without saving your edits.
 
+The web app displays dates and times in your device's local time. Fasting
+duration uses elapsed time: when clocks move forward or back by one hour,
+a fast spanning that change can be an hour shorter or longer than the
+difference between the displayed clock times.
+
 ## Local Data
 
 Fast Thirteen stores active and completed fasts on the current device and can
