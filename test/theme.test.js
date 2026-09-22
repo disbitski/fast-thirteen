@@ -40,6 +40,18 @@ test("loads and saves a valid theme", () => {
   assert.equal(loadTheme(storage), "spacex");
 });
 
+test("recovers from an unknown saved theme when a valid theme is selected", () => {
+  const storage = memoryStorage("retired-theme");
+  const root = { dataset: {} };
+
+  applyTheme(root, loadTheme(storage));
+  assert.equal(root.dataset.theme, DEFAULT_THEME);
+
+  applyTheme(root, saveTheme(storage, "purple"));
+  assert.equal(root.dataset.theme, "purple");
+  assert.equal(loadTheme(storage), "purple");
+});
+
 test("falls back safely when browser storage is unavailable", () => {
   const brokenStorage = {
     getItem() {
