@@ -201,13 +201,15 @@ test("shortening a fast below its goal removes goal completion", () => {
   assert.equal(original.endedAt, "2026-09-16T08:00:00.000Z");
 });
 
-test("rejects invalid session corrections", () => {
+test("rejects corrections ending at or before the start", () => {
   const completed = session("2026-06-14T23:00:00.000Z", "2026-06-15T11:00:00.000Z");
 
-  assert.throws(
-    () => correctSession(completed, completed.endedAt, completed.startedAt),
-    /End time must be after start time/,
-  );
+  for (const endedAt of [completed.startedAt, "2026-06-14T22:59:59.999Z"]) {
+    assert.throws(
+      () => correctSession(completed, completed.startedAt, endedAt),
+      /End time must be after start time/,
+    );
+  }
 });
 
 test("missing correction timestamps leave the original fast unchanged", () => {
