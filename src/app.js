@@ -1552,6 +1552,7 @@ elements.sessionDialog.addEventListener("close", () => {
 });
 
 elements.targetHours.addEventListener("input", () => {
+  if (elements.targetHours.value === "") return;
   appData.settings.targetHours = normalizeTargetHours(elements.targetHours.value);
   persistData("Goal saved locally");
   renderHero();

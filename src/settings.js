@@ -144,6 +144,7 @@ function render() {
 }
 
 elements.targetHours.addEventListener("input", () => {
+  if (elements.targetHours.value === "") return;
   appData.settings.targetHours = normalizeTargetHours(elements.targetHours.value);
   persistLocal("Goal saved on this device");
   if (dataSource.mode === "cloud") void saveToCloud();
