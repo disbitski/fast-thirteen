@@ -713,6 +713,7 @@ function closeSessionDialog() {
 
 function createActiveSessionRow(session, now = new Date()) {
   const item = document.createElement("li");
+  const complete = isComplete(session, now);
   const targetEnd = new Date(
     new Date(session.startedAt).getTime() + session.targetHours * 60 * 60 * 1000,
   );
@@ -724,7 +725,7 @@ function createActiveSessionRow(session, now = new Date()) {
     </div>
     <div>
       <span class="session-duration">${formatDuration(durationMs(session, now))}</span>
-      <span class="session-result complete">${session.targetHours}-hour goal</span>
+      <span class="session-result ${complete ? "complete" : ""}">${complete ? "Goal reached" : `${session.targetHours}-hour goal`}</span>
     </div>
   `;
   return item;
