@@ -1531,6 +1531,7 @@ elements.sessionForm.addEventListener("submit", (event) => {
 
 elements.deleteSession.addEventListener("click", () => {
   if (!deleteConfirmationPending) {
+    clearSessionValidation();
     deleteConfirmationPending = true;
     elements.deleteSession.textContent = "Confirm delete";
     elements.sessionError.textContent = "Click Confirm delete to remove this fast from your history.";
