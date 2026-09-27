@@ -1514,10 +1514,13 @@ elements.sessionForm.addEventListener("submit", (event) => {
   if (index < 0) return;
 
   try {
+    const original = sessions[index];
     sessions[index] = correctSession(
-      sessions[index],
-      elements.sessionStartedAt.value,
-      elements.sessionEndedAt.value,
+      original,
+      elements.sessionStartedAt.value === toLocalInputValue(original.startedAt)
+        ? original.startedAt : elements.sessionStartedAt.value,
+      elements.sessionEndedAt.value === toLocalInputValue(original.endedAt)
+        ? original.endedAt : elements.sessionEndedAt.value,
     );
     persistData("Session corrected and saved");
     closeSessionDialog();
