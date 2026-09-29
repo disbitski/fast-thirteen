@@ -126,8 +126,9 @@ matches only when its public exit IP is listed and the device routes web traffic
 through that exit. A short access password is only a convenience gate; the
 existing private Cloudflare sync key remains required to read or change data.
 
-On a Vercel URL, the browser uses the same-origin `/v1/data` relay. That route
-passes the existing private sync key to the fixed Cloudflare API endpoint and
+On `fast13.vercel.app` or `fast13.thedavedev.com`, the browser uses the
+same-origin `/v1/data` relay. The relay passes the existing private sync key
+to the fixed Cloudflare API endpoint and
 returns its response without storing a copy. The Worker, its CORS allowlist,
 and D1 data stay unchanged. The native apps currently sync directly with the
 Cloudflare API and need no Vercel password.

@@ -17,8 +17,9 @@ export function isGitHubPagesLocation(location) {
   return location?.hostname?.endsWith(".github.io") ?? false;
 }
 
-export function isVercelLocation(location) {
-  return location?.hostname?.endsWith(".vercel.app") ?? false;
+export function isHostedWebLocation(location) {
+  return location?.hostname === "fast13.thedavedev.com"
+    || (location?.hostname?.endsWith(".vercel.app") ?? false);
 }
 
 export function defaultDataSource(location = globalThis.location) {
@@ -26,7 +27,7 @@ export function defaultDataSource(location = globalThis.location) {
 
   return {
     mode: isGitHubPages ? "local" : "cloud",
-    cloudOrigin: isVercelLocation(location) ? location.origin : CLOUDFLARE_API_ORIGIN,
+    cloudOrigin: isHostedWebLocation(location) ? location.origin : CLOUDFLARE_API_ORIGIN,
   };
 }
 
