@@ -1640,7 +1640,7 @@ elements.exportButton.addEventListener("click", () => {
   const blob = new Blob([serializeBackup(appData)], { type: "application/json" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
-  const date = new Date().toISOString().slice(0, 10);
+  const date = toLocalInputValue(new Date()).slice(0, 10);
   link.href = url;
   link.download = `fast-thirteen-backup-${date}.json`;
   link.click();

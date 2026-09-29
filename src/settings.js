@@ -197,7 +197,10 @@ elements.exportButton.addEventListener("click", () => {
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = `fast-thirteen-backup-${new Date().toISOString().slice(0, 10)}.json`;
+  const now = new Date();
+  const localDate = new Date(now.getTime() - now.getTimezoneOffset() * 60 * 1000)
+    .toISOString().slice(0, 10);
+  link.download = `fast-thirteen-backup-${localDate}.json`;
   link.click();
   setTimeout(() => URL.revokeObjectURL(url), 0);
   elements.status.textContent = "Backup exported";
