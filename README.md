@@ -116,6 +116,9 @@ Before deploying, configure these environment variables on the Vercel project:
 - `FAST_THIRTEEN_ALLOWED_IPS`: optional comma-separated **public egress** IPv4
   addresses or IPv4 CIDR ranges. Exact IPv6 addresses are also accepted.
 
+After saving or changing these Production variables, redeploy the Production
+site so the new deployment receives their values.
+
 The site returns a configuration error when either access secret is missing.
 Requests from a listed public IP pass through; other browser visitors see a
 password form. Vercel cannot see private LAN or VPN tunnel addresses. A VPN
