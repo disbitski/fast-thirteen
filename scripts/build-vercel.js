@@ -7,7 +7,7 @@ const output = fileURLToPath(new URL("../dist/", import.meta.url));
 rmSync(output, { force: true, recursive: true });
 mkdirSync(output, { recursive: true });
 
-for (const file of ["index.html", "dashboard.html", "settings.html", "styles.css", "config.js"]) {
+for (const file of ["index.html", "dashboard.html", "settings.html", "styles.css", "config.js", "favicon.svg", "favicon-32.png"]) {
   cpSync(`${root}${file}`, `${output}${file}`);
 }
 cpSync(`${root}src`, `${output}src`, { recursive: true });
