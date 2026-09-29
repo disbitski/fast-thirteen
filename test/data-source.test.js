@@ -19,6 +19,16 @@ test("data source defaults to private cloud sync and keeps GitHub Pages sample m
   });
 });
 
+test("Vercel web builds reach Cloudflare through their own protected host", () => {
+  const source = defaultDataSource({
+    hostname: "fast13.vercel.app",
+    origin: "https://fast13.vercel.app",
+  });
+
+  assert.equal(source.mode, "cloud");
+  assert.equal(cloudDataUrl(source), "https://fast13.vercel.app/v1/data");
+});
+
 test("cloud connection status distinguishes selection from a verified connection", () => {
   const source = { mode: "cloud", cloudOrigin: CLOUDFLARE_API_ORIGIN };
 

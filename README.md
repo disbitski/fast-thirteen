@@ -100,6 +100,41 @@ To check only the fasting logic while working on a small change:
 node --test test/fasting.test.js
 ```
 
+## Vercel Web Access
+
+The Vercel build publishes only the browser pages, CSS, configuration, and
+client JavaScript as static files. It does not deploy the local file server or
+fasting data.
+Run `npm run build:vercel` to inspect the allowlisted `dist/` output.
+
+Before deploying, configure these environment variables on the Vercel project:
+
+- `FAST_THIRTEEN_ACCESS_PASSWORD`: the browser access password, set in Vercel
+  settings rather than committed to Git.
+- `FAST_THIRTEEN_ACCESS_SESSION_SECRET`: a random value of at least 32 characters
+  used to sign seven-day, secure, HTTP-only access cookies.
+- `FAST_THIRTEEN_ALLOWED_IPS`: optional comma-separated **public egress** IPv4
+  addresses or IPv4 CIDR ranges. Exact IPv6 addresses are also accepted.
+
+The site returns a configuration error when either access secret is missing.
+Requests from a listed public IP pass through; other browser visitors see a
+password form. Vercel cannot see private LAN or VPN tunnel addresses. A VPN
+matches only when its public exit IP is listed and the device routes web traffic
+through that exit. A short access password is only a convenience gate; the
+existing private Cloudflare sync key remains required to read or change data.
+
+On a Vercel URL, the browser uses the same-origin `/v1/data` relay. That route
+passes the existing private sync key to the fixed Cloudflare API endpoint and
+returns its response without storing a copy. The Worker, its CORS allowlist,
+and D1 data stay unchanged. The native apps currently sync directly with the
+Cloudflare API and need no Vercel password.
+
+Browser storage is scoped to each website origin. On first use of the Vercel
+site, enter the existing private sync key in Settings to load the shared
+Cloudflare history. If the old browser has local-only fasts that have never
+synced, export a backup there and import it on the new site before relying on
+the new browser copy.
+
 ## Change Your Fasting Target
 
 In the web app, open **Settings** and change **Fasting target**. Choose from

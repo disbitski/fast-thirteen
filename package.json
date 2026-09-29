@@ -5,10 +5,14 @@
   "type": "module",
   "scripts": {
     "start": "node server.js",
+    "build:vercel": "node scripts/build-vercel.js",
     "test": "node --test",
     "test:cloudflare": "node --test cloudflare/test/*.test.js"
   },
   "engines": {
     "node": ">=20"
+  },
+  "dependencies": {
+    "@vercel/functions": "^3.9.9"
   }
 }

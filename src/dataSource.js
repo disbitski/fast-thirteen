@@ -17,12 +17,16 @@ export function isGitHubPagesLocation(location) {
   return location?.hostname?.endsWith(".github.io") ?? false;
 }
 
+export function isVercelLocation(location) {
+  return location?.hostname?.endsWith(".vercel.app") ?? false;
+}
+
 export function defaultDataSource(location = globalThis.location) {
   const isGitHubPages = isGitHubPagesLocation(location);
 
   return {
     mode: isGitHubPages ? "local" : "cloud",
-    cloudOrigin: CLOUDFLARE_API_ORIGIN,
+    cloudOrigin: isVercelLocation(location) ? location.origin : CLOUDFLARE_API_ORIGIN,
   };
 }
 
