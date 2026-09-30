@@ -163,6 +163,8 @@ test("normalizes fasting targets to safe half-hour increments", () => {
   assert.equal(normalizeTargetHours(0), 1);
   assert.equal(normalizeTargetHours(100), 48);
   assert.equal(normalizeTargetHours("not a number"), 13);
+  assert.equal(normalizeTargetHours(null), 13);
+  assert.equal(normalizeTargetHours("  "), 13);
 });
 
 test("captures the selected goal when starting a fast", () => {
