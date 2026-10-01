@@ -131,6 +131,15 @@ test("multiple completed fasts on one day count as one streak day", () => {
   assert.equal(currentStreak(sessions, new Date("2026-09-27T12:00:00")), 2);
 });
 
+test("keeps a streak across the new year", () => {
+  const sessions = [
+    session("2026-12-30T18:00:00", "2026-12-31T07:00:00"),
+    session("2026-12-31T18:00:00", "2027-01-01T07:00:00"),
+  ];
+
+  assert.equal(currentStreak(sessions, new Date("2027-01-01T12:00:00")), 2);
+});
+
 test("keeps a streak across a daylight-saving time change", () => {
   const previousTimeZone = process.env.TZ;
   process.env.TZ = "America/New_York";
