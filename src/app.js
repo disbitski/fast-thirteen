@@ -633,8 +633,8 @@ function renderHero(now = new Date()) {
   elements.button.setAttribute("aria-pressed", "true");
   elements.button.classList.add("is-active");
   elements.targetCopy.textContent = complete
-    ? `Target reached at ${formatTime(targetEnd)}.`
-    : `Target time: ${formatTime(targetEnd)}.`;
+    ? `Target reached on ${formatDate(targetEnd)} at ${formatTime(targetEnd)}.`
+    : `Target time: ${formatDate(targetEnd)} at ${formatTime(targetEnd)}.`;
   elements.timerLabel.setAttribute("aria-valuenow", String(percentComplete));
   elements.timerLabel.setAttribute(
     "aria-valuetext",
