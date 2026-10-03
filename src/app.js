@@ -721,7 +721,7 @@ function createActiveSessionRow(session, now = new Date()) {
   item.innerHTML = `
     <div>
       <span class="session-date"><span class="live-dot"></span>Currently fasting</span>
-      <span class="session-times">Started <time datetime="${session.startedAt}">${formatTime(session.startedAt)}</time> · Goal time <time datetime="${targetEnd.toISOString()}">${formatTime(targetEnd)}</time></span>
+      <span class="session-times">Started <time datetime="${session.startedAt}">${formatTime(session.startedAt)}</time> · Goal time ${formatDate(targetEnd)} at <time datetime="${targetEnd.toISOString()}">${formatTime(targetEnd)}</time></span>
     </div>
     <div>
       <span class="session-duration">${formatDuration(durationMs(session, now))}</span>
