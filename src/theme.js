@@ -1,5 +1,5 @@
 export const DEFAULT_THEME = "light";
-export const THEMES = Object.freeze(["light", "cyan", "purple", "spacex"]);
+export const THEMES = Object.freeze(["light", "cyan", "purple", "spacex", "ferrari"]);
 export const THEME_STORAGE_KEY = "fast-thirteen-theme";
 
 export function normalizeTheme(value) {

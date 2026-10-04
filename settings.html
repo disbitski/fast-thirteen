@@ -10,7 +10,7 @@
     <script>
       try {
         const theme = localStorage.getItem("fast-thirteen-theme");
-        if (["light", "cyan", "purple", "spacex"].includes(theme)) {
+        if (["light", "cyan", "purple", "spacex", "ferrari"].includes(theme)) {
           document.documentElement.dataset.theme = theme;
         }
       } catch {}
@@ -36,6 +36,7 @@
             <button class="theme-option cyan" type="button" data-theme-option="cyan" aria-label="Use black and cyan theme" aria-pressed="false" title="Black and cyan"></button>
             <button class="theme-option purple" type="button" data-theme-option="purple" aria-label="Use black and purple theme" aria-pressed="false" title="Black and purple"></button>
             <button class="theme-option spacex" type="button" data-theme-option="spacex" aria-label="Use SpaceX theme" aria-pressed="false" title="SpaceX"></button>
+            <button class="theme-option ferrari" type="button" data-theme-option="ferrari" aria-label="Use Ferrari red and black theme" aria-pressed="false" title="Ferrari"></button>
           </fieldset>
         </div>
       </header>

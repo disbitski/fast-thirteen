@@ -101,6 +101,31 @@
   --active-glow: rgba(184, 199, 211, 0.16);
 }
 
+:root[data-theme="ferrari"] {
+  color-scheme: dark;
+  --ink: #fff4f2;
+  --muted: #bfa6a4;
+  --paper: #090607;
+  --card: #160b0d;
+  --line: #55252a;
+  --green: #ff4b45;
+  --green-bright: #ff8178;
+  --green-pale: #361519;
+  --accent-ink: #1a0505;
+  --orange: #ffb0a5;
+  --accent-hover: #ff746c;
+  --active: #ff4b45;
+  --active-ink: #1a0505;
+  --glow: rgba(255, 47, 45, 0.22);
+  --glass: rgba(22, 11, 13, 0.86);
+  --surface: rgba(22, 11, 13, 0.74);
+  --surface-soft: rgba(31, 13, 16, 0.78);
+  --badge: rgba(22, 11, 13, 0.84);
+  --card-border: rgba(255, 129, 120, 0.26);
+  --shadow: rgba(0, 0, 0, 0.62);
+  --active-glow: rgba(255, 75, 69, 0.2);
+}
+
 * {
   box-sizing: border-box;
 }
@@ -237,6 +262,10 @@ a {
 
 .theme-option.spacex {
   background: linear-gradient(135deg, #050608 46%, #ff7a18 47% 68%, #b8c7d3 69%);
+}
+
+.theme-option.ferrari {
+  background: linear-gradient(135deg, #090607 50%, #ff4b45 50%);
 }
 
 .brand {

@@ -28,6 +28,7 @@ test("normalizes unknown themes to light", () => {
   assert.equal(normalizeTheme("cyan"), "cyan");
   assert.equal(normalizeTheme("purple"), "purple");
   assert.equal(normalizeTheme("spacex"), "spacex");
+  assert.equal(normalizeTheme("ferrari"), "ferrari");
   assert.equal(normalizeTheme("neon-green"), DEFAULT_THEME);
   assert.equal(normalizeTheme(null), DEFAULT_THEME);
 });
