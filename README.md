@@ -139,6 +139,16 @@ Cloudflare history. If the old browser has local-only fasts that have never
 synced, export a backup there and import it on the new site before relying on
 the new browser copy.
 
+## Choose A Web Theme
+
+Use the circular color swatches at the top of the web app to choose Light,
+Cyan, Purple, SpaceX, or the red-and-black Ferrari theme. The picker is
+available on Tracker, Dashboard, and Settings.
+
+Your choice applies across all three pages and saves automatically in this
+browser. Each browser and site address keeps its own preference, so you can
+use different themes on different devices.
+
 ## Change Your Fasting Target
 
 In the web app, open **Settings** and change **Fasting target**. Choose from
