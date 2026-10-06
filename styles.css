@@ -2069,6 +2069,19 @@ h3 {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  body,
+  .theme-option,
+  .timer-card,
+  .progress-ring,
+  .primary-button {
+    transition: none;
+  }
+
+  .theme-option:hover,
+  .primary-button:hover {
+    transform: none;
+  }
+
   .live-dot {
     animation: none;
   }
