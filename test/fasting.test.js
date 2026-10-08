@@ -204,6 +204,20 @@ test("corrects a completed session while preserving its target", () => {
   assert.equal(isComplete(corrected), true);
 });
 
+test("a correction cannot end or alter a running fast", () => {
+  const active = startFast(new Date("2026-10-07T18:00:00.000Z"), 13);
+  const original = { ...active };
+  const now = new Date("2026-10-08T06:00:00.000Z");
+
+  assert.throws(
+    () => correctSession(active, "2026-10-07T17:00:00.000Z", now.toISOString(), now),
+    /An active fast cannot be corrected/,
+  );
+  assert.deepEqual(active, original);
+  assert.equal(durationMs(active, now), 12 * 60 * 60 * 1000);
+  assert.equal(isComplete(active, now), false);
+});
+
 test("shortening a fast below its goal removes goal completion", () => {
   const original = session("2026-09-15T18:00:00.000Z", "2026-09-16T08:00:00.000Z", 13);
   assert.equal(isComplete(original), true);
