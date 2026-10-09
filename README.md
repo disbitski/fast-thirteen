@@ -163,6 +163,14 @@ Reaching the target does not automatically end your fast. The timer keeps
 running until you choose **End current fast**. End it when you actually finish
 fasting so the recorded duration reflects your session.
 
+## Recent Web History
+
+The Tracker shows up to 10 completed fasts from the past 7 days. A running
+fast appears above them and does not count toward that limit.
+
+Older fasts stay saved when they leave this list; the history limit only
+controls what appears on the Tracker.
+
 ## Forgot To End A Fast?
 
 You can correct the recorded time in the web app:
