@@ -252,7 +252,14 @@ test("missing correction timestamps leave the original fast unchanged", () => {
   const original = { ...completed };
   const now = new Date("2026-09-18T08:00:00.000Z");
 
-  for (const [startedAt, endedAt] of [["", completed.endedAt], [completed.startedAt, ""]]) {
+  for (const [startedAt, endedAt] of [
+    ["", completed.endedAt],
+    [completed.startedAt, ""],
+    [null, completed.endedAt],
+    [completed.startedAt, null],
+    [undefined, completed.endedAt],
+    [completed.startedAt, undefined],
+  ]) {
     assert.throws(
       () => correctSession(completed, startedAt, endedAt, now),
       /Start and end times are required/,

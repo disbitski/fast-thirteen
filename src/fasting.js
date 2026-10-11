@@ -61,7 +61,12 @@ export function correctSession(session, startedAt, endedAt, now = new Date()) {
     throw new Error("An active fast cannot be corrected");
   }
 
-  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+  if (
+    startedAt == null ||
+    endedAt == null ||
+    Number.isNaN(start.getTime()) ||
+    Number.isNaN(end.getTime())
+  ) {
     throw new Error("Start and end times are required");
   }
 
