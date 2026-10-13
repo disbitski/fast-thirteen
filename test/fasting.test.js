@@ -204,6 +204,21 @@ test("corrects a completed session while preserving its target", () => {
   assert.equal(isComplete(corrected), true);
 });
 
+test("correcting a fast counts the repeated autumn hour", () => {
+  const original = session("2026-11-01T01:30:00-04:00", "2026-11-01T02:00:00-05:00", 1);
+  const corrected = correctSession(
+    original,
+    original.startedAt,
+    "2026-11-01T01:30:00-05:00",
+    new Date("2026-11-01T02:30:00-05:00"),
+  );
+
+  assert.equal(durationMs(corrected), 60 * 60 * 1000);
+  assert.equal(isComplete(corrected), true);
+  assert.equal(corrected.targetHours, 1);
+  assert.equal(original.endedAt, "2026-11-01T02:00:00-05:00");
+});
+
 test("a correction cannot end or alter a running fast", () => {
   const active = startFast(new Date("2026-10-07T18:00:00.000Z"), 13);
   const original = { ...active };
