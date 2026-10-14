@@ -670,7 +670,7 @@ function renderHistory() {
       item.innerHTML = `
         <div>
           <time class="session-date" datetime="${session.endedAt}">${formatDate(session.endedAt)}</time>
-          <span class="session-times"><time datetime="${session.startedAt}">${formatTime(session.startedAt)}</time> to <time datetime="${session.endedAt}">${formatTime(session.endedAt)}</time></span>
+          <span class="session-times">Started <time datetime="${session.startedAt}">${formatDate(session.startedAt)} at ${formatTime(session.startedAt)}</time> · Ended <time datetime="${session.endedAt}">${formatTime(session.endedAt)}</time></span>
         </div>
         <div class="session-result-column">
           <span class="session-duration">${formatHoursAndMinutes(durationMs(session))}</span>
