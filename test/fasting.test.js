@@ -29,6 +29,16 @@ test("calculates duration and progress toward a 13-hour fast", () => {
   assert.equal(isComplete(active, now), false);
 });
 
+test("a backward clock adjustment cannot produce negative fasting progress", () => {
+  const active = startFast(new Date("2026-10-15T18:00:00.000Z"), 13);
+  const adjustedNow = new Date("2026-10-15T17:59:00.000Z");
+
+  assert.equal(durationMs(active, adjustedNow), 0);
+  assert.equal(progress(active, adjustedNow), 0);
+  assert.equal(isComplete(active, adjustedNow), false);
+  assert.equal(formatDuration(durationMs(active, adjustedNow)), "00:00:00");
+});
+
 test("a spring clock change does not count the skipped hour toward a fast", () => {
   const active = startFast(new Date("2026-03-07T19:00:00-05:00"), 13);
   const morning = new Date("2026-03-08T08:00:00-04:00");
