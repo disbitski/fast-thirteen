@@ -168,6 +168,10 @@ fasting so the recorded duration reflects your session.
 The Tracker shows up to 10 completed fasts from the past 7 days. A running
 fast appears above them and does not count toward that limit.
 
+Completed-fast durations use `hours:minutes`: `13:30` means 13 hours and
+30 minutes. The running fast also includes seconds (`hours:minutes:seconds`).
+Elapsed hours continue past 24 rather than resetting each day.
+
 Older fasts stay saved when they leave this list; the history limit only
 controls what appears on the Tracker.
 
