@@ -76,6 +76,18 @@ test("caps progress when a fast exceeds its target", () => {
   assert.equal(isComplete(complete), true);
 });
 
+test("an active fast keeps counting beyond a 48-hour goal", () => {
+  const active = startFast(new Date("2026-10-16T18:00:00.000Z"), 48);
+  const now = new Date("2026-10-18T18:30:00.000Z");
+
+  assert.equal(active.endedAt, null);
+  assert.equal(durationMs(active, now), 48.5 * 60 * 60 * 1000);
+  assert.equal(formatDuration(durationMs(active, now)), "48:30:00");
+  assert.equal(formatHoursAndMinutes(durationMs(active, now)), "48:30");
+  assert.equal(progress(active, now), 1);
+  assert.equal(isComplete(active, now), true);
+});
+
 test("an ended fast does not keep progressing as time passes", () => {
   const active = startFast(new Date("2026-09-06T20:00:00.000Z"), 13);
   const ended = endFast(active, new Date("2026-09-07T08:00:00.000Z"));
