@@ -673,7 +673,7 @@ function renderHistory() {
           <span class="session-times">Started <time datetime="${session.startedAt}">${formatDate(session.startedAt)} at ${formatTime(session.startedAt)}</time> · Ended <time datetime="${session.endedAt}">${formatTime(session.endedAt)}</time></span>
         </div>
         <div class="session-result-column">
-          <span class="session-duration">${formatHoursAndMinutes(durationMs(session))}</span>
+          <span class="session-duration" title="Duration in hours and minutes">${formatHoursAndMinutes(durationMs(session))}</span>
           <span class="session-result ${complete ? "complete" : ""}">${complete ? "Goal reached" : "Fast ended early"}</span>
           <button class="text-button edit-session" type="button" data-session-id="${session.id}" aria-label="Edit fast from ${formatDate(session.startedAt)} at ${formatTime(session.startedAt)} to ${formatDate(session.endedAt)} at ${formatTime(session.endedAt)}">Edit</button>
         </div>
@@ -724,7 +724,7 @@ function createActiveSessionRow(session, now = new Date()) {
       <span class="session-times">Started <time datetime="${session.startedAt}">${formatTime(session.startedAt)}</time> · Goal time ${formatDate(targetEnd)} at <time datetime="${targetEnd.toISOString()}">${formatTime(targetEnd)}</time></span>
     </div>
     <div>
-      <span class="session-duration">${formatDuration(durationMs(session, now))}</span>
+      <span class="session-duration" title="Duration in hours, minutes, and seconds">${formatDuration(durationMs(session, now))}</span>
       <span class="session-result ${complete ? "complete" : ""}">${complete ? "Goal reached" : `${session.targetHours}-hour goal`}</span>
     </div>
   `;
