@@ -57,7 +57,11 @@ export function correctSession(session, startedAt, endedAt, now = new Date()) {
   const start = new Date(startedAt);
   const end = new Date(endedAt);
 
-  if (!session.endedAt || session.deletedAt) {
+  if (session.deletedAt) {
+    throw new Error("A deleted fast cannot be corrected");
+  }
+
+  if (!session.endedAt) {
     throw new Error("An active fast cannot be corrected");
   }
 
