@@ -185,6 +185,10 @@ You can correct the recorded time in the web app:
    especially for an overnight fast. You can also correct **Started** here.
 4. Choose **Save correction** to save the corrected session.
 
+Both timestamps are required. **Ended** must be after **Started** and cannot
+be in the future. If a correction is rejected, your saved fast stays unchanged.
+Check the error message, fix the dates or times, and choose **Save correction** again.
+
 For an accidental entry, choose **Delete fast**, then **Confirm delete**.
 Choose **Cancel** to close the editor without saving your edits.
 
