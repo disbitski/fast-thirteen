@@ -91,7 +91,11 @@ export function correctSession(session, startedAt, endedAt, now = new Date()) {
 }
 
 export function deleteSession(session, now = new Date()) {
-  if (!session.endedAt || session.deletedAt) {
+  if (session.deletedAt) {
+    throw new Error("Fast has already been deleted");
+  }
+
+  if (!session.endedAt) {
     throw new Error("An active fast cannot be deleted");
   }
 

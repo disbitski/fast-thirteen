@@ -319,6 +319,18 @@ test("does not allow an active fast to be deleted", () => {
   assert.throws(() => deleteSession(active), /An active fast cannot be deleted/);
 });
 
+test("deleting a fast twice preserves its original deletion time", () => {
+  const completed = session("2026-10-21T18:00:00.000Z", "2026-10-22T07:00:00.000Z");
+  const deleted = deleteSession(completed, new Date("2026-10-22T08:00:00.000Z"));
+  const original = { ...deleted };
+
+  assert.throws(
+    () => deleteSession(deleted, new Date("2026-10-23T08:00:00.000Z")),
+    /Fast has already been deleted/,
+  );
+  assert.deepEqual(deleted, original);
+});
+
 test("a deleted fast is identified correctly when a correction is rejected", () => {
   const completed = session("2026-10-19T18:00:00.000Z", "2026-10-20T07:00:00.000Z");
   const deleted = deleteSession(completed, new Date("2026-10-20T08:00:00.000Z"));
