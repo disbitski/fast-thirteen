@@ -2165,6 +2165,10 @@ h3 {
   font: inherit;
 }
 
+.session-form .form-field input[aria-invalid="true"] {
+  border-color: var(--active);
+}
+
 .form-error {
   min-height: 1.2em;
   margin: 0;
