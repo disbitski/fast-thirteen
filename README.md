@@ -190,7 +190,7 @@ be in the future. If a correction is rejected, your saved fast stays unchanged.
 Check the error message, fix the dates or times, and choose **Save correction** again.
 
 For an accidental entry, choose **Delete fast**, then **Confirm delete**.
-Choose **Cancel** to close the editor without saving your edits.
+Choose **Cancel** or press **Escape** to close the editor without saving your edits.
 
 The web app displays dates and times in your device's local time. Fasting
 duration uses elapsed time: when clocks move forward or back by one hour,
