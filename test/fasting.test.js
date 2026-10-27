@@ -110,6 +110,21 @@ test("ending a fast twice preserves the original end time", () => {
   assert.deepEqual(ended, original);
 });
 
+test("ending a fast preserves its identity and captured goal without mutating it", () => {
+  const active = startFast(new Date("2026-10-26T18:00:00.000Z"), 14.5);
+  const original = { ...active };
+  const endedAt = new Date("2026-10-27T09:00:00.000Z");
+  const ended = endFast(active, endedAt);
+
+  assert.equal(ended.id, active.id);
+  assert.equal(ended.startedAt, active.startedAt);
+  assert.equal(ended.targetHours, 14.5);
+  assert.equal(ended.endedAt, endedAt.toISOString());
+  assert.equal(ended.updatedAt, endedAt.toISOString());
+  assert.equal(isComplete(ended), true);
+  assert.deepEqual(active, original);
+});
+
 test("ending a fast rejects impossible timestamps", () => {
   const active = session("2026-06-12T08:00:00.000Z", null);
 
