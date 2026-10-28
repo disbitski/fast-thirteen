@@ -608,7 +608,10 @@ function renderHero(now = new Date()) {
     elements.button.classList.remove("is-active");
     elements.targetCopy.textContent = `Your target is ${targetLabel(appData.settings.targetHours)}.`;
     elements.timerLabel.setAttribute("aria-valuenow", "0");
-    elements.timerLabel.setAttribute("aria-valuetext", "Not fasting");
+    elements.timerLabel.setAttribute(
+      "aria-valuetext",
+      `Not fasting. Goal: ${targetLabel(appData.settings.targetHours)}.`,
+    );
     elements.progressRing.style.setProperty("--progress", "0deg");
     return;
   }

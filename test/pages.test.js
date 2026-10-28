@@ -99,7 +99,7 @@ test("goal ring exposes its current progress", () => {
 
   assert.match(index, /id="timer"[^>]*role="timer"/);
   assert.match(index, /id="timer-label"[\s\S]*role="progressbar"[\s\S]*aria-valuenow="0"/);
-  assert.match(index, /id="timer-label"[\s\S]*aria-valuetext="Not fasting"/);
+  assert.match(index, /id="timer-label"[\s\S]*aria-valuetext="Not fasting\. Goal: 13 hours\."/);
   assert.match(app, /timerLabel\.setAttribute\("aria-valuenow", String\(percentComplete\)\)/);
   assert.match(app, /`\$\{targetLabel\(activeSession\.targetHours\)\} goal complete`/);
   assert.match(
