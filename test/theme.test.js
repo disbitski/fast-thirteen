@@ -67,6 +67,19 @@ test("falls back safely when browser storage is unavailable", () => {
   assert.equal(saveTheme(brokenStorage, "cyan"), "cyan");
 });
 
+test("a selected theme still applies when storage can be read but not written", () => {
+  const storage = memoryStorage("cyan");
+  storage.setItem = () => {
+    throw new Error("Storage quota exceeded");
+  };
+  const root = { dataset: {} };
+
+  applyTheme(root, saveTheme(storage, "ferrari"));
+
+  assert.equal(root.dataset.theme, "ferrari");
+  assert.equal(loadTheme(storage), "cyan");
+});
+
 test("applies a normalized theme to the page root", () => {
   const root = { dataset: {} };
 
