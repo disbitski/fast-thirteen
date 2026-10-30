@@ -149,6 +149,9 @@ Your choice applies across all three pages and saves automatically in this
 browser. Each browser and site address keeps its own preference, so you can
 use different themes on different devices.
 
+If browser storage is blocked or full, the picker still changes the current
+page. The selection may revert when you reload or open another page.
+
 ## Change Your Fasting Target
 
 In the web app, open **Settings** and change **Fasting target**. Choose from
