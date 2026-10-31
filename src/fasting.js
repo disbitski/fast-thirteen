@@ -6,7 +6,10 @@ const HOUR_MS = 60 * 60 * 1000;
 const MINUTE_MS = 60 * 1000;
 
 export function normalizeTargetHours(value) {
-  if (value == null || (typeof value === "string" && value.trim() === "")) {
+  if (
+    (typeof value !== "number" && typeof value !== "string") ||
+    (typeof value === "string" && value.trim() === "")
+  ) {
     return DEFAULT_TARGET_HOURS;
   }
 

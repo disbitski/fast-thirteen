@@ -213,6 +213,12 @@ test("normalizes fasting targets to safe half-hour increments", () => {
   assert.equal(normalizeTargetHours("  "), 13);
 });
 
+test("non-numeric target types fall back to the default goal", () => {
+  for (const value of [false, true, [], [14.5], {}]) {
+    assert.equal(normalizeTargetHours(value), 13);
+  }
+});
+
 test("captures the selected goal when starting a fast", () => {
   const fast = startFast(new Date("2026-06-14T22:00:00.000Z"), 14.5);
 
