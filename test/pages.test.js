@@ -113,7 +113,7 @@ test("active fast history labels the goal completion time", () => {
 
   assert.match(
     app,
-    /Started <time datetime="\$\{session\.startedAt\}">\$\{formatTime\(session\.startedAt\)\}<\/time> · Goal time/,
+    /Started \$\{formatDate\(session\.startedAt\)\} at <time datetime="\$\{session\.startedAt\}">\$\{formatTime\(session\.startedAt\)\}<\/time> · Goal time/,
   );
   assert.match(
     app,
