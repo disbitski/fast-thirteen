@@ -226,6 +226,15 @@ test("captures the selected goal when starting a fast", () => {
   assert.equal(fast.startedAt, "2026-06-14T22:00:00.000Z");
 });
 
+test("starting a fast captures a normalized goal for invalid or out-of-range input", () => {
+  const now = new Date("2026-11-02T18:00:00.000Z");
+
+  for (const [input, expected] of [[0, 1], [100, 48], [false, 13], ["14.3", 14.5]]) {
+    const fast = startFast(now, input);
+    assert.equal(fast.targetHours, expected);
+  }
+});
+
 test("creates session ids without requiring secure-context randomUUID", () => {
   const id = createSessionId(new Date("2026-06-14T22:00:00.000Z"), {});
 
