@@ -697,7 +697,7 @@ function openSessionDialog(sessionId) {
   elements.sessionStartedAt.value = toLocalInputValue(session.startedAt);
   elements.sessionEndedAt.value = toLocalInputValue(session.endedAt);
   elements.sessionSummary.textContent =
-    `${formatHoursAndMinutes(durationMs(session))} · ${session.targetHours}-hour goal · ` +
+    `Saved duration: ${formatHoursAndMinutes(durationMs(session))} · ${session.targetHours}-hour goal · ` +
     `${isComplete(session) ? "Goal reached" : "Ended early"}`;
   elements.sessionDialog.showModal();
 }
