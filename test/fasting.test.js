@@ -373,6 +373,17 @@ test("a deleted fast is identified correctly when a correction is rejected", () 
   assert.deepEqual(deleted, original);
 });
 
+test("a correction ending exactly now can reach the goal", () => {
+  const completed = session("2026-11-04T18:00:00.000Z", "2026-11-05T06:00:00.000Z");
+  const now = new Date("2026-11-05T07:00:00.000Z");
+  const corrected = correctSession(completed, completed.startedAt, now.toISOString(), now);
+
+  assert.equal(corrected.endedAt, now.toISOString());
+  assert.equal(corrected.updatedAt, now.toISOString());
+  assert.equal(isComplete(corrected), true);
+  assert.equal(completed.endedAt, "2026-11-05T06:00:00.000Z");
+});
+
 test("rejects corrections that end in the future", () => {
   const completed = session("2026-06-14T23:00:00.000Z", "2026-06-15T11:00:00.000Z");
 
