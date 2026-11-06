@@ -628,7 +628,7 @@ function renderHero(now = new Date()) {
   elements.statusLabel.textContent = complete ? "Target reached" : "Fast in progress";
   elements.heroTitle.textContent = complete ? "You reached your goal." : "Stay steady.";
   elements.heroCopy.textContent = complete
-    ? "Your daily target is complete. End the fast whenever you are ready."
+    ? "Your target is complete. The timer keeps running until you choose End current fast."
     : `You started on ${formatDate(activeSession.startedAt)} at ${formatTime(activeSession.startedAt)}. Keep going at your own pace.`;
   elements.timer.textContent = formatDuration(elapsed);
   elements.timerLabel.textContent = complete ? "Goal complete" : `${percentComplete}% complete`;
