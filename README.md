@@ -139,6 +139,13 @@ Cloudflare history. If the old browser has local-only fasts that have never
 synced, export a backup there and import it on the new site before relying on
 the new browser copy.
 
+## Tracker Screen Layout
+
+The web Tracker adapts to the available browser width. On narrower screens,
+the description sits above a centered timer card and start/end button. On
+wider screens, the timer card sits beside the description. The layout adjusts
+as you fold, unfold, or rotate your phone; your current fast keeps running.
+
 ## Choose A Web Theme
 
 Use the circular color swatches at the top of the web app to choose Light,
