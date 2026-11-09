@@ -219,6 +219,12 @@ test("non-numeric target types fall back to the default goal", () => {
   }
 });
 
+test("non-finite targets use the default goal rather than the range limits", () => {
+  for (const value of [Infinity, -Infinity, "Infinity", "-Infinity", "1e309"]) {
+    assert.equal(normalizeTargetHours(value), 13);
+  }
+});
+
 test("captures the selected goal when starting a fast", () => {
   const fast = startFast(new Date("2026-06-14T22:00:00.000Z"), 14.5);
 
