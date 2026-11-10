@@ -390,6 +390,22 @@ test("a correction ending exactly now can reach the goal", () => {
   assert.equal(completed.endedAt, "2026-11-05T06:00:00.000Z");
 });
 
+test("a valid correction succeeds after a rejected future end time", () => {
+  const completed = session("2026-11-08T18:00:00.000Z", "2026-11-09T06:00:00.000Z");
+  const original = { ...completed };
+  const now = new Date("2026-11-09T08:00:00.000Z");
+
+  assert.throws(
+    () => correctSession(completed, completed.startedAt, "2026-11-09T09:00:00.000Z", now),
+    /cannot end in the future/,
+  );
+  const corrected = correctSession(completed, completed.startedAt, "2026-11-09T07:00:00.000Z", now);
+
+  assert.equal(corrected.endedAt, "2026-11-09T07:00:00.000Z");
+  assert.equal(isComplete(corrected), true);
+  assert.deepEqual(completed, original);
+});
+
 test("rejects corrections that end in the future", () => {
   const completed = session("2026-06-14T23:00:00.000Z", "2026-06-15T11:00:00.000Z");
 
