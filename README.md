@@ -195,6 +195,9 @@ You can correct the recorded time in the web app:
    especially for an overnight fast. You can also correct **Started** here.
 4. Choose **Save correction** to save the corrected session.
 
+The correction fields show times to the minute. A time you leave unchanged
+keeps its saved seconds, so saving without edits does not round the duration.
+
 Changing **Ended** can move a fast within the recent-history list. If its new
 end date is outside the past 7 days, it leaves that list but stays saved.
 
