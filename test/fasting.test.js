@@ -203,6 +203,15 @@ test("formats elapsed time for timer and history displays", () => {
   assert.equal(formatHoursAndMinutes((100 * 60 * 60 + 4 * 60 + 9) * 1000), "100:04");
 });
 
+test("duration displays roll over only when a full hour has elapsed", () => {
+  const hour = 60 * 60 * 1000;
+
+  assert.equal(formatDuration(hour - 1), "00:59:59");
+  assert.equal(formatHoursAndMinutes(hour - 1), "00:59");
+  assert.equal(formatDuration(hour), "01:00:00");
+  assert.equal(formatHoursAndMinutes(hour), "01:00");
+});
+
 test("normalizes fasting targets to safe half-hour increments", () => {
   assert.equal(normalizeTargetHours("14.2"), 14);
   assert.equal(normalizeTargetHours(14.3), 14.5);
