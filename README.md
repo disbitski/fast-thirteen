@@ -159,6 +159,10 @@ use different themes on different devices.
 If browser storage is blocked or full, the picker still changes the current
 page. The selection may revert when you reload or open another page.
 
+If you enable reduced motion in your device or browser, the Tracker disables
+hover movement and the pulsing live indicator, and removes transitions on the
+timer controls and main button.
+
 ## Change Your Fasting Target
 
 In the web app, open **Settings** and change **Fasting target**. Choose from
