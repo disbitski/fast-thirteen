@@ -41,6 +41,13 @@ test("loads and saves a valid theme", () => {
   assert.equal(loadTheme(storage), "spacex");
 });
 
+test("switching back to light replaces the saved dark theme", () => {
+  const storage = memoryStorage("ferrari");
+
+  assert.equal(saveTheme(storage, "light"), "light");
+  assert.equal(loadTheme(storage), "light");
+});
+
 test("recovers from an unknown saved theme when a valid theme is selected", () => {
   const storage = memoryStorage("retired-theme");
   const root = { dataset: {} };
