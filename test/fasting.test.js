@@ -256,6 +256,16 @@ test("creates session ids without requiring secure-context randomUUID", () => {
   assert.match(id, /^fast-/);
 });
 
+test("session ids stay distinct when generated at the same timestamp", () => {
+  const now = new Date("2026-11-16T18:00:00.000Z");
+
+  for (const cryptoProvider of [globalThis.crypto, {}]) {
+    const first = createSessionId(now, cryptoProvider);
+    const second = createSessionId(now, cryptoProvider);
+    assert.notEqual(first, second);
+  }
+});
+
 test("corrects a completed session while preserving its target", () => {
   const original = session("2026-06-14T23:00:00.000Z", "2026-06-15T11:00:00.000Z", 13);
   const corrected = correctSession(
