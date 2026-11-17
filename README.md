@@ -189,6 +189,17 @@ Elapsed hours continue past 24 rather than resetting each day.
 Older fasts stay saved when they leave this list; the history limit only
 controls what appears on the Tracker.
 
+## How The Day Streak Works
+
+The Tracker counts consecutive local calendar days with at least one ended
+fast that reached its own saved goal. A fast counts on the day it ended;
+multiple qualifying fasts on the same day count as one streak day. A running
+fast does not count until you end it, even if its goal is already reached.
+
+Your streak stays visible if your latest qualifying day was yesterday, giving
+you today to continue it. If neither today nor yesterday has a qualifying
+fast, the streak is zero.
+
 ## Forgot To End A Fast?
 
 You can correct the recorded time in the web app:
