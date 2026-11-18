@@ -158,6 +158,19 @@ test("counts a streak ending today or yesterday", () => {
   assert.equal(currentStreak(sessions, new Date("2026-06-14T12:00:00")), 0);
 });
 
+test("a goal-reaching running fast extends the streak only after it ends", () => {
+  const yesterday = session("2026-11-16T18:00:00", "2026-11-17T07:00:00");
+  const active = startFast(new Date("2026-11-17T18:00:00"), 13);
+  const now = new Date("2026-11-18T08:00:00");
+
+  assert.equal(isComplete(active, now), true);
+  assert.equal(currentStreak([active], now), 0);
+  assert.equal(currentStreak([yesterday, active], now), 1);
+
+  const ended = endFast(active, now);
+  assert.equal(currentStreak([yesterday, ended], now), 2);
+});
+
 test("multiple completed fasts on one day count as one streak day", () => {
   const sessions = [
     session("2026-09-25T18:00:00", "2026-09-26T07:00:00"),
