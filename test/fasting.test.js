@@ -181,6 +181,19 @@ test("multiple completed fasts on one day count as one streak day", () => {
   assert.equal(currentStreak(sessions, new Date("2026-09-27T12:00:00")), 2);
 });
 
+test("deleting the only qualifying fast on a middle day breaks the streak", () => {
+  const sessions = [
+    session("2026-11-17T18:00:00", "2026-11-18T07:00:00"),
+    session("2026-11-18T18:00:00", "2026-11-19T07:00:00"),
+    session("2026-11-19T18:00:00", "2026-11-20T07:00:00"),
+  ];
+  const now = new Date("2026-11-20T12:00:00");
+
+  assert.equal(currentStreak(sessions, now), 3);
+  sessions[1] = deleteSession(sessions[1], now);
+  assert.equal(currentStreak(sessions, now), 1);
+});
+
 test("keeps a streak across the new year", () => {
   const sessions = [
     session("2026-12-30T18:00:00", "2026-12-31T07:00:00"),
