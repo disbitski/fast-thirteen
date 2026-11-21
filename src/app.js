@@ -1540,7 +1540,7 @@ elements.deleteSession.addEventListener("click", () => {
     clearSessionValidation();
     deleteConfirmationPending = true;
     elements.deleteSession.textContent = "Confirm delete";
-    elements.sessionError.textContent = "Click Confirm delete to remove this fast from your history.";
+    elements.sessionError.textContent = "Choose Confirm delete to remove this fast from your history, or Cancel to keep it.";
     return;
   }
 
