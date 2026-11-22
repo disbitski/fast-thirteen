@@ -171,6 +171,17 @@ test("a goal-reaching running fast extends the streak only after it ends", () =>
   assert.equal(currentStreak([yesterday, ended], now), 2);
 });
 
+test("streaks use each fast's saved goal when a duration is corrected", () => {
+  const yesterday = session("2026-11-20T19:00:00", "2026-11-21T07:00:00", 12);
+  const today = session("2026-11-21T18:00:00", "2026-11-22T08:00:00", 14.5);
+  const now = new Date("2026-11-22T09:00:00");
+
+  assert.equal(currentStreak([yesterday, today], now), 1);
+
+  const corrected = correctSession(today, today.startedAt, "2026-11-22T08:30:00", now);
+  assert.equal(currentStreak([yesterday, corrected], now), 2);
+});
+
 test("multiple completed fasts on one day count as one streak day", () => {
   const sessions = [
     session("2026-09-25T18:00:00", "2026-09-26T07:00:00"),
