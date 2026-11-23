@@ -200,6 +200,10 @@ Your streak stays visible if your latest qualifying day was yesterday, giving
 you today to continue it. If neither today nor yesterday has a qualifying
 fast, the streak is zero.
 
+Corrections and deletions recalculate the streak. Shortening a fast below its
+saved goal, moving its end date, or deleting the only qualifying fast on a day
+can break the streak. Correcting a fast to reach its goal can restore a day.
+
 ## Forgot To End A Fast?
 
 You can correct the recorded time in the web app:
