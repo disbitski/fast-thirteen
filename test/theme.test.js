@@ -33,12 +33,15 @@ test("normalizes unknown themes to light", () => {
   assert.equal(normalizeTheme(null), DEFAULT_THEME);
 });
 
-test("loads and saves a valid theme", () => {
+test("loads and saves every supported theme", () => {
   const storage = memoryStorage();
 
   assert.equal(loadTheme(storage), DEFAULT_THEME);
-  assert.equal(saveTheme(storage, "spacex"), "spacex");
-  assert.equal(loadTheme(storage), "spacex");
+
+  for (const theme of ["light", "cyan", "purple", "spacex", "ferrari"]) {
+    assert.equal(saveTheme(storage, theme), theme);
+    assert.equal(loadTheme(storage), theme);
+  }
 });
 
 test("switching back to light replaces the saved dark theme", () => {
