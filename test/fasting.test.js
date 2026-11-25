@@ -376,7 +376,7 @@ test("rejects corrections ending at or before the start", () => {
   }
 });
 
-test("missing correction timestamps leave the original fast unchanged", () => {
+test("missing or invalid correction timestamps leave the original fast unchanged", () => {
   const completed = session("2026-09-17T18:00:00.000Z", "2026-09-18T07:00:00.000Z");
   const original = { ...completed };
   const now = new Date("2026-09-18T08:00:00.000Z");
@@ -388,6 +388,8 @@ test("missing correction timestamps leave the original fast unchanged", () => {
     [completed.startedAt, null],
     [undefined, completed.endedAt],
     [completed.startedAt, undefined],
+    ["not-a-date", completed.endedAt],
+    [completed.startedAt, "2026-09-18T25:00:00.000Z"],
   ]) {
     assert.throws(
       () => correctSession(completed, startedAt, endedAt, now),
