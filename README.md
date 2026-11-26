@@ -214,6 +214,9 @@ You can correct the recorded time in the web app:
    especially for an overnight fast. You can also correct **Started** here.
 4. Choose **Save correction** to save the corrected session.
 
+The **Saved duration** summary shows the fast before your edits. Save the
+correction to update the duration and goal result in history.
+
 The correction fields show times to the minute. A time you leave unchanged
 keeps its saved seconds, so saving without edits does not round the duration.
 
