@@ -125,13 +125,15 @@ test("ending a fast preserves its identity and captured goal without mutating it
   assert.deepEqual(active, original);
 });
 
-test("ending a fast rejects impossible timestamps", () => {
-  const active = session("2026-06-12T08:00:00.000Z", null);
+test("ending before the start leaves the running fast unchanged", () => {
+  const active = startFast(new Date("2026-06-12T08:00:00.000Z"));
+  const original = { ...active };
 
   assert.throws(
-    () => endFast(active, new Date("2026-06-12T07:59:00.000Z")),
+    () => endFast(active, new Date("2026-06-12T07:59:59.999Z")),
     /cannot end before it starts/,
   );
+  assert.deepEqual(active, original);
 });
 
 test("summarizes completed fasts and total tracked time", () => {
