@@ -216,6 +216,26 @@ test("keeps a streak across the new year", () => {
   assert.equal(currentStreak(sessions, new Date("2027-01-01T12:00:00")), 2);
 });
 
+test("streak days follow local dates rather than UTC midnight", () => {
+  const previousTimeZone = process.env.TZ;
+  process.env.TZ = "America/New_York";
+
+  try {
+    const sessions = [
+      session("2026-11-25T22:00:00.000Z", "2026-11-25T23:30:00.000Z", 1),
+      session("2026-11-26T03:00:00.000Z", "2026-11-26T04:30:00.000Z", 1),
+    ];
+
+    assert.equal(currentStreak(sessions, new Date("2026-11-26T13:00:00.000Z")), 1);
+  } finally {
+    if (previousTimeZone === undefined) {
+      delete process.env.TZ;
+    } else {
+      process.env.TZ = previousTimeZone;
+    }
+  }
+});
+
 test("keeps a streak across a daylight-saving time change", () => {
   const previousTimeZone = process.env.TZ;
   process.env.TZ = "America/New_York";
